@@ -293,6 +293,17 @@ class WP_Tester_Admin {
      * List flows page
      */
     private function list_flows_page() {
+        // Clean up any duplicate flows first
+        $removed_count = $this->database->remove_duplicate_flows();
+        if ($removed_count > 0) {
+            // Add admin notice about cleanup
+            add_action('admin_notices', function() use ($removed_count) {
+                echo '<div class="notice notice-info is-dismissible"><p>';
+                printf(__('WP Tester: Removed %d duplicate flows from the database.', 'wp-tester'), $removed_count);
+                echo '</p></div>';
+            });
+        }
+        
         $flows = $this->database->get_flows(true);
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-flows.php';

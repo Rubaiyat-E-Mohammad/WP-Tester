@@ -188,6 +188,19 @@ class WP_Tester_Database {
     public function save_flow($flow_name, $flow_type, $start_url, $steps, $expected_outcome = '', $priority = 5) {
         global $wpdb;
         
+        // Check if flow already exists to prevent duplicates
+        $existing_flow = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$this->flows_table} WHERE flow_name = %s AND flow_type = %s AND start_url = %s",
+            $flow_name,
+            $flow_type,
+            $start_url
+        ));
+        
+        if ($existing_flow) {
+            // Flow already exists, return the existing ID instead of creating duplicate
+            return $existing_flow;
+        }
+        
         return $wpdb->insert(
             $this->flows_table,
             array(
@@ -201,6 +214,38 @@ class WP_Tester_Database {
             ),
             array('%s', '%s', '%s', '%s', '%s', '%d', '%d')
         );
+    }
+    
+    /**
+     * Remove duplicate flows
+     */
+    public function remove_duplicate_flows() {
+        global $wpdb;
+        
+        // Find and remove duplicate flows, keeping the oldest one
+        $duplicates = $wpdb->get_results(
+            "SELECT flow_name, flow_type, start_url, GROUP_CONCAT(id ORDER BY created_at ASC) as ids
+             FROM {$this->flows_table} 
+             GROUP BY flow_name, flow_type, start_url 
+             HAVING COUNT(*) > 1"
+        );
+        
+        $removed_count = 0;
+        foreach ($duplicates as $duplicate) {
+            $ids = explode(',', $duplicate->ids);
+            $keep_id = array_shift($ids); // Keep the first (oldest) one
+            
+            if (!empty($ids)) {
+                $ids_placeholder = implode(',', array_fill(0, count($ids), '%d'));
+                $wpdb->query($wpdb->prepare(
+                    "DELETE FROM {$this->flows_table} WHERE id IN ($ids_placeholder)",
+                    $ids
+                ));
+                $removed_count += count($ids);
+            }
+        }
+        
+        return $removed_count;
     }
     
     /**
