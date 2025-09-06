@@ -246,34 +246,25 @@ class WP_Tester {
     
     
     /**
-     * Add plugin row meta links - NUCLEAR APPROACH to eliminate duplicates
+     * Add plugin row meta links (properly preserve version/author info)
      */
     public function add_plugin_row_meta($links, $file) {
         if (plugin_basename(WP_TESTER_PLUGIN_FILE) === $file) {
-            // NUCLEAR OPTION: Start completely fresh, only keep essential links
             $cleaned_links = array();
             
-            // Only keep essential links that are NOT view/details related
+            // Keep all links except "View details" variations
             foreach ($links as $key => $link) {
                 if (is_string($link)) {
-                    $link_lower = strtolower($link);
-                    // Skip ANYTHING that could be a details/view link
-                    if (strpos($link_lower, 'view') !== false || 
-                        strpos($link_lower, 'detail') !== false ||
-                        strpos($link_lower, 'plugin') !== false ||
-                        strpos($link_lower, 'site') !== false ||
-                        strpos($link_lower, 'more') !== false ||
-                        strpos($link_lower, 'info') !== false ||
-                        strpos($link_lower, 'visit') !== false) {
-                        continue; // Skip completely
+                    // Only remove actual "View details" links, keep version/author info
+                    if (preg_match('/view\s*details/i', $link) && strpos($link, '<a') !== false) {
+                        continue; // Skip only "View details" links
                     }
                 }
-                // Only keep safe, essential links (like version info)
                 $cleaned_links[$key] = $link;
             }
             
-            // Add ONLY our custom "View Details" link
-            $cleaned_links = array('<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>');
+            // Add our custom "View Details" link
+            $cleaned_links['wp_tester_view_details'] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
             
             return $cleaned_links;
         }

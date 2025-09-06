@@ -159,8 +159,18 @@ if (!defined('ABSPATH')) {
                                 <div class="item-details">
                                     <h4><?php echo esc_html($result->flow_name ?? 'Unknown Flow'); ?></h4>
                                     <p>
-                                        <?php echo esc_html(($result->steps_completed ?? 0) . ' of ' . ($result->total_steps ?? 0) . ' steps'); ?> • 
-                                        Executed <?php echo esc_html($result->executed_at ?? 'Unknown time'); ?>
+                                        <?php 
+                                        $steps_executed = $result->steps_executed ?? 0;
+                                        $steps_passed = $result->steps_passed ?? 0; 
+                                        $steps_failed = $result->steps_failed ?? 0;
+                                        $total_steps = $steps_executed ?: ($steps_passed + $steps_failed);
+                                        $executed_time = $result->completed_at ?? $result->started_at ?? 'Unknown time';
+                                        if ($executed_time !== 'Unknown time') {
+                                            $executed_time = human_time_diff(strtotime($executed_time), current_time('timestamp')) . ' ago';
+                                        }
+                                        echo esc_html($steps_executed . ' of ' . $total_steps . ' steps'); 
+                                        ?> • 
+                                        Executed <?php echo esc_html($executed_time); ?>
                                     </p>
                                 </div>
                             </div>
@@ -169,7 +179,7 @@ if (!defined('ABSPATH')) {
                                     <?php echo esc_html(ucfirst($result->status ?? 'Unknown')); ?>
                                 </div>
                                 <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
-                                    <?php echo esc_html(($result->execution_time ?? '0') . 's execution time'); ?>
+                                    <?php echo esc_html(number_format($result->execution_time ?? 0, 3) . 's execution time'); ?>
                                 </div>
                                 <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
                                     <a href="<?php echo admin_url('admin.php?page=wp-tester-results&action=view&result_id=' . ($result->id ?? '')); ?>" 
