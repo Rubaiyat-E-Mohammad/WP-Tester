@@ -309,7 +309,7 @@ class WP_Tester_Flow_Executor {
         if (is_wp_error($response)) {
             return array(
                 'success' => false,
-                'error' => 'Failed to navigate to URL: ' . $response->get_error_message()
+                'error' => 'Failed to navigate to URL: ' . ($response ? $response->get_error_message() : 'Unknown error')
             );
         }
         

@@ -216,8 +216,8 @@ class WP_Tester_Feedback_Reporter {
         
         return array(
             'total_execution_time' => $test_result->execution_time,
-            'average_step_time' => round($avg_step_time, 2),
-            'steps_per_second' => $test_result->execution_time > 0 
+            'average_step_time' => round($avg_step_time ?: 0, 2),
+            'steps_per_second' => ($test_result->execution_time > 0 && $test_result->steps_executed > 0)
                 ? round($test_result->steps_executed / $test_result->execution_time, 2) 
                 : 0,
             'performance_rating' => $this->calculate_performance_rating($test_result->execution_time, $test_result->steps_executed),
@@ -267,8 +267,12 @@ class WP_Tester_Feedback_Reporter {
             );
         }
         
-        $historical_success_rate = round(($success_count / count($historical_results)) * 100, 1);
-        $average_execution_time = round($total_execution_time / count($historical_results), 2);
+        $historical_success_rate = count($historical_results) > 0 
+            ? round(($success_count / count($historical_results)) * 100, 1) 
+            : 0;
+        $average_execution_time = count($historical_results) > 0 
+            ? round(($total_execution_time ?: 0) / count($historical_results), 2) 
+            : 0;
         
         return array(
             'total_tests' => count($historical_results),
@@ -380,7 +384,7 @@ class WP_Tester_Feedback_Reporter {
                 'priority' => $flow->priority,
                 'success_rate' => $success_rate,
                 'total_tests' => $flow->total_tests,
-                'avg_execution_time' => round($flow->avg_execution_time, 2),
+                'avg_execution_time' => round($flow->avg_execution_time ?: 0, 2),
                 'last_test_date' => $flow->last_test_date,
                 'health_status' => $health_status,
                 'health_color' => $this->get_health_color($health_status)
@@ -585,9 +589,9 @@ class WP_Tester_Feedback_Reporter {
         if ($test_result->steps_executed === 0) return 0;
         
         $success_ratio = $test_result->steps_passed / $test_result->steps_executed;
-        $time_penalty = min($test_result->execution_time / 60, 1); // Penalty for tests over 1 minute
+        $time_penalty = min(($test_result->execution_time ?: 0) / 60, 1); // Penalty for tests over 1 minute
         
-        return round((($success_ratio * 100) * (1 - $time_penalty * 0.2)), 1);
+        return round((($success_ratio * 100) * (1 - $time_penalty * 0.2)) ?: 0, 1);
     }
     
     private function analyze_trend($trend_data) {

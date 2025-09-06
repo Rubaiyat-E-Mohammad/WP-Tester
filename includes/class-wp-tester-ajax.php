@@ -59,7 +59,7 @@ class WP_Tester_Ajax {
             }
             
             wp_send_json_success(array(
-                'message' => sprintf(__('Executed %d flows successfully.', 'wp-tester'), count($flows)),
+                'message' => sprintf(__('Executed %d flows successfully.', 'wp-tester'), count($flows ?: [])),
                 'results' => $results
             ));
             
@@ -88,9 +88,9 @@ class WP_Tester_Ajax {
                 wp_send_json_success(array(
                     'message' => sprintf(
                         __('Crawl completed. Discovered %d URLs and %d flows in %.2f seconds.', 'wp-tester'),
-                        $result['crawled_count'],
-                        $result['discovered_flows'],
-                        $result['execution_time']
+                        $result['crawled_count'] ?: 0,
+                        $result['discovered_flows'] ?: 0,
+                        $result['execution_time'] ?: 0
                     ),
                     'crawled_count' => $result['crawled_count'],
                     'discovered_flows' => $result['discovered_flows'],
@@ -134,7 +134,7 @@ class WP_Tester_Ajax {
                 wp_send_json_success(array(
                     'message' => sprintf(
                         __('Flow test completed with status: %s', 'wp-tester'),
-                        $result['status']
+                        $result['status'] ?: 'unknown'
                     ),
                     'result' => $result
                 ));
@@ -210,7 +210,7 @@ class WP_Tester_Ajax {
                 wp_send_json_success(array(
                     'message' => sprintf(
                         __('Flow discovery completed. Found %d new flows.', 'wp-tester'),
-                        $result['discovered_flows']
+                        $result['discovered_flows'] ?: 0
                     ),
                     'discovered_flows' => $result['discovered_flows']
                 ));
@@ -256,7 +256,7 @@ class WP_Tester_Ajax {
                     $results = $executor->execute_multiple_flows($flow_ids);
                     
                     wp_send_json_success(array(
-                        'message' => sprintf(__('Tested %d flows.', 'wp-tester'), count($flow_ids)),
+                        'message' => sprintf(__('Tested %d flows.', 'wp-tester'), count($flow_ids ?: [])),
                         'results' => $results
                     ));
                     break;
@@ -271,7 +271,7 @@ class WP_Tester_Ajax {
                     );
                     
                     wp_send_json_success(array(
-                        'message' => sprintf(__('Activated %d flows.', 'wp-tester'), count($flow_ids))
+                        'message' => sprintf(__('Activated %d flows.', 'wp-tester'), count($flow_ids ?: []))
                     ));
                     break;
                     
@@ -285,7 +285,7 @@ class WP_Tester_Ajax {
                     );
                     
                     wp_send_json_success(array(
-                        'message' => sprintf(__('Deactivated %d flows.', 'wp-tester'), count($flow_ids))
+                        'message' => sprintf(__('Deactivated %d flows.', 'wp-tester'), count($flow_ids ?: []))
                     ));
                     break;
                     
@@ -295,7 +295,7 @@ class WP_Tester_Ajax {
                     }
                     
                     wp_send_json_success(array(
-                        'message' => sprintf(__('Deleted %d flows.', 'wp-tester'), count($flow_ids))
+                        'message' => sprintf(__('Deleted %d flows.', 'wp-tester'), count($flow_ids ?: []))
                     ));
                     break;
                     

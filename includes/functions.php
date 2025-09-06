@@ -198,7 +198,7 @@ function wp_tester_check_system_requirements() {
     );
     
     // WordPress version
-    $wp_version = get_bloginfo('version');
+    $wp_version = get_bloginfo('version') ?: '0.0.0';
     $requirements['wp_version'] = array(
         'current' => $wp_version,
         'required' => '6.0',
@@ -321,9 +321,11 @@ function wp_tester_clean_test_data() {
         'search_columns' => array('user_login', 'user_email')
     ));
     
-    foreach ($test_users as $user) {
-        if (strpos($user->user_login, 'testuser') !== false) {
-            wp_delete_user($user->ID);
+    if ($test_users) {
+        foreach ($test_users as $user) {
+            if (strpos($user->user_login, 'testuser') !== false) {
+                wp_delete_user($user->ID);
+            }
         }
     }
     
@@ -350,7 +352,7 @@ function wp_tester_get_system_info() {
         'upload_max_filesize' => ini_get('upload_max_filesize'),
         'post_max_size' => ini_get('post_max_size'),
         'active_plugins' => get_option('active_plugins'),
-        'active_theme' => wp_get_theme()->get('Name'),
+        'active_theme' => function_exists('wp_get_theme') && ($theme = wp_get_theme()) ? $theme->get('Name') : 'Unknown',
         'site_url' => site_url(),
         'home_url' => home_url(),
         'wp_debug' => WP_DEBUG,

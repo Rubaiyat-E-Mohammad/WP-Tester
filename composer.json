@@ -1,0 +1,40 @@
+{
+    "name": "wp-tester/wp-tester",
+    "description": "Automatically tests all user flows on a WordPress site and produces detailed feedback",
+    "type": "wordpress-plugin",
+    "version": "1.0.0",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "WP Tester Team"
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "php-stubs/wordpress-stubs": "^6.4",
+        "php-stubs/woocommerce-stubs": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "WPTester\\": "includes/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "scripts": {
+        "check-syntax": "find . -name '*.php' -exec php -l {} \\;",
+        "lint": "phpcs --standard=WordPress includes/ wp-tester.php",
+        "fix": "phpcbf --standard=WordPress includes/ wp-tester.php"
+    },
+    "extra": {
+        "wordpress-install-dir": "wp",
+        "installer-paths": {
+            "wp-content/plugins/{$name}/": ["type:wordpress-plugin"]
+        }
+    }
+}

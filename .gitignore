@@ -1,0 +1,46 @@
+# IDE and Editor files
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# WordPress stub files (for IDE support only)
+.phpstorm.meta.php
+wordpress-stubs.php
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+
+# Node modules (if any)
+node_modules/
+
+# Composer vendor (if any)
+vendor/
+
+# Package files
+*.zip
+*.tar.gz
+*.rar
+
+# Test files
+tests/
+phpunit.xml

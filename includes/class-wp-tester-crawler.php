@@ -52,7 +52,7 @@ class WP_Tester_Crawler {
             $this->crawl_url($home_url, 'homepage', $crawled_urls, $discovered_flows);
             
             // Crawl posts and pages
-            foreach ($post_types as $post_type) {
+            foreach ($post_types ?: [] as $post_type) {
                 $this->crawl_post_type($post_type, $crawled_urls, $discovered_flows);
             }
             
@@ -104,7 +104,7 @@ class WP_Tester_Crawler {
             'order' => 'DESC'
         ));
         
-        foreach ($posts as $post) {
+        foreach ($posts ?: [] as $post) {
             $url = get_permalink($post->ID);
             if ($url && !in_array($url, $crawled_urls)) {
                 $this->crawl_url($url, $post_type, $crawled_urls, $discovered_flows, $post);
@@ -118,7 +118,7 @@ class WP_Tester_Crawler {
     private function crawl_archives(&$crawled_urls, &$discovered_flows) {
         // Category archives
         $categories = get_categories(array('hide_empty' => true));
-        foreach ($categories as $category) {
+        foreach ($categories ?: [] as $category) {
             $url = get_category_link($category->term_id);
             if ($url && !in_array($url, $crawled_urls)) {
                 $this->crawl_url($url, 'category_archive', $crawled_urls, $discovered_flows);
@@ -127,7 +127,7 @@ class WP_Tester_Crawler {
         
         // Tag archives
         $tags = get_tags(array('hide_empty' => true));
-        foreach ($tags as $tag) {
+        foreach ($tags ?: [] as $tag) {
             $url = get_tag_link($tag->term_id);
             if ($url && !in_array($url, $crawled_urls)) {
                 $this->crawl_url($url, 'tag_archive', $crawled_urls, $discovered_flows);
@@ -136,7 +136,7 @@ class WP_Tester_Crawler {
         
         // Author archives
         $authors = get_users(array('who' => 'authors'));
-        foreach ($authors as $author) {
+        foreach ($authors ?: [] as $author) {
             $url = get_author_posts_url($author->ID);
             if ($url && !in_array($url, $crawled_urls)) {
                 $this->crawl_url($url, 'author_archive', $crawled_urls, $discovered_flows);
@@ -183,7 +183,7 @@ class WP_Tester_Crawler {
                 return;
             }
             
-            $html = wp_remote_retrieve_body($response);
+            $html = wp_remote_retrieve_body($response) ?: '';
             $content_hash = md5($html);
             
             // Parse HTML for interactive elements
@@ -234,6 +234,7 @@ class WP_Tester_Crawler {
         // Find forms
         $forms = $xpath->query('//form');
         foreach ($forms as $form) {
+            /** @var DOMElement $form */
             $form_data = array(
                 'id' => $form->getAttribute('id'),
                 'class' => $form->getAttribute('class'),
@@ -245,6 +246,7 @@ class WP_Tester_Crawler {
             // Find form fields
             $fields = $xpath->query('.//input | .//select | .//textarea', $form);
             foreach ($fields as $field) {
+                /** @var DOMElement $field */
                 $field_data = array(
                     'type' => $field->getAttribute('type') ?: $field->nodeName,
                     'name' => $field->getAttribute('name'),
@@ -261,6 +263,7 @@ class WP_Tester_Crawler {
         // Find buttons
         $buttons = $xpath->query('//button | //input[@type="button"] | //input[@type="submit"]');
         foreach ($buttons as $button) {
+            /** @var DOMElement $button */
             $elements['buttons'][] = array(
                 'id' => $button->getAttribute('id'),
                 'class' => $button->getAttribute('class'),
@@ -273,6 +276,7 @@ class WP_Tester_Crawler {
         // Find links
         $links = $xpath->query('//a[@href]');
         foreach ($links as $link) {
+            /** @var DOMElement $link */
             $href = $link->getAttribute('href');
             if (!empty($href) && $href !== '#') {
                 $elements['links'][] = array(
@@ -287,6 +291,7 @@ class WP_Tester_Crawler {
         // Find input fields (not in forms)
         $inputs = $xpath->query('//input[not(ancestor::form)]');
         foreach ($inputs as $input) {
+            /** @var DOMElement $input */
             $elements['inputs'][] = array(
                 'type' => $input->getAttribute('type') ?: 'text',
                 'name' => $input->getAttribute('name'),
@@ -299,9 +304,11 @@ class WP_Tester_Crawler {
         // Find select elements
         $selects = $xpath->query('//select');
         foreach ($selects as $select) {
+            /** @var DOMElement $select */
             $options = array();
             $option_nodes = $xpath->query('.//option', $select);
             foreach ($option_nodes as $option) {
+                /** @var DOMElement $option */
                 $options[] = array(
                     'value' => $option->getAttribute('value'),
                     'text' => trim($option->textContent)
@@ -319,6 +326,7 @@ class WP_Tester_Crawler {
         // Find textareas
         $textareas = $xpath->query('//textarea');
         foreach ($textareas as $textarea) {
+            /** @var DOMElement $textarea */
             $elements['textareas'][] = array(
                 'name' => $textarea->getAttribute('name'),
                 'id' => $textarea->getAttribute('id'),
@@ -330,6 +338,7 @@ class WP_Tester_Crawler {
         // Find modals and dropdowns (common patterns)
         $modals = $xpath->query('//*[contains(@class, "modal") or contains(@class, "popup") or contains(@class, "dialog")]');
         foreach ($modals as $modal) {
+            /** @var DOMElement $modal */
             $elements['modals'][] = array(
                 'id' => $modal->getAttribute('id'),
                 'class' => $modal->getAttribute('class'),
@@ -339,6 +348,7 @@ class WP_Tester_Crawler {
         
         $dropdowns = $xpath->query('//*[contains(@class, "dropdown") or contains(@class, "menu")]');
         foreach ($dropdowns as $dropdown) {
+            /** @var DOMElement $dropdown */
             $elements['dropdowns'][] = array(
                 'id' => $dropdown->getAttribute('id'),
                 'class' => $dropdown->getAttribute('class'),

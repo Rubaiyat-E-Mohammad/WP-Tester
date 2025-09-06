@@ -72,7 +72,7 @@ class WP_Tester {
      */
     public function init() {
         // Load text domain
-        load_plugin_textdomain('wp-tester', false, dirname(plugin_basename(__FILE__)) . '/languages');
+        $this->load_textdomain();
         
         // Include required files
         $this->includes();
@@ -82,6 +82,13 @@ class WP_Tester {
         
         // Setup hooks
         $this->setup_hooks();
+    }
+    
+    /**
+     * Load plugin text domain for translations
+     */
+    private function load_textdomain() {
+        load_plugin_textdomain('wp-tester', false, basename(dirname(__FILE__)) . '/languages');
     }
     
     /**

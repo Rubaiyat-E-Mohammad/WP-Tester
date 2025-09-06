@@ -118,7 +118,7 @@ class WP_Tester_WooCommerce {
             'orderby' => 'popularity'
         ));
         
-        foreach ($products as $product) {
+        foreach ($products ?: [] as $product) {
             $product_url = get_permalink($product->get_id());
             
             $flows[] = array(
@@ -145,7 +145,7 @@ class WP_Tester_WooCommerce {
             'number' => 5
         ));
         
-        foreach ($categories as $category) {
+        foreach ($categories ?: [] as $category) {
             $category_url = get_term_link($category);
             
             if (!is_wp_error($category_url)) {
@@ -429,13 +429,17 @@ class WP_Tester_WooCommerce {
         }
         
         // Check if there are products
-        $product_count = wp_count_posts('product')->publish;
+        $product_count = wp_count_posts('product');
+        $product_count = $product_count ? $product_count->publish : 0;
         if ($product_count === 0) {
             $issues[] = 'No published products found';
         }
         
         // Check payment methods
-        $payment_gateways = WC()->payment_gateways()->get_available_payment_gateways();
+        $payment_gateways = array();
+        if (function_exists('WC') && ($wc = WC()) && method_exists($wc, 'payment_gateways') && ($gateways = $wc->payment_gateways())) {
+            $payment_gateways = $gateways->get_available_payment_gateways();
+        }
         if (empty($payment_gateways)) {
             $issues[] = 'No payment methods are enabled';
         }
