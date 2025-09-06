@@ -128,7 +128,10 @@ class WP_Tester {
         
         // Add plugin action links
         add_filter('plugin_action_links_' . plugin_basename(WP_TESTER_PLUGIN_FILE), array($this, 'add_plugin_action_links'));
-        add_filter('plugin_row_meta', array($this, 'add_plugin_row_meta'), 10, 2);
+        add_filter('plugin_row_meta', array($this, 'add_plugin_row_meta'), 999, 2);
+        
+        // Additional filter to ensure removal on plugins page
+        add_action('admin_init', array($this, 'cleanup_plugin_links'));
     }
     
     /**
@@ -244,16 +247,76 @@ class WP_Tester {
     }
     
     /**
+     * Cleanup plugin links on plugins page
+     */
+    public function cleanup_plugin_links() {
+        global $pagenow;
+        if ($pagenow === 'plugins.php') {
+            // Use JavaScript to remove duplicate View Details links
+            add_action('admin_footer', array($this, 'remove_duplicate_view_details'));
+        }
+    }
+    
+    /**
+     * JavaScript to remove duplicate View Details links
+     */
+    public function remove_duplicate_view_details() {
+        ?>
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            // Find our plugin row
+            var pluginSlug = 'wp-tester/wp-tester.php';
+            var $pluginRow = $('tr[data-slug="wp-tester"], tr[data-plugin="' + pluginSlug + '"]');
+            
+            if ($pluginRow.length === 0) {
+                // Fallback: find by plugin name
+                $pluginRow = $('tr').filter(function() {
+                    return $(this).find('strong:contains("WP Tester")').length > 0;
+                });
+            }
+            
+            if ($pluginRow.length > 0) {
+                var $metaLinks = $pluginRow.find('.row-actions-visible, .plugin-version-author-uri');
+                
+                // Remove all existing "View details" links first
+                $metaLinks.find('a').each(function() {
+                    var linkText = $(this).text().toLowerCase();
+                    var linkHref = $(this).attr('href') || '';
+                    if (linkText.includes('view details') || 
+                        linkText.includes('view_details') ||
+                        linkHref.includes('plugin-information')) {
+                        $(this).parent().remove(); // Remove the parent <span> or container
+                        $(this).remove(); // Remove the link itself
+                    }
+                });
+                
+                // Ensure our custom link is present
+                if ($metaLinks.find('.wp-tester-view-details').length === 0) {
+                    $metaLinks.append(' | <a href="#" class="wp-tester-view-details">View Details</a>');
+                }
+            }
+        });
+        </script>
+        <?php
+    }
+    
+    /**
      * Add plugin row meta links
      */
     public function add_plugin_row_meta($links, $file) {
         if (plugin_basename(WP_TESTER_PLUGIN_FILE) === $file) {
-            // Remove existing "View details" link if it exists
+            // More robust removal of existing "View details" links
+            $new_links = array();
             foreach ($links as $key => $link) {
-                if (strpos($link, 'View details') !== false || strpos($link, 'View Details') !== false) {
-                    unset($links[$key]);
+                // Check for various forms of "View details" text
+                $lowercase_link = strtolower($link);
+                if (strpos($lowercase_link, 'view details') === false && 
+                    strpos($lowercase_link, 'view_details') === false &&
+                    strpos($lowercase_link, 'plugin-information') === false) {
+                    $new_links[$key] = $link;
                 }
             }
+            $links = $new_links;
             
             // Add our custom View Details link
             $links['wp_tester_view_details'] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
