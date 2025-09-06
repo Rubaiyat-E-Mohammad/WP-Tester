@@ -3,7 +3,7 @@
  * Plugin Name: WP Tester
  * Plugin URI: https://github.com/Rubaiyat-E-Mohammad/WP-Tester
  * Description: Automatically tests all user flows on a WordPress site and produces detailed feedback without generating coded test scripts.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: REMTech
  * Author URI: https://github.com/Rubaiyat-E-Mohammad
  * License: GPL v2 or later
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('WP_TESTER_VERSION', '1.0.3');
+define('WP_TESTER_VERSION', '1.0.4');
 define('WP_TESTER_PLUGIN_FILE', __FILE__);
 define('WP_TESTER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WP_TESTER_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -248,10 +248,15 @@ class WP_Tester {
      */
     public function add_plugin_row_meta($links, $file) {
         if (plugin_basename(WP_TESTER_PLUGIN_FILE) === $file) {
-            $row_meta = array(
-                'view_details' => '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>',
-            );
-            return array_merge($links, $row_meta);
+            // Remove existing "View details" link if it exists
+            foreach ($links as $key => $link) {
+                if (strpos($link, 'View details') !== false || strpos($link, 'View Details') !== false) {
+                    unset($links[$key]);
+                }
+            }
+            
+            // Add our custom View Details link
+            $links['wp_tester_view_details'] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
         }
         return $links;
     }

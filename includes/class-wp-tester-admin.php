@@ -53,27 +53,21 @@ class WP_Tester_Admin {
             WP_TESTER_VERSION
         );
         
-        // Enqueue React and modern JavaScript on WP Tester pages
+        // Enqueue modern JavaScript on WP Tester pages (lightweight version)
         if (strpos($hook, 'wp-tester') !== false || strpos($hook, 'toplevel_page_wp-tester') !== false) {
-            // Enqueue React (WordPress includes it)
-            wp_enqueue_script('react');
-            wp_enqueue_script('react-dom');
-            
-            // Enqueue our modern admin JavaScript
+            // Enqueue our basic admin JavaScript for interactions
             wp_enqueue_script(
-                'wp-tester-modern-admin',
-                WP_TESTER_PLUGIN_URL . 'assets/dist/modern-admin.js',
-                array('react', 'react-dom', 'jquery'),
+                'wp-tester-admin-interactions',
+                WP_TESTER_PLUGIN_URL . 'assets/js/admin.js',
+                array('jquery'),
                 WP_TESTER_VERSION,
                 true
             );
             
-            // Localize script with data for React components
-            wp_localize_script('wp-tester-modern-admin', 'wpTesterData', array(
+            // Localize script with basic data
+            wp_localize_script('wp-tester-admin-interactions', 'wpTesterData', array(
                 'nonce' => wp_create_nonce('wp_tester_nonce'),
                 'ajaxurl' => admin_url('admin-ajax.php'),
-                'pluginData' => $this->get_plugin_details(),
-                'isDevelopment' => defined('WP_DEBUG') && WP_DEBUG,
                 'version' => WP_TESTER_VERSION
             ));
         }
@@ -225,7 +219,7 @@ class WP_Tester_Admin {
     public function dashboard_page() {
         $dashboard_data = $this->feedback_reporter->generate_dashboard_summary();
         
-        include WP_TESTER_PLUGIN_DIR . 'templates/admin-dashboard.php';
+        include WP_TESTER_PLUGIN_DIR . 'templates/admin-dashboard-modern.php';
     }
     
     /**

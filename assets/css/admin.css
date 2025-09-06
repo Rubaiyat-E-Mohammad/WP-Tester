@@ -19,10 +19,13 @@
 /* Fix for WP Tester menu icon */
 #adminmenu li.toplevel_page_wp-tester .wp-menu-image {
     background: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 #adminmenu li.toplevel_page_wp-tester .wp-menu-image img {
-    padding: 6px;
+    padding: 0;
     width: 20px;
     height: 20px;
     max-width: none;

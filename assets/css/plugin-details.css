@@ -48,7 +48,7 @@
 
 /* Popup Header */
 .wp-tester-popup-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%);
     color: white;
     padding: 30px;
     display: flex;
@@ -170,8 +170,8 @@
 }
 
 .wp-tester-tab-button.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
+    color: #1FC09A;
+    border-bottom-color: #1FC09A;
     background: white;
 }
 
@@ -226,7 +226,7 @@
     padding: 12px;
     background: #f8f9fa;
     border-radius: 6px;
-    border-left: 4px solid #667eea;
+    border-left: 4px solid #1FC09A;
 }
 
 .wp-tester-features-list li .dashicons {
@@ -246,7 +246,7 @@
 }
 
 .wp-tester-stat-item {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%);
     color: white;
     padding: 25px;
     border-radius: 8px;
@@ -309,8 +309,8 @@
 }
 
 .wp-tester-popup-footer .button-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: #667eea;
+    background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%);
+    border-color: #1FC09A;
 }
 
 .wp-tester-popup-footer .button-primary:hover {

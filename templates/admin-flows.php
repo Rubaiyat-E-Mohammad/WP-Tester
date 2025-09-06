@@ -8,13 +8,27 @@ if (!defined('ABSPATH')) {
 }
 ?>
 
-<div class="wrap">
-    <h1>
-        <?php _e('User Flows', 'wp-tester'); ?>
-        <button id="wp-tester-discover-flows" class="page-title-action">
-            <?php _e('Discover New Flows', 'wp-tester'); ?>
-        </button>
-    </h1>
+<div class="wrap wp-tester-modern">
+    <!-- Modern Header with Logo -->
+    <div class="wp-tester-modern-header glass-nav">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png'); ?>" alt="WP Tester Logo" class="logo" />
+                <div class="title-section">
+                    <h1><?php _e('User Flows', 'wp-tester'); ?></h1>
+                    <div class="subtitle"><?php _e('Manage and test your user flows', 'wp-tester'); ?></div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="wp-tester-discover-flows" class="btn btn-primary btn-sm">
+                    <span class="dashicons dashicons-search"></span>
+                    <?php _e('Discover New Flows', 'wp-tester'); ?>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="wp-tester-content">
     
     <?php if (!empty($flows)): ?>
     <div class="wp-tester-flows-filters">
@@ -160,7 +174,8 @@ if (!defined('ABSPATH')) {
         </button>
     </div>
     <?php endif; ?>
-</div>
+    </div> <!-- wp-tester-content -->
+</div> <!-- wp-tester-modern -->
 
 <script>
 jQuery(document).ready(function($) {
