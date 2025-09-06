@@ -64,7 +64,7 @@ if (!defined('ABSPATH')) {
                     $forms_count = 0;
                     if (!empty($crawl_results)) {
                         foreach ($crawl_results as $result) {
-                            $forms_count += ($result['forms_found'] ?? 0);
+                            $forms_count += ($result->forms_found ?? 0);
                         }
                     }
                     echo $forms_count;
@@ -88,7 +88,7 @@ if (!defined('ABSPATH')) {
                     $links_count = 0;
                     if (!empty($crawl_results)) {
                         foreach ($crawl_results as $result) {
-                            $links_count += ($result['links_found'] ?? 0);
+                            $links_count += ($result->links_found ?? 0);
                         }
                     }
                     echo $links_count;
@@ -112,8 +112,8 @@ if (!defined('ABSPATH')) {
                     $last_crawl = 'Never';
                     if (!empty($crawl_results)) {
                         $latest = array_slice($crawl_results, 0, 1);
-                        if (!empty($latest[0]['crawled_at'])) {
-                            $last_crawl = date('M j', strtotime($latest[0]['crawled_at']));
+                        if (!empty($latest[0]->crawled_at)) {
+                            $last_crawl = date('M j', strtotime($latest[0]->crawled_at));
                         }
                     }
                     echo esc_html($last_crawl);
@@ -148,11 +148,11 @@ if (!defined('ABSPATH')) {
             <?php if (!empty($crawl_results)) : ?>
                 <div class="modern-list" id="crawl-list">
                     <?php foreach ($crawl_results as $result) : ?>
-                        <div class="modern-list-item" data-page-type="<?php echo esc_attr($result['page_type'] ?? ''); ?>">
+                        <div class="modern-list-item" data-page-type="<?php echo esc_attr($result->page_type ?? ''); ?>">
                             <div class="item-info">
                                 <div class="item-icon">
                                     <span class="dashicons dashicons-<?php 
-                                        $page_type = $result['page_type'] ?? 'page';
+                                        $page_type = $result->page_type ?? 'page';
                                         $icons = [
                                             'page' => 'admin-page',
                                             'post' => 'admin-post',
@@ -165,37 +165,37 @@ if (!defined('ABSPATH')) {
                                 </div>
                                 <div class="item-details">
                                     <h4>
-                                        <a href="<?php echo esc_url($result['url'] ?? '#'); ?>" target="_blank" style="color: inherit; text-decoration: none;">
-                                            <?php echo esc_html($result['title'] ?? $result['url'] ?? 'Unknown Page'); ?>
+                                        <a href="<?php echo esc_url($result->url ?? '#'); ?>" target="_blank" style="color: inherit; text-decoration: none;">
+                                            <?php echo esc_html($result->title ?? $result->url ?? 'Unknown Page'); ?>
                                             <span class="dashicons dashicons-external" style="font-size: 12px; margin-left: 0.25rem;"></span>
                                         </a>
                                     </h4>
                                     <p>
-                                        <?php echo esc_html(ucfirst($result['page_type'] ?? 'Page')); ?> • 
-                                        <?php echo esc_html(($result['forms_found'] ?? 0) . ' forms'); ?> • 
-                                        <?php echo esc_html(($result['links_found'] ?? 0) . ' links'); ?>
+                                        <?php echo esc_html(ucfirst($result->page_type ?? 'Page')); ?> • 
+                                        <?php echo esc_html(($result->forms_found ?? 0) . ' forms'); ?> • 
+                                        <?php echo esc_html(($result->links_found ?? 0) . ' links'); ?>
                                     </p>
                                 </div>
                             </div>
                             <div class="item-meta">
                                 <div style="text-align: right; font-size: 0.8125rem; color: #64748b;">
                                     <div>Status: 
-                                        <span class="status-badge <?php echo esc_attr($result['status'] ?? 'success'); ?>">
-                                            <?php echo esc_html(ucfirst($result['status'] ?? 'Success')); ?>
+                                        <span class="status-badge <?php echo esc_attr($result->status ?? 'success'); ?>">
+                                            <?php echo esc_html(ucfirst($result->status ?? 'Success')); ?>
                                         </span>
                                     </div>
                                     <div style="margin-top: 0.25rem;">
-                                        Crawled: <?php echo esc_html($result['crawled_at'] ?? 'Unknown'); ?>
+                                        Crawled: <?php echo esc_html($result->crawled_at ?? 'Unknown'); ?>
                                     </div>
                                 </div>
                                 <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
                                     <button class="modern-btn modern-btn-secondary modern-btn-small view-details" 
-                                            data-url="<?php echo esc_attr($result['url'] ?? ''); ?>">
+                                            data-url="<?php echo esc_attr($result->url ?? ''); ?>">
                                         View
                                     </button>
-                                    <?php if (($result['forms_found'] ?? 0) > 0) : ?>
+                                    <?php if (($result->forms_found ?? 0) > 0) : ?>
                                         <button class="modern-btn modern-btn-primary modern-btn-small create-flow" 
-                                                data-url="<?php echo esc_attr($result['url'] ?? ''); ?>">
+                                                data-url="<?php echo esc_attr($result->url ?? ''); ?>">
                                             Create Flow
                                         </button>
                                     <?php endif; ?>

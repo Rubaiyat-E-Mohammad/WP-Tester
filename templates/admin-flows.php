@@ -63,7 +63,7 @@ if (!defined('ABSPATH')) {
                     $active_count = 0;
                     if (!empty($flows)) {
                         foreach ($flows as $flow) {
-                            if (($flow['is_active'] ?? false)) $active_count++;
+                            if (($flow->is_active ?? false)) $active_count++;
                         }
                     }
                     echo $active_count;
@@ -88,8 +88,8 @@ if (!defined('ABSPATH')) {
                         $total_success = 0;
                         $total_flows = 0;
                         foreach ($flows as $flow) {
-                            if (isset($flow['success_rate'])) {
-                                $total_success += $flow['success_rate'];
+                            if (isset($flow->success_rate)) {
+                                $total_success += $flow->success_rate;
                                 $total_flows++;
                             }
                         }
@@ -118,8 +118,8 @@ if (!defined('ABSPATH')) {
                     $last_test = 'Never';
                     if (!empty($flows)) {
                         foreach ($flows as $flow) {
-                            if (!empty($flow['last_tested']) && $flow['last_tested'] !== 'Never') {
-                                $last_test = $flow['last_tested'];
+                            if (!empty($flow->last_tested) && $flow->last_tested !== 'Never') {
+                                $last_test = $flow->last_tested;
                                 break;
                             }
                         }
@@ -153,11 +153,11 @@ if (!defined('ABSPATH')) {
             <?php if (!empty($flows)) : ?>
                 <div class="modern-list">
                     <?php foreach ($flows as $flow) : ?>
-                        <div class="modern-list-item" data-flow-id="<?php echo esc_attr($flow['id'] ?? ''); ?>">
+                        <div class="modern-list-item" data-flow-id="<?php echo esc_attr($flow->id ?? ''); ?>">
                             <div class="item-info">
                                 <div class="item-icon">
                                     <span class="dashicons dashicons-<?php 
-                                        $flow_type = $flow['flow_type'] ?? 'generic';
+                                        $flow_type = $flow->flow_type ?? 'generic';
                                         $icons = [
                                             'registration' => 'admin-users',
                                             'login' => 'admin-network', 
@@ -170,20 +170,20 @@ if (!defined('ABSPATH')) {
                                     ?>"></span>
                                 </div>
                                 <div class="item-details">
-                                    <h4><?php echo esc_html($flow['flow_name'] ?? 'Unnamed Flow'); ?></h4>
-                                    <p><?php echo esc_html($flow['flow_type'] ?? 'Generic'); ?> Flow • <?php echo esc_html(($flow['step_count'] ?? 0) . ' steps'); ?></p>
+                                    <h4><?php echo esc_html($flow->flow_name ?? 'Unnamed Flow'); ?></h4>
+                                    <p><?php echo esc_html($flow->flow_type ?? 'Generic'); ?> Flow • <?php echo esc_html(($flow->step_count ?? 0) . ' steps'); ?></p>
                                 </div>
                             </div>
                             <div class="item-meta">
-                                <div class="status-badge <?php echo ($flow['is_active'] ?? false) ? 'success' : 'pending'; ?>">
-                                    <?php echo ($flow['is_active'] ?? false) ? 'Active' : 'Inactive'; ?>
+                                <div class="status-badge <?php echo ($flow->is_active ?? false) ? 'success' : 'pending'; ?>">
+                                    <?php echo ($flow->is_active ?? false) ? 'Active' : 'Inactive'; ?>
                                 </div>
                                 <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-                                    <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=view&flow_id=' . ($flow['id'] ?? '')); ?>" 
+                                    <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=view&flow_id=' . ($flow->id ?? '')); ?>" 
                                        class="modern-btn modern-btn-secondary modern-btn-small">
                                         View
                                     </a>
-                                    <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . ($flow['id'] ?? '')); ?>" 
+                                    <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . ($flow->id ?? '')); ?>" 
                                        class="modern-btn modern-btn-primary modern-btn-small">
                                         Test
                                     </a>

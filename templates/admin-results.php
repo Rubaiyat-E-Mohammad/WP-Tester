@@ -64,7 +64,7 @@ if (!defined('ABSPATH')) {
                     $passed_count = 0;
                     if (!empty($results)) {
                         foreach ($results as $result) {
-                            if (($result['status'] ?? '') === 'passed') $passed_count++;
+                            if (($result->status ?? '') === 'passed') $passed_count++;
                         }
                     }
                     echo $passed_count;
@@ -88,7 +88,7 @@ if (!defined('ABSPATH')) {
                     $failed_count = 0;
                     if (!empty($results)) {
                         foreach ($results as $result) {
-                            if (($result['status'] ?? '') === 'failed') $failed_count++;
+                            if (($result->status ?? '') === 'failed') $failed_count++;
                         }
                     }
                     echo $failed_count;
@@ -146,39 +146,39 @@ if (!defined('ABSPATH')) {
             <?php if (!empty($results)) : ?>
                 <div class="modern-list" id="results-list">
                     <?php foreach ($results as $result) : ?>
-                        <div class="modern-list-item" data-status="<?php echo esc_attr($result['status'] ?? ''); ?>">
+                        <div class="modern-list-item" data-status="<?php echo esc_attr($result->status ?? ''); ?>">
                             <div class="item-info">
                                 <div class="item-icon">
                                     <span class="dashicons dashicons-<?php 
-                                        $status = $result['status'] ?? 'unknown';
+                                        $status = $result->status ?? 'unknown';
                                         echo $status === 'passed' ? 'yes-alt' : 
                                             ($status === 'failed' ? 'dismiss' : 
                                             ($status === 'running' ? 'update' : 'clock'));
                                     ?>"></span>
                                 </div>
                                 <div class="item-details">
-                                    <h4><?php echo esc_html($result['flow_name'] ?? 'Unknown Flow'); ?></h4>
+                                    <h4><?php echo esc_html($result->flow_name ?? 'Unknown Flow'); ?></h4>
                                     <p>
-                                        <?php echo esc_html(($result['steps_completed'] ?? 0) . ' of ' . ($result['total_steps'] ?? 0) . ' steps'); ?> • 
-                                        Executed <?php echo esc_html($result['executed_at'] ?? 'Unknown time'); ?>
+                                        <?php echo esc_html(($result->steps_completed ?? 0) . ' of ' . ($result->total_steps ?? 0) . ' steps'); ?> • 
+                                        Executed <?php echo esc_html($result->executed_at ?? 'Unknown time'); ?>
                                     </p>
                                 </div>
                             </div>
                             <div class="item-meta">
-                                <div class="status-badge <?php echo esc_attr($result['status'] ?? 'pending'); ?>">
-                                    <?php echo esc_html(ucfirst($result['status'] ?? 'Unknown')); ?>
+                                <div class="status-badge <?php echo esc_attr($result->status ?? 'pending'); ?>">
+                                    <?php echo esc_html(ucfirst($result->status ?? 'Unknown')); ?>
                                 </div>
                                 <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
-                                    <?php echo esc_html(($result['execution_time'] ?? '0') . 's execution time'); ?>
+                                    <?php echo esc_html(($result->execution_time ?? '0') . 's execution time'); ?>
                                 </div>
                                 <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
-                                    <a href="<?php echo admin_url('admin.php?page=wp-tester-results&action=view&result_id=' . ($result['id'] ?? '')); ?>" 
+                                    <a href="<?php echo admin_url('admin.php?page=wp-tester-results&action=view&result_id=' . ($result->id ?? '')); ?>" 
                                        class="modern-btn modern-btn-secondary modern-btn-small">
                                         View Details
                                     </a>
-                                    <?php if (($result['status'] ?? '') === 'failed') : ?>
+                                    <?php if (($result->status ?? '') === 'failed') : ?>
                                         <button class="modern-btn modern-btn-primary modern-btn-small retry-test" 
-                                                data-flow-id="<?php echo esc_attr($result['flow_id'] ?? ''); ?>">
+                                                data-flow-id="<?php echo esc_attr($result->flow_id ?? ''); ?>">
                                             Retry
                                         </button>
                                     <?php endif; ?>
