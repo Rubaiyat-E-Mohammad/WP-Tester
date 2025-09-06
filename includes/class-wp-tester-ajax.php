@@ -113,6 +113,10 @@ class WP_Tester_Ajax {
             return;
         }
         
+        // Set longer execution time for crawl process
+        set_time_limit(300); // 5 minutes
+        ini_set('memory_limit', '512M');
+        
         try {
             $crawler = new WP_Tester_Crawler();
             $result = $crawler->run_full_crawl();
@@ -136,8 +140,14 @@ class WP_Tester_Ajax {
             }
             
         } catch (Exception $e) {
+            error_log('WP Tester Crawl Error: ' . $e->getMessage());
             wp_send_json_error(array(
                 'message' => __('Failed to run crawl: ', 'wp-tester') . $e->getMessage()
+            ));
+        } catch (Error $e) {
+            error_log('WP Tester Crawl Fatal Error: ' . $e->getMessage());
+            wp_send_json_error(array(
+                'message' => __('Crawl encountered a fatal error. Please check your server logs.', 'wp-tester')
             ));
         }
     }

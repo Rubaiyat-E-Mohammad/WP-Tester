@@ -315,14 +315,23 @@ jQuery(document).ready(function($) {
         
         button.html('<span class="dashicons dashicons-update-alt"></span> Crawling...').prop('disabled', true);
         
+        // Set up timeout to prevent infinite progress bar
+        const timeoutId = setTimeout(function() {
+            hideProgressModal();
+            showErrorModal('Crawl Timeout', 'The crawl process is taking longer than expected. This might be due to a large website or server issues. Please try again or contact support if the problem persists.');
+            button.html(originalText).prop('disabled', false);
+        }, 300000); // 5 minutes timeout
+        
         $.ajax({
             url: ajaxurl,
             type: 'POST',
+            timeout: 300000, // 5 minutes AJAX timeout
             data: {
                 action: 'wp_tester_run_crawl',
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
+                clearTimeout(timeoutId); // Clear the timeout
                 hideProgressModal();
                 if (response.success) {
                     showSuccessModal('Crawl Complete!', 
@@ -335,11 +344,21 @@ jQuery(document).ready(function($) {
                 }
             },
             error: function(xhr, status, error) {
+                clearTimeout(timeoutId); // Clear the timeout
                 hideProgressModal();
                 console.error('Crawl AJAX Error:', {xhr, status, error});
-                showErrorModal('Connection Error', 'Could not connect to server. Please check your connection and try again.');
+                
+                let errorMessage = 'Could not connect to server. Please check your connection and try again.';
+                if (status === 'timeout') {
+                    errorMessage = 'The crawl process timed out. This might be due to a large website. Please try again or contact support.';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Server error occurred during crawl. Please check your server logs and try again.';
+                }
+                
+                showErrorModal('Connection Error', errorMessage);
             },
             complete: function() {
+                clearTimeout(timeoutId); // Clear the timeout
                 button.html(originalText).prop('disabled', false);
             }
         });
@@ -390,11 +409,25 @@ jQuery(document).ready(function($) {
                             <p class="wp-tester-progress-message">${message}</p>
                         </div>
                     </div>
+                    <div class="wp-tester-modal-footer">
+                        <button class="modern-btn modern-btn-secondary" id="cancel-crawl-btn">
+                            <span class="dashicons dashicons-dismiss"></span>
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             </div>
         `);
         $('body').append(modal);
         modal.fadeIn(300);
+        
+        // Add cancel functionality
+        $('#cancel-crawl-btn').on('click', function() {
+            hideProgressModal();
+            showErrorModal('Crawl Cancelled', 'The crawl process has been cancelled by the user.');
+            // Reset button state
+            $('#start-crawl, #start-first-crawl').html('<span class="dashicons dashicons-controls-play"></span> Start Crawl').prop('disabled', false);
+        });
     }
     
     function hideProgressModal() {
@@ -522,6 +555,8 @@ jQuery(document).ready(function($) {
 .wp-tester-modal-footer {
     padding: 1rem 2rem 2rem 2rem;
     text-align: center;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
 }
 
 .wp-tester-progress-container {
