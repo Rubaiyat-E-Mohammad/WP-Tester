@@ -1,0 +1,387 @@
+/**
+ * WP Tester Plugin Details Popup Styles
+ */
+
+/* Popup Overlay */
+.wp-tester-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Popup Container */
+.wp-tester-popup-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+    position: relative;
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0; 
+        transform: scale(0.9) translateY(-20px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
+}
+
+/* Popup Header */
+.wp-tester-popup-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+}
+
+.wp-tester-plugin-icon {
+    margin-right: 20px;
+    flex-shrink: 0;
+}
+
+.wp-tester-plugin-icon img {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.wp-tester-plugin-icon .dashicons {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wp-tester-plugin-info h2 {
+    margin: 0 0 10px 0;
+    font-size: 28px;
+    font-weight: 600;
+    color: white;
+}
+
+.wp-tester-description {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    line-height: 1.5;
+    opacity: 0.9;
+}
+
+.wp-tester-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.wp-tester-meta span {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+.wp-tester-meta a {
+    color: white;
+    text-decoration: none;
+}
+
+.wp-tester-meta a:hover {
+    text-decoration: underline;
+}
+
+.wp-tester-popup-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.wp-tester-popup-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Popup Body */
+.wp-tester-popup-body {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+/* Tabs */
+.wp-tester-popup-tabs {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f8f9fa;
+}
+
+.wp-tester-tab-button {
+    background: none;
+    border: none;
+    padding: 15px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.wp-tester-tab-button:hover {
+    background: #e9ecef;
+    color: #333;
+}
+
+.wp-tester-tab-button.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background: white;
+}
+
+/* Tab Content */
+.wp-tester-popup-content {
+    padding: 30px;
+}
+
+.wp-tester-tab-content {
+    display: none;
+}
+
+.wp-tester-tab-content.active {
+    display: block;
+}
+
+.wp-tester-tab-content h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 20px;
+}
+
+.wp-tester-tab-content p {
+    line-height: 1.6;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.wp-tester-tab-content ul {
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+.wp-tester-tab-content li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+    color: #555;
+}
+
+/* Features List */
+.wp-tester-features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.wp-tester-features-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+}
+
+.wp-tester-features-list li .dashicons {
+    color: #28a745;
+    margin-right: 10px;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Stats Grid */
+.wp-tester-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.wp-tester-stat-item {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.wp-tester-stat-value {
+    display: block;
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.wp-tester-stat-label {
+    display: block;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* Requirements Table */
+.wp-tester-requirements-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.wp-tester-requirements-table td {
+    padding: 12px;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: top;
+}
+
+.wp-tester-requirements-table td:first-child {
+    width: 30%;
+    background: #f8f9fa;
+}
+
+/* Popup Footer */
+.wp-tester-popup-footer {
+    padding: 20px 30px;
+    background: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.wp-tester-popup-footer .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.wp-tester-popup-footer .button .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.wp-tester-popup-footer .button-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+}
+
+.wp-tester-popup-footer .button-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    border-color: #5a6fd8;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .wp-tester-popup-container {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .wp-tester-popup-header {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .wp-tester-plugin-icon {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .wp-tester-meta {
+        justify-content: center;
+    }
+    
+    .wp-tester-popup-content {
+        padding: 20px;
+    }
+    
+    .wp-tester-popup-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .wp-tester-tab-button {
+        flex: 1;
+        min-width: 120px;
+        padding: 12px 15px;
+    }
+    
+    .wp-tester-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .wp-tester-popup-footer {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .wp-tester-popup-footer .button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Fix for potential conflicts with other admin styles */
+.wp-tester-popup-overlay * {
+    box-sizing: border-box;
+}
+
+.wp-tester-popup-overlay .dashicons {
+    font-family: dashicons;
+    speak: never;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}

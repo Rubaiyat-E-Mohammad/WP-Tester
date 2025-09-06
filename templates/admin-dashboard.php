@@ -14,8 +14,17 @@ $flow_health = $dashboard_data['flow_health'];
 $recommendations = $dashboard_data['recommendations'];
 ?>
 
-<div class="wrap">
-    <h1><?php _e('WP Tester Dashboard', 'wp-tester'); ?></h1>
+<div class="wrap wp-tester-admin">
+    <!-- React Dashboard Container -->
+    <div id="wp-tester-modern-dashboard"></div>
+    
+    <!-- Fallback content for when JavaScript is disabled -->
+    <noscript>
+        <div class="wp-tester-admin-header">
+            <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png'); ?>" alt="WP Tester Logo" />
+            <h1><?php _e('WP Tester Dashboard', 'wp-tester'); ?></h1>
+        </div>
+    </noscript>
     
     <!-- Statistics Cards -->
     <div class="wp-tester-stats-grid">

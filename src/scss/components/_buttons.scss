@@ -1,0 +1,455 @@
+// 🎯 Ultra-Modern Button Components
+// Beautiful gradients, hover effects, and accessibility
+
+@use '../base/variables' as *;
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  padding: $space-3 $space-6;
+  border-radius: $radius-lg;
+  font-weight: $font-semibold;
+  font-size: $text-sm;
+  line-height: 1;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-base;
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+
+  // Focus styles
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba($primary, 0.5);
+  }
+
+  // Disabled state
+  &:disabled,
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  // Loading state
+  &.loading {
+    color: transparent;
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s linear infinite;
+      color: inherit;
+    }
+  }
+
+  // Icon sizing
+  svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+
+  // Button variants
+  &.btn-primary {
+    background: $gradient-primary;
+    color: $white;
+    box-shadow: $shadow-primary;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-xl;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  &.btn-secondary {
+    background: rgba($gray-100, 0.8);
+    color: $gray-700;
+    border: 1px solid rgba($gray-300, 0.5);
+
+    &:hover {
+      background: rgba($gray-200, 0.9);
+      color: $gray-900;
+      transform: translateY(-1px);
+      box-shadow: $shadow-md;
+    }
+  }
+
+  &.btn-outline {
+    background: transparent;
+    color: $primary;
+    border: 2px solid $primary;
+
+    &:hover {
+      background: $primary;
+      color: $white;
+      transform: translateY(-1px);
+      box-shadow: $shadow-primary;
+    }
+  }
+
+  &.btn-ghost {
+    background: transparent;
+    color: $gray-600;
+    border: none;
+
+    &:hover {
+      background: rgba($gray-100, 0.5);
+      color: $gray-900;
+    }
+  }
+
+  &.btn-success {
+    background: $gradient-success;
+    color: $white;
+    box-shadow: $shadow-success;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-xl;
+    }
+  }
+
+  &.btn-warning {
+    background: $gradient-warning;
+    color: $white;
+    box-shadow: $shadow-warning;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-xl;
+    }
+  }
+
+  &.btn-error {
+    background: $gradient-error;
+    color: $white;
+    box-shadow: $shadow-error;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-xl;
+    }
+  }
+
+  // Button sizes
+  &.btn-xs {
+    padding: $space-1 $space-3;
+    font-size: $text-xs;
+    border-radius: $radius-md;
+
+    svg {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
+  &.btn-sm {
+    padding: $space-2 $space-4;
+    font-size: $text-sm;
+    border-radius: $radius-md;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
+  &.btn-lg {
+    padding: $space-4 $space-8;
+    font-size: $text-lg;
+    border-radius: $radius-xl;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &.btn-xl {
+    padding: $space-5 $space-10;
+    font-size: $text-xl;
+    border-radius: $radius-2xl;
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  // Full width
+  &.btn-full {
+    width: 100%;
+  }
+
+  // Icon only buttons
+  &.btn-icon {
+    padding: $space-3;
+    width: auto;
+    aspect-ratio: 1;
+
+    &.btn-xs {
+      padding: $space-1;
+    }
+
+    &.btn-sm {
+      padding: $space-2;
+    }
+
+    &.btn-lg {
+      padding: $space-4;
+    }
+
+    &.btn-xl {
+      padding: $space-5;
+    }
+  }
+
+  // Floating action button
+  &.btn-fab {
+    position: fixed;
+    bottom: $space-6;
+    right: $space-6;
+    width: 56px;
+    height: 56px;
+    border-radius: $radius-full;
+    padding: 0;
+    background: $gradient-primary;
+    color: $white;
+    box-shadow: $shadow-2xl;
+    z-index: $z-fixed;
+
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: $shadow-2xl;
+    }
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+// Button groups
+.btn-group {
+  display: inline-flex;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  box-shadow: $shadow-md;
+
+  .btn {
+    border-radius: 0;
+    border-right: 1px solid rgba($white, 0.2);
+
+    &:first-child {
+      border-radius: $radius-lg 0 0 $radius-lg;
+    }
+
+    &:last-child {
+      border-radius: 0 $radius-lg $radius-lg 0;
+      border-right: none;
+    }
+
+    &:only-child {
+      border-radius: $radius-lg;
+      border-right: none;
+    }
+
+    &:hover {
+      transform: none;
+      z-index: 1;
+    }
+  }
+
+  &.btn-group-vertical {
+    flex-direction: column;
+
+    .btn {
+      border-right: none;
+      border-bottom: 1px solid rgba($white, 0.2);
+
+      &:first-child {
+        border-radius: $radius-lg $radius-lg 0 0;
+      }
+
+      &:last-child {
+        border-radius: 0 0 $radius-lg $radius-lg;
+        border-bottom: none;
+      }
+
+      &:only-child {
+        border-radius: $radius-lg;
+        border-bottom: none;
+      }
+    }
+  }
+}
+
+// Toggle buttons
+.btn-toggle {
+  @extend .btn;
+  @extend .btn-outline;
+
+  &.active {
+    background: $primary;
+    color: $white;
+    border-color: $primary;
+  }
+}
+
+// Dropdown button
+.dropdown {
+  position: relative;
+  display: inline-block;
+
+  .dropdown-trigger {
+    @extend .btn;
+
+    &:after {
+      content: '';
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid currentColor;
+      margin-left: $space-2;
+    }
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+    background: rgba($white, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba($gray-200, 0.5);
+    border-radius: $radius-lg;
+    box-shadow: $shadow-xl;
+    padding: $space-2;
+    margin-top: $space-2;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all $transition-base;
+    z-index: $z-dropdown;
+
+    &.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: $space-3;
+      padding: $space-3 $space-4;
+      border-radius: $radius-md;
+      color: $gray-700;
+      text-decoration: none;
+      font-size: $text-sm;
+      transition: all $transition-fast;
+
+      &:hover {
+        background: rgba($primary, 0.1);
+        color: $primary;
+      }
+
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      &.dropdown-divider {
+        height: 1px;
+        padding: 0;
+        margin: $space-2 0;
+        background: rgba($gray-200, 0.5);
+        border: none;
+
+        &:hover {
+          background: rgba($gray-200, 0.5);
+        }
+      }
+    }
+  }
+
+  &.dropdown-right {
+    .dropdown-menu {
+      left: auto;
+      right: 0;
+    }
+  }
+
+  &.dropdown-up {
+    .dropdown-menu {
+      top: auto;
+      bottom: 100%;
+      margin-top: 0;
+      margin-bottom: $space-2;
+    }
+  }
+}
+
+// Animations
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive button adjustments
+@media (max-width: $breakpoint-md) {
+  .btn {
+    &.btn-responsive {
+      padding: $space-2 $space-4;
+      font-size: $text-sm;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+    }
+  }
+
+  .btn-group {
+    &.btn-group-responsive {
+      flex-direction: column;
+      width: 100%;
+
+      .btn {
+        border-radius: 0;
+        border-right: none;
+        border-bottom: 1px solid rgba($white, 0.2);
+
+        &:first-child {
+          border-radius: $radius-lg $radius-lg 0 0;
+        }
+
+        &:last-child {
+          border-radius: 0 0 $radius-lg $radius-lg;
+          border-bottom: none;
+        }
+      }
+    }
+  }
+}

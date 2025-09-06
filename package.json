@@ -1,0 +1,37 @@
+{
+  "name": "wp-tester-modern-ui",
+  "version": "1.0.3",
+  "description": "Ultra-modern React UI for WP Tester WordPress Plugin",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack --mode development --watch",
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development"
+  },
+  "keywords": ["wordpress", "react", "modern-ui", "testing"],
+  "author": "Rubaiyat E Mohammad",
+  "license": "GPL-2.0-or-later",
+  "devDependencies": {
+    "@babel/core": "^7.23.0",
+    "@babel/preset-env": "^7.23.0",
+    "@babel/preset-react": "^7.22.0",
+    "babel-loader": "^9.1.3",
+    "css-loader": "^6.8.1",
+    "mini-css-extract-plugin": "^2.7.6",
+    "postcss": "^8.4.31",
+    "postcss-loader": "^7.3.3",
+    "postcss-preset-env": "^9.2.0",
+    "sass": "^1.69.5",
+    "sass-loader": "^13.3.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "framer-motion": "^10.16.4",
+    "lucide-react": "^0.292.0",
+    "recharts": "^2.8.0",
+    "clsx": "^2.0.0"
+  }
+}

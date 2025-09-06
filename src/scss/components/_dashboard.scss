@@ -1,0 +1,516 @@
+// 🎯 Ultra-Modern Dashboard Components
+// Glassmorphism, animations, and beautiful layouts
+
+@use '../base/variables' as *;
+
+.wp-tester-dashboard {
+  // Stats grid with modern cards
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: $space-6;
+    margin-bottom: $space-8;
+
+    @media (max-width: $breakpoint-md) {
+      grid-template-columns: 1fr;
+      gap: $space-4;
+    }
+  }
+
+  // Modern stat cards with glassmorphism
+  .stat-card {
+    background: rgba($white, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba($white, 0.2);
+    border-radius: $radius-2xl;
+    padding: $space-6;
+    position: relative;
+    overflow: hidden;
+    transition: all $transition-base;
+    box-shadow: $shadow-lg;
+
+    // Hover effect
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: $shadow-2xl;
+      border-color: rgba($primary, 0.3);
+    }
+
+    // Gradient overlay
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: $gradient-primary;
+      opacity: 0;
+      transition: opacity $transition-base;
+    }
+
+    &:hover::before {
+      opacity: 1;
+    }
+
+    // Card content
+    .stat-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: $space-4;
+
+      .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: $radius-xl;
+        background: $gradient-primary;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: $shadow-primary;
+
+        svg {
+          width: 24px;
+          height: 24px;
+          color: $white;
+        }
+      }
+
+      .stat-trend {
+        display: flex;
+        align-items: center;
+        gap: $space-1;
+        font-size: $text-sm;
+        font-weight: $font-medium;
+        padding: $space-1 $space-2;
+        border-radius: $radius-full;
+
+        &.trend-up {
+          color: $success;
+          background: rgba($success, 0.1);
+        }
+
+        &.trend-down {
+          color: $error;
+          background: rgba($error, 0.1);
+        }
+
+        &.trend-neutral {
+          color: $gray-500;
+          background: rgba($gray-500, 0.1);
+        }
+
+        svg {
+          width: 14px;
+          height: 14px;
+        }
+      }
+    }
+
+    .stat-value {
+      font-size: $text-3xl;
+      font-weight: $font-extrabold;
+      color: $gray-900;
+      margin-bottom: $space-2;
+      line-height: 1;
+    }
+
+    .stat-label {
+      color: $gray-600;
+      font-size: $text-sm;
+      font-weight: $font-medium;
+      margin-bottom: $space-3;
+    }
+
+    .stat-progress {
+      height: 6px;
+      background: rgba($gray-300, 0.5);
+      border-radius: $radius-full;
+      overflow: hidden;
+      margin-bottom: $space-2;
+
+      .progress-bar {
+        height: 100%;
+        background: $gradient-primary;
+        border-radius: $radius-full;
+        transition: width $transition-slow;
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(90deg, 
+            transparent 0%, 
+            rgba($white, 0.4) 50%, 
+            transparent 100%
+          );
+          animation: shimmer 2s infinite;
+        }
+      }
+    }
+
+    .stat-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: $text-xs;
+      color: $gray-500;
+
+      .last-updated {
+        display: flex;
+        align-items: center;
+        gap: $space-1;
+
+        svg {
+          width: 12px;
+          height: 12px;
+        }
+      }
+    }
+  }
+
+  // Chart containers with modern styling
+  .chart-container {
+    background: rgba($white, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba($white, 0.2);
+    border-radius: $radius-2xl;
+    padding: $space-6;
+    margin-bottom: $space-6;
+    box-shadow: $shadow-lg;
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $space-6;
+      padding-bottom: $space-4;
+      border-bottom: 1px solid rgba($gray-200, 0.5);
+
+      h3 {
+        margin: 0;
+        font-size: $text-xl;
+        font-weight: $font-semibold;
+        color: $gray-900;
+      }
+
+      .chart-actions {
+        display: flex;
+        gap: $space-2;
+      }
+    }
+
+    .chart-content {
+      min-height: 300px;
+      position: relative;
+    }
+  }
+
+  // Activity feed with timeline
+  .activity-feed {
+    background: rgba($white, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba($white, 0.2);
+    border-radius: $radius-2xl;
+    padding: $space-6;
+    box-shadow: $shadow-lg;
+
+    .feed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $space-6;
+      padding-bottom: $space-4;
+      border-bottom: 1px solid rgba($gray-200, 0.5);
+
+      h3 {
+        margin: 0;
+        font-size: $text-xl;
+        font-weight: $font-semibold;
+        color: $gray-900;
+      }
+    }
+
+    .activity-item {
+      display: flex;
+      gap: $space-4;
+      padding: $space-4 0;
+      border-bottom: 1px solid rgba($gray-200, 0.3);
+      position: relative;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: $radius-full;
+        background: $gradient-primary;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: $shadow-primary;
+
+        svg {
+          width: 20px;
+          height: 20px;
+          color: $white;
+        }
+
+        &.success {
+          background: $gradient-success;
+          box-shadow: $shadow-success;
+        }
+
+        &.warning {
+          background: $gradient-warning;
+          box-shadow: $shadow-warning;
+        }
+
+        &.error {
+          background: $gradient-error;
+          box-shadow: $shadow-error;
+        }
+      }
+
+      .activity-content {
+        flex: 1;
+        min-width: 0;
+
+        .activity-title {
+          font-weight: $font-medium;
+          color: $gray-900;
+          margin-bottom: $space-1;
+        }
+
+        .activity-description {
+          font-size: $text-sm;
+          color: $gray-600;
+          margin-bottom: $space-2;
+        }
+
+        .activity-meta {
+          display: flex;
+          gap: $space-4;
+          font-size: $text-xs;
+          color: $gray-500;
+
+          .activity-time {
+            display: flex;
+            align-items: center;
+            gap: $space-1;
+
+            svg {
+              width: 12px;
+              height: 12px;
+            }
+          }
+
+          .activity-type {
+            background: rgba($primary, 0.1);
+            color: $primary;
+            padding: $space-1 $space-2;
+            border-radius: $radius-full;
+            font-weight: $font-medium;
+          }
+        }
+      }
+    }
+  }
+
+  // Quick actions grid
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: $space-4;
+    margin-bottom: $space-8;
+
+    .action-card {
+      background: rgba($white, 0.7);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba($white, 0.2);
+      border-radius: $radius-xl;
+      padding: $space-5;
+      text-align: center;
+      transition: all $transition-base;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      box-shadow: $shadow-md;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $shadow-xl;
+        border-color: rgba($primary, 0.3);
+      }
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, 
+          transparent 0%, 
+          rgba($primary, 0.1) 50%, 
+          transparent 100%
+        );
+        transition: left $transition-slow;
+      }
+
+      &:hover::before {
+        left: 100%;
+      }
+
+      .action-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: $radius-xl;
+        background: $gradient-primary;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto $space-4;
+        box-shadow: $shadow-primary;
+
+        svg {
+          width: 28px;
+          height: 28px;
+          color: $white;
+        }
+      }
+
+      .action-title {
+        font-weight: $font-semibold;
+        color: $gray-900;
+        margin-bottom: $space-2;
+      }
+
+      .action-description {
+        font-size: $text-sm;
+        color: $gray-600;
+        line-height: $leading-relaxed;
+      }
+    }
+  }
+
+  // System status with modern indicators
+  .system-status {
+    background: rgba($white, 0.7);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba($white, 0.2);
+    border-radius: $radius-2xl;
+    padding: $space-6;
+    box-shadow: $shadow-lg;
+
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: $space-6;
+
+      h3 {
+        margin: 0;
+        font-size: $text-xl;
+        font-weight: $font-semibold;
+        color: $gray-900;
+      }
+
+      .overall-status {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+        padding: $space-2 $space-4;
+        border-radius: $radius-full;
+        font-weight: $font-medium;
+        font-size: $text-sm;
+
+        &.status-healthy {
+          background: rgba($success, 0.1);
+          color: $success;
+        }
+
+        &.status-warning {
+          background: rgba($warning, 0.1);
+          color: $warning;
+        }
+
+        &.status-error {
+          background: rgba($error, 0.1);
+          color: $error;
+        }
+
+        .status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: $radius-full;
+          background: currentColor;
+          animation: pulse 2s infinite;
+        }
+      }
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: $space-4;
+
+      .status-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: $space-4;
+        border-radius: $radius-lg;
+        background: rgba($gray-50, 0.5);
+        border: 1px solid rgba($gray-200, 0.3);
+
+        .status-info {
+          .status-name {
+            font-weight: $font-medium;
+            color: $gray-900;
+            margin-bottom: $space-1;
+          }
+
+          .status-detail {
+            font-size: $text-sm;
+            color: $gray-600;
+          }
+        }
+
+        .status-indicator {
+          width: 12px;
+          height: 12px;
+          border-radius: $radius-full;
+          
+          &.status-ok {
+            background: $success;
+            box-shadow: 0 0 0 3px rgba($success, 0.2);
+          }
+
+          &.status-warning {
+            background: $warning;
+            box-shadow: 0 0 0 3px rgba($warning, 0.2);
+          }
+
+          &.status-error {
+            background: $error;
+            box-shadow: 0 0 0 3px rgba($error, 0.2);
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,282 @@
+// Modern Typography System for WP Tester
+// Import Inter font for professional look
+
+@use 'variables' as *;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+.wp-tester-modern {
+  // Base typography
+  font-family: $font-family-sans;
+  font-size: $text-base;
+  line-height: $leading-normal;
+  color: $gray-800;
+  font-weight: $font-normal;
+
+  // Headings
+  h1, .text-4xl {
+    font-size: $text-4xl;
+    font-weight: $font-extrabold;
+    line-height: $leading-tight;
+    color: $gray-900;
+    margin-bottom: $space-6;
+    letter-spacing: -0.025em;
+  }
+
+  h2, .text-3xl {
+    font-size: $text-3xl;
+    font-weight: $font-bold;
+    line-height: $leading-tight;
+    color: $gray-900;
+    margin-bottom: $space-5;
+    letter-spacing: -0.025em;
+  }
+
+  h3, .text-2xl {
+    font-size: $text-2xl;
+    font-weight: $font-semibold;
+    line-height: $leading-snug;
+    color: $gray-800;
+    margin-bottom: $space-4;
+  }
+
+  h4, .text-xl {
+    font-size: $text-xl;
+    font-weight: $font-semibold;
+    line-height: $leading-snug;
+    color: $gray-800;
+    margin-bottom: $space-3;
+  }
+
+  h5, .text-lg {
+    font-size: $text-lg;
+    font-weight: $font-medium;
+    line-height: $leading-normal;
+    color: $gray-700;
+    margin-bottom: $space-3;
+  }
+
+  h6, .text-base {
+    font-size: $text-base;
+    font-weight: $font-medium;
+    line-height: $leading-normal;
+    color: $gray-700;
+    margin-bottom: $space-2;
+  }
+
+  // Paragraph and body text
+  p, .text-body {
+    font-size: $text-base;
+    line-height: $leading-relaxed;
+    color: $gray-600;
+    margin-bottom: $space-4;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Small text
+  small, .text-sm {
+    font-size: $text-sm;
+    line-height: $leading-normal;
+    color: $gray-500;
+  }
+
+  .text-xs {
+    font-size: $text-xs;
+    line-height: $leading-normal;
+    color: $gray-500;
+  }
+
+  // Lead text
+  .text-lead {
+    font-size: $text-lg;
+    font-weight: $font-normal;
+    line-height: $leading-relaxed;
+    color: $gray-600;
+  }
+
+  // Links
+  a {
+    color: $primary;
+    text-decoration: none;
+    font-weight: $font-medium;
+    transition: all $transition-fast;
+    border-radius: $radius-sm;
+    padding: $space-1 $space-2;
+    margin: (-$space-1) (-$space-2);
+
+    &:hover {
+      color: $primary-dark;
+      background-color: rgba($primary, 0.1);
+    }
+
+    &:focus {
+      outline: 2px solid $primary;
+      outline-offset: 2px;
+    }
+  }
+
+  // Strong and emphasis
+  strong, b {
+    font-weight: $font-semibold;
+    color: $gray-800;
+  }
+
+  em, i {
+    font-style: italic;
+    color: $gray-700;
+  }
+
+  // Code and pre
+  code {
+    font-family: $font-family-mono;
+    font-size: 0.875em;
+    font-weight: $font-medium;
+    background-color: $gray-100;
+    color: $gray-800;
+    padding: $space-1 $space-2;
+    border-radius: $radius-base;
+    border: 1px solid $gray-200;
+  }
+
+  pre {
+    font-family: $font-family-mono;
+    font-size: $text-sm;
+    line-height: $leading-relaxed;
+    background-color: $gray-900;
+    color: $gray-100;
+    padding: $space-4;
+    border-radius: $radius-lg;
+    overflow-x: auto;
+    margin: $space-4 0;
+
+    code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: inherit;
+      font-size: inherit;
+    }
+  }
+
+  // Lists
+  ul, ol {
+    margin: $space-4 0;
+    padding-left: $space-6;
+
+    li {
+      margin-bottom: $space-2;
+      line-height: $leading-relaxed;
+      color: $gray-600;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  ul {
+    list-style-type: disc;
+
+    ul {
+      list-style-type: circle;
+      margin: $space-2 0;
+    }
+  }
+
+  ol {
+    list-style-type: decimal;
+
+    ol {
+      list-style-type: lower-alpha;
+      margin: $space-2 0;
+    }
+  }
+
+  // Blockquote
+  blockquote {
+    border-left: 4px solid $primary;
+    padding: $space-4 $space-6;
+    margin: $space-6 0;
+    background-color: $gray-50;
+    border-radius: $radius-lg;
+    font-style: italic;
+    font-size: $text-lg;
+    line-height: $leading-relaxed;
+    color: $gray-700;
+
+    p {
+      margin-bottom: $space-3;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    footer, cite {
+      font-style: normal;
+      font-size: $text-sm;
+      color: $gray-500;
+      margin-top: $space-3;
+
+      &::before {
+        content: '— ';
+      }
+    }
+  }
+
+  // Utility classes
+  .font-light { font-weight: $font-light; }
+  .font-normal { font-weight: $font-normal; }
+  .font-medium { font-weight: $font-medium; }
+  .font-semibold { font-weight: $font-semibold; }
+  .font-bold { font-weight: $font-bold; }
+  .font-extrabold { font-weight: $font-extrabold; }
+
+  .leading-tight { line-height: $leading-tight; }
+  .leading-snug { line-height: $leading-snug; }
+  .leading-normal { line-height: $leading-normal; }
+  .leading-relaxed { line-height: $leading-relaxed; }
+  .leading-loose { line-height: $leading-loose; }
+
+  .text-left { text-align: left; }
+  .text-center { text-align: center; }
+  .text-right { text-align: right; }
+  .text-justify { text-align: justify; }
+
+  .uppercase { text-transform: uppercase; }
+  .lowercase { text-transform: lowercase; }
+  .capitalize { text-transform: capitalize; }
+
+  .italic { font-style: italic; }
+  .not-italic { font-style: normal; }
+
+  // Color utilities
+  .text-primary { color: $primary; }
+  .text-primary-dark { color: $primary-dark; }
+  .text-success { color: $success; }
+  .text-warning { color: $warning; }
+  .text-error { color: $error; }
+  .text-info { color: $info; }
+
+  .text-gray-900 { color: $gray-900; }
+  .text-gray-800 { color: $gray-800; }
+  .text-gray-700 { color: $gray-700; }
+  .text-gray-600 { color: $gray-600; }
+  .text-gray-500 { color: $gray-500; }
+  .text-gray-400 { color: $gray-400; }
+
+  // Selection styling
+  ::selection {
+    background-color: rgba($primary, 0.3);
+    color: $gray-900;
+  }
+
+  ::-moz-selection {
+    background-color: rgba($primary, 0.3);
+    color: $gray-900;
+  }
+}

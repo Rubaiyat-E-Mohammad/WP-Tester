@@ -30,6 +30,78 @@ class WP_Tester_Admin {
         
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'admin_init'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+    }
+    
+    /**
+     * Enqueue admin scripts and styles
+     */
+    public function enqueue_admin_scripts($hook) {
+        // Enqueue modern UI styles for all admin pages
+        wp_enqueue_style(
+            'wp-tester-modern-admin',
+            WP_TESTER_PLUGIN_URL . 'assets/dist/modern-styles.css',
+            array(),
+            WP_TESTER_VERSION
+        );
+        
+        // Enqueue legacy admin styles for compatibility
+        wp_enqueue_style(
+            'wp-tester-admin',
+            WP_TESTER_PLUGIN_URL . 'assets/css/admin.css',
+            array(),
+            WP_TESTER_VERSION
+        );
+        
+        // Enqueue React and modern JavaScript on WP Tester pages
+        if (strpos($hook, 'wp-tester') !== false || strpos($hook, 'toplevel_page_wp-tester') !== false) {
+            // Enqueue React (WordPress includes it)
+            wp_enqueue_script('react');
+            wp_enqueue_script('react-dom');
+            
+            // Enqueue our modern admin JavaScript
+            wp_enqueue_script(
+                'wp-tester-modern-admin',
+                WP_TESTER_PLUGIN_URL . 'assets/dist/modern-admin.js',
+                array('react', 'react-dom', 'jquery'),
+                WP_TESTER_VERSION,
+                true
+            );
+            
+            // Localize script with data for React components
+            wp_localize_script('wp-tester-modern-admin', 'wpTesterData', array(
+                'nonce' => wp_create_nonce('wp_tester_nonce'),
+                'ajaxurl' => admin_url('admin-ajax.php'),
+                'pluginData' => $this->get_plugin_details(),
+                'isDevelopment' => defined('WP_DEBUG') && WP_DEBUG,
+                'version' => WP_TESTER_VERSION
+            ));
+        }
+        
+        // Only load plugin details popup on plugins page
+        if ($hook === 'plugins.php') {
+            wp_enqueue_script(
+                'wp-tester-plugin-details',
+                WP_TESTER_PLUGIN_URL . 'assets/js/plugin-details.js',
+                array('jquery'),
+                WP_TESTER_VERSION,
+                true
+            );
+            
+            wp_enqueue_style(
+                'wp-tester-plugin-details',
+                WP_TESTER_PLUGIN_URL . 'assets/css/plugin-details.css',
+                array(),
+                WP_TESTER_VERSION
+            );
+            
+            // Localize script with plugin data
+            wp_localize_script('wp-tester-plugin-details', 'wpTesterData', array(
+                'nonce' => wp_create_nonce('wp_tester_nonce'),
+                'ajaxurl' => admin_url('admin-ajax.php'),
+                'pluginData' => $this->get_plugin_details()
+            ));
+        }
     }
     
     /**
@@ -42,7 +114,7 @@ class WP_Tester_Admin {
             'manage_options',
             'wp-tester',
             array($this, 'dashboard_page'),
-            'dashicons-analytics',
+            WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png',
             30
         );
         
@@ -422,5 +494,45 @@ class WP_Tester_Admin {
         
         $icon = isset($icons[$flow_type]) ? $icons[$flow_type] : 'admin-generic';
         return '<span class="dashicons dashicons-' . $icon . '"></span>';
+    }
+    
+    /**
+     * Get plugin details for the popup
+     */
+    public function get_plugin_details() {
+        $stats = $this->database->get_dashboard_stats();
+        
+        return array(
+            'name' => 'WP Tester',
+            'version' => WP_TESTER_VERSION,
+            'author' => 'Rubaiyat E Mohammad',
+            'author_url' => 'https://github.com/Rubaiyat-E-Mohammad',
+            'plugin_url' => 'https://github.com/Rubaiyat-E-Mohammad/WP-Tester',
+            'logo_url' => WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png',
+            'description' => 'Automatically tests all user flows on a WordPress site and produces detailed feedback without generating coded test scripts.',
+            'features' => array(
+                'Automatic flow detection and testing',
+                'WooCommerce integration support',
+                'Visual feedback with screenshots',
+                'Detailed reporting and analytics',
+                'Scheduled testing capabilities',
+                'Email notifications for failures',
+                'Multiple flow types support',
+                'Easy setup and configuration'
+            ),
+            'stats' => array(
+                'Total Pages Crawled' => $stats['total_pages'] ?: 0,
+                'Active Flows' => $stats['total_flows'] ?: 0,
+                'Recent Tests (24h)' => $stats['recent_tests'] ?: 0,
+                'Success Rate (7 days)' => ($stats['success_rate'] ?: 0) . '%'
+            ),
+            'requirements' => array(
+                'WordPress' => '6.0+',
+                'PHP' => '7.4+',
+                'MySQL' => '5.6+'
+            ),
+            'last_updated' => '2 months ago',
+            'homepage' => 'https://github.com/Rubaiyat-E-Mohammad/WP-Tester'
+        );
     }
 }

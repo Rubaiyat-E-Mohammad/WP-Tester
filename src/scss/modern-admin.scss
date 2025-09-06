@@ -1,0 +1,282 @@
+// 🚀 WP Tester Ultra-Modern Admin UI
+// Theme Color: #1FC09A (Beautiful Teal Green)
+
+// === BASE IMPORTS ===
+@use 'base/variables' as *;
+@use 'base/reset';
+@use 'base/typography';
+
+// === COMPONENT IMPORTS ===
+@use 'components/dashboard';
+@use 'components/cards';
+@use 'components/buttons';
+@use 'components/forms';
+@use 'components/animations';
+@use 'components/glass';
+
+// === MODERN ADMIN LAYOUT ===
+.wp-tester-modern {
+  // Main container with gradient background
+  min-height: 100vh;
+  background: linear-gradient(135deg, 
+    rgba($primary, 0.05) 0%, 
+    rgba($primary-light, 0.1) 50%, 
+    rgba($white, 1) 100%
+  );
+  
+  // Override WordPress admin styles within our scope
+  .wrap {
+    margin: 0;
+    max-width: none;
+  }
+
+  // Modern header with glassmorphism
+  .wp-tester-modern-header {
+    background: rgba($white, 0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba($primary, 0.1);
+    padding: $space-6 $space-8;
+    margin: 0 0 $space-8 0;
+    border-radius: 0 0 $radius-2xl $radius-2xl;
+    box-shadow: $shadow-lg;
+    position: sticky;
+    top: 32px; // Account for WordPress admin bar
+    z-index: $z-sticky;
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: $space-4;
+
+      .logo {
+        width: 48px;
+        height: 48px;
+        border-radius: $radius-xl;
+        box-shadow: $shadow-primary;
+      }
+
+      .title-section {
+        h1 {
+          margin: 0;
+          font-size: $text-3xl;
+          font-weight: $font-extrabold;
+          background: $gradient-primary;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .subtitle {
+          font-size: $text-sm;
+          color: $gray-500;
+          font-weight: $font-medium;
+        }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: $space-4;
+    }
+  }
+
+  // Main content area
+  .wp-tester-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 $space-8 $space-12;
+
+    @media (max-width: $breakpoint-lg) {
+      padding: 0 $space-6 $space-10;
+    }
+
+    @media (max-width: $breakpoint-md) {
+      padding: 0 $space-4 $space-8;
+    }
+  }
+
+  // Grid system for modern layouts
+  .grid {
+    display: grid;
+    gap: $space-6;
+
+    &.grid-1 { grid-template-columns: 1fr; }
+    &.grid-2 { grid-template-columns: repeat(2, 1fr); }
+    &.grid-3 { grid-template-columns: repeat(3, 1fr); }
+    &.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+    // Responsive grids
+    &.grid-responsive {
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+
+    &.grid-auto {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    @media (max-width: $breakpoint-lg) {
+      &.grid-3,
+      &.grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: $breakpoint-md) {
+      &.grid-2,
+      &.grid-3,
+      &.grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      gap: $space-4;
+    }
+  }
+
+  // Flexbox utilities
+  .flex {
+    display: flex;
+
+    &.flex-col { flex-direction: column; }
+    &.flex-wrap { flex-wrap: wrap; }
+    &.items-center { align-items: center; }
+    &.items-start { align-items: flex-start; }
+    &.items-end { align-items: flex-end; }
+    &.justify-center { justify-content: center; }
+    &.justify-between { justify-content: space-between; }
+    &.justify-end { justify-content: flex-end; }
+    &.gap-2 { gap: $space-2; }
+    &.gap-3 { gap: $space-3; }
+    &.gap-4 { gap: $space-4; }
+    &.gap-6 { gap: $space-6; }
+    &.gap-8 { gap: $space-8; }
+  }
+
+  // Spacing utilities
+  .p-0 { padding: 0; }
+  .p-2 { padding: $space-2; }
+  .p-3 { padding: $space-3; }
+  .p-4 { padding: $space-4; }
+  .p-6 { padding: $space-6; }
+  .p-8 { padding: $space-8; }
+
+  .m-0 { margin: 0; }
+  .m-2 { margin: $space-2; }
+  .m-3 { margin: $space-3; }
+  .m-4 { margin: $space-4; }
+  .m-6 { margin: $space-6; }
+  .m-8 { margin: $space-8; }
+
+  .mt-0 { margin-top: 0; }
+  .mt-2 { margin-top: $space-2; }
+  .mt-4 { margin-top: $space-4; }
+  .mt-6 { margin-top: $space-6; }
+  .mt-8 { margin-top: $space-8; }
+
+  .mb-0 { margin-bottom: 0; }
+  .mb-2 { margin-bottom: $space-2; }
+  .mb-4 { margin-bottom: $space-4; }
+  .mb-6 { margin-bottom: $space-6; }
+  .mb-8 { margin-bottom: $space-8; }
+
+  // Border radius utilities
+  .rounded-none { border-radius: $radius-none; }
+  .rounded-sm { border-radius: $radius-sm; }
+  .rounded { border-radius: $radius-base; }
+  .rounded-md { border-radius: $radius-md; }
+  .rounded-lg { border-radius: $radius-lg; }
+  .rounded-xl { border-radius: $radius-xl; }
+  .rounded-2xl { border-radius: $radius-2xl; }
+  .rounded-3xl { border-radius: $radius-3xl; }
+  .rounded-full { border-radius: $radius-full; }
+
+  // Shadow utilities
+  .shadow-none { box-shadow: none; }
+  .shadow-sm { box-shadow: $shadow-sm; }
+  .shadow { box-shadow: $shadow-base; }
+  .shadow-md { box-shadow: $shadow-md; }
+  .shadow-lg { box-shadow: $shadow-lg; }
+  .shadow-xl { box-shadow: $shadow-xl; }
+  .shadow-2xl { box-shadow: $shadow-2xl; }
+
+  // Modern scrollbar
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba($primary, 0.3) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba($primary, 0.3);
+    border-radius: $radius-full;
+    border: 2px solid transparent;
+    background-clip: content-box;
+
+    &:hover {
+      background: rgba($primary, 0.5);
+      background-clip: content-box;
+    }
+  }
+
+  // Loading states
+  .loading {
+    opacity: 0.6;
+    pointer-events: none;
+    transition: opacity $transition-base;
+  }
+
+  // Focus visible improvements
+  .focus\:ring-primary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba($primary, 0.5);
+  }
+
+  // Print styles
+  @media print {
+    background: $white !important;
+    
+    .wp-tester-modern-header,
+    .header-actions,
+    .no-print {
+      display: none !important;
+    }
+    
+    .wp-tester-content {
+      padding: 0 !important;
+      max-width: none !important;
+    }
+  }
+}
+
+// Dark mode support (for future enhancement)
+@media (prefers-color-scheme: dark) {
+  .wp-tester-modern.dark-mode {
+    background: linear-gradient(135deg, 
+      rgba($dark-bg, 1) 0%, 
+      rgba($dark-surface, 1) 50%, 
+      rgba($dark-surface-2, 1) 100%
+    );
+    color: $dark-text;
+
+    .wp-tester-modern-header {
+      background: rgba($dark-surface, 0.8);
+      border-bottom-color: rgba($primary, 0.2);
+    }
+  }
+}

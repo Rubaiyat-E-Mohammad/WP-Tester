@@ -1,0 +1,518 @@
+// 🔮 Glassmorphism Effects
+// Beautiful glass-like components with backdrop blur
+
+@use '../base/variables' as *;
+
+// === BASE GLASS EFFECTS ===
+
+.glass {
+  background: rgba($white, 0.25);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba($white, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.glass-light {
+  background: rgba($white, 0.8);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba($white, 0.2);
+}
+
+.glass-dark {
+  background: rgba($black, 0.25);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba($white, 0.1);
+}
+
+.glass-primary {
+  background: rgba($primary, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba($primary, 0.2);
+}
+
+.glass-success {
+  background: rgba($success, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba($success, 0.2);
+}
+
+.glass-warning {
+  background: rgba($warning, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba($warning, 0.2);
+}
+
+.glass-error {
+  background: rgba($error, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba($error, 0.2);
+}
+
+// === GLASS NAVIGATION ===
+
+.glass-nav {
+  @extend .glass-light;
+  position: sticky;
+  top: 32px; // WordPress admin bar height
+  z-index: $z-sticky;
+  border-radius: 0 0 $radius-2xl $radius-2xl;
+  margin-bottom: $space-8;
+
+  .nav-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $space-4 $space-6;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    font-weight: $font-bold;
+    color: $gray-900;
+    text-decoration: none;
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: $radius-lg;
+    }
+  }
+
+  .nav-menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: $space-2;
+
+    .nav-item {
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: $space-2;
+        padding: $space-2 $space-4;
+        border-radius: $radius-lg;
+        color: $gray-600;
+        text-decoration: none;
+        font-weight: $font-medium;
+        transition: all $transition-base;
+
+        &:hover,
+        &.active {
+          background: rgba($primary, 0.1);
+          color: $primary;
+        }
+
+        svg {
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+  }
+}
+
+// === GLASS CARDS ===
+
+.glass-card {
+  @extend .glass-light;
+  border-radius: $radius-2xl;
+  padding: $space-6;
+  transition: all $transition-base;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px 0 rgba(31, 38, 135, 0.25);
+  }
+
+  // Shimmer effect on hover
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba($white, 0.2) 50%, 
+      transparent 100%
+    );
+    transition: left $transition-slow;
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
+
+  .card-header {
+    position: relative;
+    z-index: 2;
+  }
+
+  .card-content {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+// === GLASS MODALS ===
+
+.glass-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba($black, 0.5);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-modal;
+  opacity: 0;
+  visibility: hidden;
+  transition: all $transition-base;
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+
+    .modal-content {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .modal-content {
+    @extend .glass-light;
+    border-radius: $radius-2xl;
+    padding: $space-8;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    opacity: 0;
+    transition: all $transition-base;
+    position: relative;
+
+    .modal-close {
+      position: absolute;
+      top: $space-4;
+      right: $space-4;
+      width: 32px;
+      height: 32px;
+      border-radius: $radius-full;
+      background: rgba($gray-500, 0.1);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all $transition-fast;
+
+      &:hover {
+        background: rgba($gray-500, 0.2);
+        transform: scale(1.1);
+      }
+
+      svg {
+        width: 16px;
+        height: 16px;
+        color: $gray-600;
+      }
+    }
+  }
+}
+
+// === GLASS POPOVER ===
+
+.glass-popover {
+  @extend .glass-light;
+  position: absolute;
+  border-radius: $radius-xl;
+  padding: $space-4;
+  box-shadow: 0 10px 25px 0 rgba(31, 38, 135, 0.2);
+  z-index: $z-popover;
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all $transition-base;
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  // Arrow
+  &::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid rgba($white, 0.8);
+  }
+
+  &.popover-bottom {
+    &::before {
+      top: auto;
+      bottom: -8px;
+      border-bottom: none;
+      border-top: 8px solid rgba($white, 0.8);
+    }
+  }
+
+  &.popover-left {
+    &::before {
+      top: 50%;
+      left: -8px;
+      transform: translateY(-50%);
+      border-bottom: 8px solid transparent;
+      border-top: 8px solid transparent;
+      border-right: 8px solid rgba($white, 0.8);
+    }
+  }
+
+  &.popover-right {
+    &::before {
+      top: 50%;
+      left: auto;
+      right: -8px;
+      transform: translateY(-50%);
+      border-bottom: 8px solid transparent;
+      border-top: 8px solid transparent;
+      border-left: 8px solid rgba($white, 0.8);
+    }
+  }
+}
+
+// === GLASS TOOLTIP ===
+
+.glass-tooltip {
+  @extend .glass-light;
+  position: absolute;
+  padding: $space-2 $space-3;
+  border-radius: $radius-lg;
+  font-size: $text-sm;
+  white-space: nowrap;
+  z-index: $z-tooltip;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  transition: all $transition-fast;
+  pointer-events: none;
+
+  &.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}
+
+// === GLASS NOTIFICATIONS ===
+
+.glass-notification {
+  @extend .glass-light;
+  border-radius: $radius-xl;
+  padding: $space-4 $space-6;
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  box-shadow: 0 10px 25px 0 rgba(31, 38, 135, 0.2);
+  border-left: 4px solid $primary;
+  position: relative;
+  overflow: hidden;
+
+  &.notification-success {
+    border-left-color: $success;
+  }
+
+  &.notification-warning {
+    border-left-color: $warning;
+  }
+
+  &.notification-error {
+    border-left-color: $error;
+  }
+
+  .notification-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+
+  .notification-content {
+    flex: 1;
+
+    .notification-title {
+      font-weight: $font-semibold;
+      color: $gray-900;
+      margin-bottom: $space-1;
+    }
+
+    .notification-message {
+      color: $gray-600;
+      font-size: $text-sm;
+    }
+  }
+
+  .notification-close {
+    width: 24px;
+    height: 24px;
+    border-radius: $radius-full;
+    background: rgba($gray-500, 0.1);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all $transition-fast;
+
+    &:hover {
+      background: rgba($gray-500, 0.2);
+    }
+
+    svg {
+      width: 14px;
+      height: 14px;
+      color: $gray-600;
+    }
+  }
+
+  // Progress bar for auto-dismiss
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: currentColor;
+    width: 100%;
+    transform-origin: left;
+    animation: notificationProgress 5s linear forwards;
+  }
+}
+
+@keyframes notificationProgress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+// === GLASS SIDEBAR ===
+
+.glass-sidebar {
+  @extend .glass-light;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 280px;
+  height: 100vh;
+  z-index: $z-fixed;
+  padding: $space-6;
+  transform: translateX(-100%);
+  transition: transform $transition-base;
+
+  &.show {
+    transform: translateX(0);
+  }
+
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $space-6;
+    padding-bottom: $space-4;
+    border-bottom: 1px solid rgba($gray-200, 0.3);
+  }
+
+  .sidebar-nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    .nav-item {
+      margin-bottom: $space-2;
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: $space-3;
+        padding: $space-3 $space-4;
+        border-radius: $radius-lg;
+        color: $gray-600;
+        text-decoration: none;
+        transition: all $transition-base;
+
+        &:hover,
+        &.active {
+          background: rgba($primary, 0.1);
+          color: $primary;
+        }
+
+        svg {
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+  }
+}
+
+// === RESPONSIVE GLASS EFFECTS ===
+
+@media (max-width: $breakpoint-md) {
+  .glass-nav {
+    .nav-menu {
+      display: none;
+    }
+  }
+
+  .glass-modal .modal-content {
+    padding: $space-6;
+    width: 95%;
+  }
+
+  .glass-sidebar {
+    width: 100%;
+  }
+}
+
+// === FALLBACK FOR BROWSERS WITHOUT BACKDROP-FILTER SUPPORT ===
+
+@supports not (backdrop-filter: blur(20px)) {
+  .glass,
+  .glass-light,
+  .glass-dark,
+  .glass-primary,
+  .glass-success,
+  .glass-warning,
+  .glass-error {
+    background: rgba($white, 0.9);
+  }
+
+  .glass-dark {
+    background: rgba($black, 0.8);
+  }
+}

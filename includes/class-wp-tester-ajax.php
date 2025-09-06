@@ -27,26 +27,58 @@ class WP_Tester_Ajax {
         
         // Frontend AJAX actions (if needed)
         add_action('wp_ajax_nopriv_wp_tester_track_interaction', array($this, 'track_interaction'));
+        
+        // Modern UI AJAX actions
+        add_action('wp_ajax_wp_tester_get_dashboard_stats', array($this, 'get_dashboard_stats'));
     }
     
     /**
      * Run all tests
      */
     public function run_all_tests() {
-        check_ajax_referer('wp_tester_admin_nonce', 'nonce');
+        check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'wp-tester'));
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
         }
         
         try {
+            // Set longer execution time for bulk operations
+            if (current_user_can('manage_options')) {
+                set_time_limit(300); // 5 minutes max
+            }
+            
             $executor = new WP_Tester_Flow_Executor();
             $database = new WP_Tester_Database();
             
             $flows = $database->get_flows(true); // Get active flows only
+            
+            if (empty($flows)) {
+                wp_send_json_error(array(
+                    'message' => __('No active flows found to test.', 'wp-tester')
+                ));
+                return;
+            }
+            
             $results = array();
+            $start_time = time();
+            $max_execution_time = 240; // 4 minutes to allow for cleanup
             
             foreach ($flows as $flow) {
+                // Check execution time limit
+                if ((time() - $start_time) > $max_execution_time) {
+                    $results[] = array(
+                        'flow_id' => $flow->id,
+                        'flow_name' => $flow->flow_name,
+                        'result' => array(
+                            'success' => false,
+                            'error' => 'Execution time limit reached'
+                        )
+                    );
+                    break;
+                }
+                
                 $result = $executor->execute_flow($flow->id, true);
                 $results[] = array(
                     'flow_id' => $flow->id,
@@ -54,7 +86,7 @@ class WP_Tester_Ajax {
                     'result' => $result
                 );
                 
-                // Small delay between flows
+                // Small delay between flows to prevent server overload
                 usleep(100000); // 0.1 second
             }
             
@@ -74,10 +106,11 @@ class WP_Tester_Ajax {
      * Run site crawl
      */
     public function run_crawl() {
-        check_ajax_referer('wp_tester_admin_nonce', 'nonce');
+        check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'wp-tester'));
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
         }
         
         try {
@@ -113,17 +146,19 @@ class WP_Tester_Ajax {
      * Test single flow
      */
     public function test_flow() {
-        check_ajax_referer('wp_tester_admin_nonce', 'nonce');
+        check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'wp-tester'));
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
         }
         
-        $flow_id = intval($_POST['flow_id']);
-        if (!$flow_id) {
+        $flow_id = intval($_POST['flow_id'] ?? 0);
+        if (!$flow_id || $flow_id <= 0) {
             wp_send_json_error(array(
                 'message' => __('Invalid flow ID.', 'wp-tester')
             ));
+            return;
         }
         
         try {
@@ -155,17 +190,19 @@ class WP_Tester_Ajax {
      * Delete flow
      */
     public function delete_flow() {
-        check_ajax_referer('wp_tester_admin_nonce', 'nonce');
+        check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'wp-tester'));
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
         }
         
-        $flow_id = intval($_POST['flow_id']);
-        if (!$flow_id) {
+        $flow_id = intval($_POST['flow_id'] ?? 0);
+        if (!$flow_id || $flow_id <= 0) {
             wp_send_json_error(array(
                 'message' => __('Invalid flow ID.', 'wp-tester')
             ));
+            return;
         }
         
         try {
@@ -196,10 +233,11 @@ class WP_Tester_Ajax {
      * Discover flows
      */
     public function discover_flows() {
-        check_ajax_referer('wp_tester_admin_nonce', 'nonce');
+        check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'wp-tester'));
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
         }
         
         try {
@@ -231,19 +269,30 @@ class WP_Tester_Ajax {
      * Bulk actions
      */
     public function bulk_action() {
-        check_ajax_referer('wp_tester_admin_nonce', 'nonce');
+        check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'wp-tester'));
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
         }
         
-        $action = sanitize_text_field($_POST['bulk_action']);
-        $flow_ids = array_map('intval', $_POST['flow_ids']);
+        $action = sanitize_text_field($_POST['bulk_action'] ?? '');
+        $flow_ids = array_filter(array_map('intval', $_POST['flow_ids'] ?? []));
         
         if (empty($action) || empty($flow_ids)) {
             wp_send_json_error(array(
                 'message' => __('Invalid action or no flows selected.', 'wp-tester')
             ));
+            return;
+        }
+        
+        // Validate action
+        $allowed_actions = array('test', 'activate', 'deactivate', 'delete');
+        if (!in_array($action, $allowed_actions, true)) {
+            wp_send_json_error(array(
+                'message' => __('Invalid bulk action.', 'wp-tester')
+            ));
+            return;
         }
         
         try {
@@ -262,13 +311,11 @@ class WP_Tester_Ajax {
                     break;
                     
                 case 'activate':
-                    $wpdb->update(
-                        $flows_table,
-                        array('is_active' => 1),
-                        array('id' => $flow_ids),
-                        array('%d'),
-                        array('%d')
-                    );
+                    $placeholders = implode(',', array_fill(0, count($flow_ids), '%d'));
+                    $wpdb->query($wpdb->prepare(
+                        "UPDATE {$flows_table} SET is_active = 1 WHERE id IN ({$placeholders})",
+                        ...$flow_ids
+                    ));
                     
                     wp_send_json_success(array(
                         'message' => sprintf(__('Activated %d flows.', 'wp-tester'), count($flow_ids ?: []))
@@ -276,13 +323,11 @@ class WP_Tester_Ajax {
                     break;
                     
                 case 'deactivate':
-                    $wpdb->update(
-                        $flows_table,
-                        array('is_active' => 0),
-                        array('id' => $flow_ids),
-                        array('%d'),
-                        array('%d')
-                    );
+                    $placeholders = implode(',', array_fill(0, count($flow_ids), '%d'));
+                    $wpdb->query($wpdb->prepare(
+                        "UPDATE {$flows_table} SET is_active = 0 WHERE id IN ({$placeholders})",
+                        ...$flow_ids
+                    ));
                     
                     wp_send_json_success(array(
                         'message' => sprintf(__('Deactivated %d flows.', 'wp-tester'), count($flow_ids ?: []))
@@ -290,9 +335,11 @@ class WP_Tester_Ajax {
                     break;
                     
                 case 'delete':
-                    foreach ($flow_ids as $flow_id) {
-                        $wpdb->delete($flows_table, array('id' => $flow_id), array('%d'));
-                    }
+                    $placeholders = implode(',', array_fill(0, count($flow_ids), '%d'));
+                    $wpdb->query($wpdb->prepare(
+                        "DELETE FROM {$flows_table} WHERE id IN ({$placeholders})",
+                        ...$flow_ids
+                    ));
                     
                     wp_send_json_success(array(
                         'message' => sprintf(__('Deleted %d flows.', 'wp-tester'), count($flow_ids ?: []))
@@ -316,17 +363,19 @@ class WP_Tester_Ajax {
      * Get test status (for real-time updates)
      */
     public function get_test_status() {
-        check_ajax_referer('wp_tester_admin_nonce', 'nonce');
+        check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'wp-tester'));
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
         }
         
-        $test_run_id = sanitize_text_field($_POST['test_run_id']);
-        if (!$test_run_id) {
+        $test_run_id = sanitize_text_field($_POST['test_run_id'] ?? '');
+        if (empty($test_run_id)) {
             wp_send_json_error(array(
                 'message' => __('Invalid test run ID.', 'wp-tester')
             ));
+            return;
         }
         
         try {
@@ -365,14 +414,20 @@ class WP_Tester_Ajax {
      * Export report
      */
     public function export_report() {
-        check_ajax_referer('wp_tester_admin_nonce', 'nonce');
+        check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_die(__('Insufficient permissions', 'wp-tester'));
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
         }
         
         try {
-            $format = sanitize_text_field($_POST['format']) ?: 'json';
+            $format = sanitize_text_field($_POST['format'] ?? 'json');
+            $allowed_formats = array('json', 'csv', 'pdf');
+            if (!in_array($format, $allowed_formats, true)) {
+                $format = 'json';
+            }
+            
             $flow_id = !empty($_POST['flow_id']) ? intval($_POST['flow_id']) : null;
             $date_from = !empty($_POST['date_from']) ? sanitize_text_field($_POST['date_from']) : null;
             $date_to = !empty($_POST['date_to']) ? sanitize_text_field($_POST['date_to']) : null;
@@ -415,6 +470,14 @@ class WP_Tester_Ajax {
         // This could be used to track real user interactions for comparison
         // with automated tests (future feature)
         
+        // Validate required fields
+        if (empty($_POST['element']) || empty($_POST['action']) || empty($_POST['url'])) {
+            wp_send_json_error(array(
+                'message' => 'Missing required interaction data'
+            ));
+            return;
+        }
+        
         $interaction_data = array(
             'element' => sanitize_text_field($_POST['element']),
             'action' => sanitize_text_field($_POST['action']),
@@ -428,5 +491,88 @@ class WP_Tester_Ajax {
         wp_send_json_success(array(
             'message' => 'Interaction tracked'
         ));
+    }
+    
+    /**
+     * Get dashboard statistics for React components
+     */
+    public function get_dashboard_stats() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $database = new WP_Tester_Database();
+            $stats = $database->get_dashboard_stats();
+            
+            // Enhanced stats for modern UI
+            $enhanced_stats = array(
+                'totalPages' => $stats['total_pages'] ?: 0,
+                'totalFlows' => $stats['total_flows'] ?: 0,
+                'recentTests' => $stats['recent_tests'] ?: 0,
+                'successRate' => $stats['success_rate'] ?: 0,
+                'avgResponseTime' => $stats['avg_response_time'] ?: 0,
+                'totalErrors' => $stats['total_errors'] ?: 0,
+                'lastCrawl' => $stats['last_crawl'] ?: '',
+                'systemStatus' => array(
+                    'database' => 'ok',
+                    'crawler' => 'ok',
+                    'php_version' => PHP_VERSION,
+                    'wp_version' => get_bloginfo('version'),
+                    'memory_usage' => round(memory_get_usage(true) / 1024 / 1024, 2) . ' MB',
+                    'disk_space' => function_exists('disk_free_space') ? 
+                        round(disk_free_space('.') / 1024 / 1024 / 1024, 2) . ' GB' : 'Unknown'
+                ),
+                'recentActivity' => $this->get_recent_activity(),
+                'performance' => array(
+                    'avg_load_time' => $stats['avg_load_time'] ?: 0,
+                    'slowest_page' => $stats['slowest_page'] ?: '',
+                    'fastest_page' => $stats['fastest_page'] ?: ''
+                )
+            );
+            
+            wp_send_json_success($enhanced_stats);
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to fetch dashboard stats', 'wp-tester'),
+                'error' => $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Get recent activity for dashboard
+     */
+    private function get_recent_activity() {
+        $database = new WP_Tester_Database();
+        $recent_results = $database->get_test_results(null, 5, 0); // Use existing method
+        
+        $activity = array();
+        foreach ($recent_results ?: [] as $result) {
+            // Handle different possible column names
+            $created_time = $result->completed_at ?? $result->started_at ?? current_time('mysql');
+            $status = $result->status ?: 'unknown';
+            
+            $activity[] = array(
+                'id' => $result->id,
+                'title' => sprintf(__('Test completed for flow: %s', 'wp-tester'), $result->flow_name ?: 'Unknown Flow'),
+                'description' => sprintf(
+                    __('%d steps executed, %d passed, %d failed', 'wp-tester'), 
+                    $result->steps_executed ?: 0,
+                    $result->steps_passed ?: 0,
+                    $result->steps_failed ?: 0
+                ),
+                'time' => human_time_diff(strtotime($created_time), current_time('timestamp')) . ' ago',
+                'type' => ($status === 'passed' || $status === 'completed') ? 'success' : 
+                         ($status === 'failed' ? 'error' : 'warning'),
+                'status' => $status
+            );
+        }
+        
+        return $activity;
     }
 }

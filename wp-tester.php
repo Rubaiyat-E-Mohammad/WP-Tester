@@ -1,10 +1,11 @@
 <?php
 /**
  * Plugin Name: WP Tester
- * Plugin URI: https://example.com/wp-tester
+ * Plugin URI: https://github.com/Rubaiyat-E-Mohammad/WP-Tester
  * Description: Automatically tests all user flows on a WordPress site and produces detailed feedback without generating coded test scripts.
- * Version: 1.0.0
- * Author: WP Tester Team
+ * Version: 1.0.3
+ * Author: REMTech
+ * Author URI: https://github.com/Rubaiyat-E-Mohammad
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wp-tester
@@ -21,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('WP_TESTER_VERSION', '1.0.0');
+define('WP_TESTER_VERSION', '1.0.3');
 define('WP_TESTER_PLUGIN_FILE', __FILE__);
 define('WP_TESTER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WP_TESTER_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -124,6 +125,10 @@ class WP_Tester {
         if (class_exists('WooCommerce')) {
             new WP_Tester_WooCommerce();
         }
+        
+        // Add plugin action links
+        add_filter('plugin_action_links_' . plugin_basename(WP_TESTER_PLUGIN_FILE), array($this, 'add_plugin_action_links'));
+        add_filter('plugin_row_meta', array($this, 'add_plugin_row_meta'), 10, 2);
     }
     
     /**
@@ -227,6 +232,28 @@ class WP_Tester {
         
         // Flush rewrite rules
         flush_rewrite_rules();
+    }
+    
+    /**
+     * Add plugin action links
+     */
+    public function add_plugin_action_links($links) {
+        $settings_link = '<a href="' . admin_url('admin.php?page=wp-tester-settings') . '">' . __('Settings', 'wp-tester') . '</a>';
+        array_unshift($links, $settings_link);
+        return $links;
+    }
+    
+    /**
+     * Add plugin row meta links
+     */
+    public function add_plugin_row_meta($links, $file) {
+        if (plugin_basename(WP_TESTER_PLUGIN_FILE) === $file) {
+            $row_meta = array(
+                'view_details' => '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>',
+            );
+            return array_merge($links, $row_meta);
+        }
+        return $links;
     }
     
     /**

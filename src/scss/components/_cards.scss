@@ -1,0 +1,528 @@
+// 🎴 Ultra-Modern Card Components
+// Glassmorphism, hover effects, and beautiful layouts
+
+@use '../base/variables' as *;
+
+.card {
+  background: rgba($white, 0.7);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba($white, 0.2);
+  border-radius: $radius-xl;
+  padding: $space-6;
+  box-shadow: $shadow-lg;
+  transition: all $transition-base;
+  position: relative;
+  overflow: hidden;
+
+  // Hover effects
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-2xl;
+    border-color: rgba($primary, 0.3);
+  }
+
+  // Card variants
+  &.card-primary {
+    border-color: rgba($primary, 0.2);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: $gradient-primary;
+    }
+  }
+
+  &.card-success {
+    border-color: rgba($success, 0.2);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: $gradient-success;
+    }
+  }
+
+  &.card-warning {
+    border-color: rgba($warning, 0.2);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: $gradient-warning;
+    }
+  }
+
+  &.card-error {
+    border-color: rgba($error, 0.2);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: $gradient-error;
+    }
+  }
+
+  // Interactive card
+  &.card-interactive {
+    cursor: pointer;
+
+    &:hover {
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, 
+          transparent 0%, 
+          rgba($primary, 0.05) 50%, 
+          transparent 100%
+        );
+        animation: shimmer 1.5s ease-in-out;
+      }
+    }
+  }
+
+  // Card header
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $space-4;
+    padding-bottom: $space-4;
+    border-bottom: 1px solid rgba($gray-200, 0.3);
+
+    .card-title {
+      margin: 0;
+      font-size: $text-xl;
+      font-weight: $font-semibold;
+      color: $gray-900;
+      display: flex;
+      align-items: center;
+      gap: $space-3;
+
+      .title-icon {
+        width: 24px;
+        height: 24px;
+        color: $primary;
+      }
+    }
+
+    .card-actions {
+      display: flex;
+      gap: $space-2;
+    }
+  }
+
+  // Card body
+  .card-body {
+    margin-bottom: $space-4;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Card footer
+  .card-footer {
+    margin-top: $space-4;
+    padding-top: $space-4;
+    border-top: 1px solid rgba($gray-200, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .card-meta {
+      font-size: $text-sm;
+      color: $gray-500;
+      display: flex;
+      align-items: center;
+      gap: $space-2;
+
+      svg {
+        width: 14px;
+        height: 14px;
+      }
+    }
+  }
+}
+
+// Metric card - special card for displaying metrics
+.metric-card {
+  @extend .card;
+  text-align: center;
+  
+  .metric-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: $radius-xl;
+    background: $gradient-primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto $space-4;
+    box-shadow: $shadow-primary;
+
+    svg {
+      width: 32px;
+      height: 32px;
+      color: $white;
+    }
+
+    &.metric-success {
+      background: $gradient-success;
+      box-shadow: $shadow-success;
+    }
+
+    &.metric-warning {
+      background: $gradient-warning;
+      box-shadow: $shadow-warning;
+    }
+
+    &.metric-error {
+      background: $gradient-error;
+      box-shadow: $shadow-error;
+    }
+
+    &.metric-info {
+      background: $gradient-info;
+    }
+  }
+
+  .metric-value {
+    font-size: $text-4xl;
+    font-weight: $font-extrabold;
+    color: $gray-900;
+    margin-bottom: $space-2;
+    line-height: 1;
+  }
+
+  .metric-label {
+    color: $gray-600;
+    font-size: $text-sm;
+    font-weight: $font-medium;
+    margin-bottom: $space-3;
+  }
+
+  .metric-change {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    font-size: $text-sm;
+    font-weight: $font-medium;
+    padding: $space-1 $space-3;
+    border-radius: $radius-full;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    &.change-positive {
+      color: $success;
+      background: rgba($success, 0.1);
+    }
+
+    &.change-negative {
+      color: $error;
+      background: rgba($error, 0.1);
+    }
+
+    &.change-neutral {
+      color: $gray-500;
+      background: rgba($gray-500, 0.1);
+    }
+  }
+}
+
+// Progress card for showing progress metrics
+.progress-card {
+  @extend .card;
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $space-4;
+
+    .progress-title {
+      font-weight: $font-semibold;
+      color: $gray-900;
+    }
+
+    .progress-percentage {
+      font-weight: $font-bold;
+      color: $primary;
+      font-size: $text-lg;
+    }
+  }
+
+  .progress-bar-container {
+    height: 12px;
+    background: rgba($gray-300, 0.3);
+    border-radius: $radius-full;
+    overflow: hidden;
+    margin-bottom: $space-3;
+    position: relative;
+
+    .progress-bar {
+      height: 100%;
+      background: $gradient-primary;
+      border-radius: $radius-full;
+      transition: width $transition-slow;
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, 
+          transparent 0%, 
+          rgba($white, 0.4) 50%, 
+          transparent 100%
+        );
+        animation: shimmer 2s infinite;
+      }
+
+      &.progress-success {
+        background: $gradient-success;
+      }
+
+      &.progress-warning {
+        background: $gradient-warning;
+      }
+
+      &.progress-error {
+        background: $gradient-error;
+      }
+    }
+  }
+
+  .progress-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: $text-sm;
+    color: $gray-600;
+
+    .progress-current {
+      font-weight: $font-medium;
+    }
+
+    .progress-total {
+      color: $gray-500;
+    }
+  }
+}
+
+// Feature card for highlighting features
+.feature-card {
+  @extend .card;
+  text-align: center;
+  padding: $space-8;
+
+  .feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: $radius-2xl;
+    background: $gradient-primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto $space-6;
+    box-shadow: $shadow-primary;
+
+    svg {
+      width: 40px;
+      height: 40px;
+      color: $white;
+    }
+  }
+
+  .feature-title {
+    font-size: $text-2xl;
+    font-weight: $font-bold;
+    color: $gray-900;
+    margin-bottom: $space-3;
+  }
+
+  .feature-description {
+    color: $gray-600;
+    line-height: $leading-relaxed;
+    margin-bottom: $space-6;
+  }
+
+  .feature-action {
+    .btn {
+      background: $gradient-primary;
+      color: $white;
+      border: none;
+      padding: $space-3 $space-6;
+      border-radius: $radius-full;
+      font-weight: $font-semibold;
+      transition: all $transition-base;
+      box-shadow: $shadow-primary;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: $shadow-xl;
+      }
+    }
+  }
+}
+
+// Alert card for notifications
+.alert-card {
+  @extend .card;
+  padding: $space-5;
+
+  .alert-content {
+    display: flex;
+    gap: $space-4;
+
+    .alert-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: $radius-full;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .alert-body {
+      flex: 1;
+
+      .alert-title {
+        font-weight: $font-semibold;
+        margin-bottom: $space-2;
+      }
+
+      .alert-message {
+        font-size: $text-sm;
+        line-height: $leading-relaxed;
+        margin-bottom: $space-3;
+      }
+
+      .alert-actions {
+        display: flex;
+        gap: $space-2;
+      }
+    }
+  }
+
+  &.alert-info {
+    border-color: rgba($info, 0.2);
+
+    .alert-icon {
+      background: rgba($info, 0.1);
+      color: $info;
+    }
+
+    .alert-title {
+      color: $info;
+    }
+  }
+
+  &.alert-success {
+    border-color: rgba($success, 0.2);
+
+    .alert-icon {
+      background: rgba($success, 0.1);
+      color: $success;
+    }
+
+    .alert-title {
+      color: $success;
+    }
+  }
+
+  &.alert-warning {
+    border-color: rgba($warning, 0.2);
+
+    .alert-icon {
+      background: rgba($warning, 0.1);
+      color: $warning;
+    }
+
+    .alert-title {
+      color: $warning;
+    }
+  }
+
+  &.alert-error {
+    border-color: rgba($error, 0.2);
+
+    .alert-icon {
+      background: rgba($error, 0.1);
+      color: $error;
+    }
+
+    .alert-title {
+      color: $error;
+    }
+  }
+}
+
+// Card grid layouts
+.card-grid {
+  display: grid;
+  gap: $space-6;
+
+  &.grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  &.grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  &.grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  &.grid-auto {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  @media (max-width: $breakpoint-lg) {
+    &.grid-3,
+    &.grid-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: $breakpoint-md) {
+    &.grid-2,
+    &.grid-3,
+    &.grid-4 {
+      grid-template-columns: 1fr;
+    }
+
+    gap: $space-4;
+  }
+}
