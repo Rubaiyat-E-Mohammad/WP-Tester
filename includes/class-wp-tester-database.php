@@ -423,7 +423,7 @@ class WP_Tester_Database {
         $total_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)") ?: 0;
         $successful_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed' AND started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)") ?: 0;
         
-        $stats['success_rate'] = $total_tests > 0 ? round(($successful_tests / $total_tests) * 100, 1) : 100;
+        $stats['success_rate'] = $total_tests > 0 ? round(($successful_tests / $total_tests) * 100, 1) : 0;
         
         // Average response time (execution time)
         $avg_execution_time = $wpdb->get_var("SELECT AVG(execution_time) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND execution_time > 0");

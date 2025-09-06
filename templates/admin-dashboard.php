@@ -18,7 +18,7 @@ $recommendations = $dashboard_data['recommendations'] ?? [];
 // Calculate summary stats
 $total_flows = $stats['total_flows'] ?? 0;
 $total_tests = $stats['tests_executed_30d'] ?? 0;
-$success_rate = $stats['success_rate'] ?? 100;
+$success_rate = $stats['success_rate'] ?? 0; // Changed from 100 to 0 - should show actual calculated rate
 $avg_response_time = $stats['avg_response_time'] ?? 0;
 ?>
 
@@ -274,11 +274,15 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
             <div class="modern-card">
                 <div class="card-header">
                     <h2 class="card-title">Recommendations</h2>
-                    <span class="status-badge info"><?php echo count($recommendations); ?> tips</span>
+                    <button class="status-badge info recommendation-tips-btn" 
+                            data-recommendations='<?php echo esc_attr(json_encode($recommendations)); ?>'>
+                        <?php echo count($recommendations); ?> tips
+                    </button>
                 </div>
                 <div class="modern-list">
-                    <?php foreach (array_slice($recommendations, 0, 3) as $recommendation) : ?>
-                        <div class="modern-list-item">
+                    <?php foreach (array_slice($recommendations, 0, 3) as $index => $recommendation) : ?>
+                        <div class="modern-list-item recommendation-item" 
+                             data-recommendation='<?php echo esc_attr(json_encode($recommendation)); ?>'>
                             <div class="item-info">
                                 <div class="item-icon" style="background: #dbeafe; color: #1e40af;">
                                     <span class="dashicons dashicons-lightbulb"></span>
@@ -289,7 +293,10 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                                 </div>
                             </div>
                             <div class="item-meta">
-                                <span class="status-badge info">Tip</span>
+                                <button class="status-badge info recommendation-tip-btn" 
+                                        data-recommendation='<?php echo esc_attr(json_encode($recommendation)); ?>'>
+                                    Tip
+                                </button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -311,8 +318,9 @@ jQuery(document).ready(function($) {
         const button = $(this);
         const originalText = button.html();
         
-        // Show loading state
-        button.html('<div class="spinner"></div> Running Tests...').prop('disabled', true);
+        // Show progress modal
+        showProgressModal('Running All Tests', 'Executing all configured flows...');
+        button.html('<span class="dashicons dashicons-update-alt"></span> Running...').prop('disabled', true);
         
         // AJAX call to run tests
         $.ajax({
@@ -323,20 +331,331 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
+                hideProgressModal();
                 if (response.success) {
-                    // Reload page to show updated results
-                    location.reload();
+                    showSuccessModal('Tests Complete!', 
+                        'All tests have been executed successfully. ' + (response.data.message || ''));
+                    setTimeout(() => location.reload(), 2000);
                 } else {
-                    alert('Error running tests: ' + (response.data || 'Unknown error'));
+                    showErrorModal('Test Failed', response.data.message || 'Unknown error occurred');
                 }
             },
-            error: function() {
-                alert('Error connecting to server');
+            error: function(xhr, status, error) {
+                hideProgressModal();
+                console.error('Run All Tests AJAX Error:', {xhr, status, error});
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
             }
         });
     });
+    
+    // Recommendation tips functionality
+    $('.recommendation-tips-btn').on('click', function(e) {
+        e.preventDefault();
+        const recommendations = JSON.parse($(this).data('recommendations'));
+        showRecommendationsModal('All Recommendations', recommendations);
+    });
+    
+    $('.recommendation-tip-btn').on('click', function(e) {
+        e.preventDefault();
+        const recommendation = JSON.parse($(this).data('recommendation'));
+        showRecommendationsModal('Recommendation Details', [recommendation]);
+    });
+    
+    function showRecommendationsModal(title, recommendations) {
+        const modal = $(`
+            <div id="wp-tester-recommendations-modal" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
+                    <div class="wp-tester-modal-header">
+                        <div class="wp-tester-modal-icon">
+                            <span class="dashicons dashicons-lightbulb"></span>
+                        </div>
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <div class="recommendations-list">
+                            ${recommendations.map(rec => `
+                                <div class="recommendation-detail">
+                                    <div class="recommendation-header">
+                                        <h4>${rec.title}</h4>
+                                        <span class="priority-badge ${rec.priority}">${rec.priority.toUpperCase()}</span>
+                                    </div>
+                                    <p class="recommendation-description">${rec.description}</p>
+                                    <div class="recommendation-action">
+                                        <strong>Action:</strong> ${rec.action}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="wp-tester-modal-footer">
+                        <button class="modern-btn modern-btn-primary" onclick="$('#wp-tester-recommendations-modal').fadeOut(300, function(){$(this).remove();})">Close</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        $('body').append(modal);
+        modal.fadeIn(300);
+    }
+    
+    // Progress and result modal functions
+    function showProgressModal(title, message) {
+        const modal = $(`
+            <div id="wp-tester-progress-modal" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
+                    <div class="wp-tester-modal-header">
+                        <div class="wp-tester-modal-icon">
+                            <span class="dashicons dashicons-update-alt spinning"></span>
+                        </div>
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <p>${message}</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+        $('body').append(modal);
+        modal.fadeIn(300);
+    }
+    
+    function hideProgressModal() {
+        $('#wp-tester-progress-modal').fadeOut(300, function() {
+            $(this).remove();
+        });
+    }
+    
+    function showSuccessModal(title, message) {
+        const modal = $(`
+            <div id="wp-tester-success-modal" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
+                    <div class="wp-tester-modal-header">
+                        <div class="wp-tester-modal-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <span class="dashicons dashicons-yes-alt"></span>
+                        </div>
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="wp-tester-modal-footer">
+                        <button class="modern-btn modern-btn-primary" onclick="$('#wp-tester-success-modal').fadeOut(300, function(){$(this).remove();})">Close</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        $('body').append(modal);
+        modal.fadeIn(300);
+    }
+    
+    function showErrorModal(title, message) {
+        const modal = $(`
+            <div id="wp-tester-error-modal" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
+                    <div class="wp-tester-modal-header">
+                        <div class="wp-tester-modal-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                            <span class="dashicons dashicons-warning"></span>
+                        </div>
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="wp-tester-modal-footer">
+                        <button class="modern-btn modern-btn-primary" onclick="$('#wp-tester-error-modal').fadeOut(300, function(){$(this).remove();})">Close</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        $('body').append(modal);
+        modal.fadeIn(300);
+    }
 });
 </script>
+
+<style>
+/* Recommendation Modal Styles */
+.wp-tester-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+}
+
+.wp-tester-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    min-width: 500px;
+    max-width: 700px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.wp-tester-modal-header {
+    padding: 2rem 2rem 1rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.wp-tester-modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.wp-tester-modal-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem auto;
+    font-size: 24px;
+}
+
+.wp-tester-modal-body {
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.wp-tester-modal-footer {
+    padding: 1rem 2rem 2rem 2rem;
+    text-align: center;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.recommendations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.recommendation-detail {
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+}
+
+.recommendation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.recommendation-header h4 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.priority-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.priority-badge.critical {
+    background: #fecaca;
+    color: #991b1b;
+}
+
+.priority-badge.high {
+    background: #fed7aa;
+    color: #9a3412;
+}
+
+.priority-badge.medium {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.priority-badge.low {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.recommendation-description {
+    margin: 0 0 1rem 0;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+.recommendation-action {
+    padding: 0.75rem;
+    background: #e0f2fe;
+    border-radius: 6px;
+    color: #0c4a6e;
+    font-size: 0.875rem;
+}
+
+.recommendation-tips-btn,
+.recommendation-tip-btn {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.recommendation-tips-btn:hover,
+.recommendation-tip-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Progress Bar Styles */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    border-radius: 4px;
+    animation: progress-animation 2s ease-in-out infinite;
+}
+
+@keyframes progress-animation {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+/* Spinning Animation */
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>

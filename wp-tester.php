@@ -3,7 +3,7 @@
  * Plugin Name: WP Tester
  * Plugin URI: https://github.com/Rubaiyat-E-Mohammad/WP-Tester
  * Description: Automatically tests all user flows on a WordPress site and produces detailed feedback without generating coded test scripts.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: REMTech
  * Author URI: https://github.com/Rubaiyat-E-Mohammad
  * License: GPL v2 or later
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('WP_TESTER_VERSION', '1.0.4');
+define('WP_TESTER_VERSION', '1.0.5');
 define('WP_TESTER_PLUGIN_FILE', __FILE__);
 define('WP_TESTER_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('WP_TESTER_PLUGIN_URL', plugin_dir_url(__FILE__));

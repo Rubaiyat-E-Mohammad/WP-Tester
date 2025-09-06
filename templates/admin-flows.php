@@ -193,10 +193,19 @@ if (!defined('ABSPATH')) {
                                        class="modern-btn modern-btn-secondary modern-btn-small">
                                         View
                                     </a>
+                                    <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . ($flow->id ?? '')); ?>" 
+                                       class="modern-btn modern-btn-secondary modern-btn-small">
+                                        Edit
+                                    </a>
                                     <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . ($flow->id ?? '')); ?>" 
                                        class="modern-btn modern-btn-primary modern-btn-small">
                                         Test
                                     </a>
+                                    <button type="button" class="modern-btn modern-btn-danger modern-btn-small wp-tester-delete-flow" 
+                                            data-flow-id="<?php echo ($flow->id ?? ''); ?>"
+                                            style="background: #ef4444; color: white; border: 1px solid #dc2626;">
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -450,6 +459,53 @@ jQuery(document).ready(function($) {
         $('body').append(modal);
         modal.fadeIn(300);
     }
+    
+    // Delete flow functionality
+    $('.wp-tester-delete-flow').on('click', function(e) {
+        e.preventDefault();
+        
+        const flowId = parseInt($(this).data('flow-id'));
+        const button = $(this);
+        const flowName = button.closest('.modern-list-item').find('h4').text();
+        
+        if (!flowId || flowId === 0) {
+            alert('Invalid flow ID');
+            return;
+        }
+        
+        if (!confirm(`Are you sure you want to delete the flow "${flowName}"? This action cannot be undone.`)) {
+            return;
+        }
+        
+        button.html('<span class="dashicons dashicons-update-alt"></span> Deleting...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_delete_flow',
+                flow_id: flowId,
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+            if (response.success) {
+                    showSuccessModal('Flow Deleted', 'Flow has been deleted successfully.');
+                    // Remove the flow item from the list
+                    button.closest('.modern-list-item').fadeOut(300, function() {
+                        $(this).remove();
+                    });
+            } else {
+                    showErrorModal('Delete Failed', response.data.message || 'Failed to delete flow');
+                    button.html('Delete').prop('disabled', false);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Delete AJAX Error:', {xhr, status, error});
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
+                button.html('Delete').prop('disabled', false);
+            }
+        });
+    });
 });
 </script>
 

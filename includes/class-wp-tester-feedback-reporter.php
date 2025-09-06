@@ -347,8 +347,14 @@ class WP_Tester_Feedback_Reporter {
                 return $s['priority'] === 'critical';
             });
             
+            // Generate meaningful title and description
+            $title = $issue->flow_name ?: 'Unknown Flow';
+            $description = $this->generate_issue_description($issue, $critical_suggestions);
+            
             $formatted_issues[] = array(
                 'id' => $issue->id,
+                'title' => $title,
+                'description' => $description,
                 'flow_name' => $issue->flow_name,
                 'flow_type' => $issue->flow_type,
                 'error_message' => $issue->error_message,
@@ -651,6 +657,44 @@ class WP_Tester_Feedback_Reporter {
         }
         
         return $formatted;
+    }
+    
+    /**
+     * Generate meaningful issue description
+     */
+    private function generate_issue_description($issue, $critical_suggestions) {
+        // If we have critical suggestions, use the first one for description
+        if (!empty($critical_suggestions)) {
+            $first_suggestion = reset($critical_suggestions);
+            return $first_suggestion['description'] ?? $this->get_default_issue_description($issue);
+        }
+        
+        // Use error message if available
+        if (!empty($issue->error_message)) {
+            return $issue->error_message;
+        }
+        
+        // Generate description based on flow type and failure
+        return $this->get_default_issue_description($issue);
+    }
+    
+    /**
+     * Get default issue description based on flow type
+     */
+    private function get_default_issue_description($issue) {
+        $flow_type = $issue->flow_type ?? 'unknown';
+        $flow_name = $issue->flow_name ?? 'Unknown Flow';
+        
+        $descriptions = array(
+            'login' => "Login flow '{$flow_name}' failed. Users may not be able to access the site.",
+            'registration' => "Registration flow '{$flow_name}' failed. New users cannot create accounts.",
+            'woocommerce' => "E-commerce flow '{$flow_name}' failed. Customers may not be able to complete purchases.",
+            'contact' => "Contact form '{$flow_name}' failed. Users cannot submit inquiries.",
+            'search' => "Search functionality '{$flow_name}' failed. Users cannot find content.",
+            'navigation' => "Navigation flow '{$flow_name}' failed. Users may have trouble browsing the site."
+        );
+        
+        return $descriptions[$flow_type] ?? "Flow '{$flow_name}' failed during testing. This may affect user experience.";
     }
     
     private function calculate_issue_severity($issue) {

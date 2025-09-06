@@ -367,6 +367,54 @@ class WP_Tester_Admin {
             wp_die(__('Flow not found.', 'wp-tester'));
         }
         
+        // Handle form submission
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['wp_tester_nonce']) && wp_verify_nonce($_POST['wp_tester_nonce'], 'wp_tester_edit_flow')) {
+            $flow_name = sanitize_text_field($_POST['flow_name'] ?? '');
+            $flow_type = sanitize_text_field($_POST['flow_type'] ?? 'login');
+            $start_url = esc_url_raw($_POST['start_url'] ?? '');
+            $priority = intval($_POST['priority'] ?? 5);
+            $is_active = isset($_POST['is_active']) ? 1 : 0;
+            $steps = isset($_POST['steps']) ? $_POST['steps'] : array();
+            $expected_outcome = sanitize_text_field($_POST['expected_outcome'] ?? '');
+            
+            if ($flow_name && $start_url) {
+                // Update the flow
+                global $wpdb;
+                $result = $wpdb->update(
+                    $wpdb->prefix . 'wp_tester_flows',
+                    array(
+                        'flow_name' => $flow_name,
+                        'flow_type' => $flow_type,
+                        'start_url' => $start_url,
+                        'steps' => wp_json_encode($steps),
+                        'expected_outcome' => $expected_outcome,
+                        'priority' => $priority,
+                        'is_active' => $is_active,
+                        'updated_at' => current_time('mysql')
+                    ),
+                    array('id' => $flow_id),
+                    array('%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s'),
+                    array('%d')
+                );
+                
+                if ($result !== false) {
+                    // Refresh the flow data
+                    $flow = $this->database->get_flow($flow_id);
+                    add_action('admin_notices', function() {
+                        echo '<div class="notice notice-success is-dismissible"><p>' . __('Flow updated successfully!', 'wp-tester') . '</p></div>';
+                    });
+                } else {
+                    add_action('admin_notices', function() {
+                        echo '<div class="notice notice-error is-dismissible"><p>' . __('Failed to update flow. Please try again.', 'wp-tester') . '</p></div>';
+                    });
+                }
+            } else {
+                add_action('admin_notices', function() {
+                    echo '<div class="notice notice-error is-dismissible"><p>' . __('Flow name and start URL are required.', 'wp-tester') . '</p></div>';
+                });
+            }
+        }
+        
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-flow-edit.php';
     }
     
