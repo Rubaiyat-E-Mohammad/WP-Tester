@@ -82,8 +82,20 @@ class WP_Tester_Flow_Executor {
             }
             
             $steps = json_decode($flow->steps, true);
-            if (!$steps) {
-                throw new Exception('Invalid flow steps');
+            if (!$steps || !is_array($steps) || empty($steps)) {
+                // Create a simple validation step for flows with no defined steps
+                $steps = array(
+                    array(
+                        'action' => 'visit',
+                        'target' => $flow->start_url,
+                        'description' => 'Validate page accessibility'
+                    )
+                );
+                
+                $this->log_step('warning', 'Flow has no defined steps, using default validation step', array(
+                    'flow_id' => $flow_id,
+                    'start_url' => $flow->start_url
+                ));
             }
             
             $this->log_step('info', 'Starting flow execution', array(
@@ -206,6 +218,7 @@ class WP_Tester_Flow_Executor {
      * Execute a single step
      */
     private function execute_step($step, $step_number, $flow) {
+        $step_start_time = microtime(true);
         $max_retries = isset($this->settings['retry_attempts']) ? (int)$this->settings['retry_attempts'] : 2;
         $timeout = isset($this->settings['test_timeout']) ? (int)$this->settings['test_timeout'] : 30;
         
@@ -217,6 +230,9 @@ class WP_Tester_Flow_Executor {
                 $result = $this->perform_step_action($step, $step_number, $flow, $timeout);
                 
                 if ($result['success']) {
+                    $step_execution_time = microtime(true) - $step_start_time;
+                    $result['execution_time'] = $step_execution_time;
+                    
                     if ($attempt > 1) {
                         $result['retry_attempt'] = $attempt;
                         $result['note'] = 'Succeeded after ' . ($attempt - 1) . ' retries';
@@ -249,11 +265,13 @@ class WP_Tester_Flow_Executor {
         }
         
         // All attempts failed
+        $step_execution_time = microtime(true) - $step_start_time;
         return array(
             'success' => false,
             'error' => $last_error,
             'attempts' => $max_retries + 1,
-            'critical' => $this->is_critical_failure($step, $last_error)
+            'critical' => $this->is_critical_failure($step, $last_error),
+            'execution_time' => $step_execution_time
         );
     }
     

@@ -228,6 +228,10 @@ if (!defined('ABSPATH')) {
 
 <script>
 jQuery(document).ready(function($) {
+    // Ensure ajaxurl is available
+    if (typeof ajaxurl === 'undefined') {
+        ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
+    }
     // Discover flows functionality
     $('#wp-tester-discover-flows, #discover-flows-btn').on('click', function(e) {
         e.preventDefault();
@@ -249,11 +253,11 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 hideProgressModal();
-                if (response.success) {
+            if (response.success) {
                     showSuccessModal('Flow Discovery Complete!', 
                         'Found ' + (response.data.discovered_flows || 0) + ' new testing flows. Refreshing page...');
                     setTimeout(() => location.reload(), 2000);
-                } else {
+            } else {
                     showErrorModal('Discovery Failed', response.data.message || 'Unknown error occurred');
                 }
             },
@@ -271,6 +275,65 @@ jQuery(document).ready(function($) {
     $('#add-new-flow, #create-flow-btn').on('click', function(e) {
         e.preventDefault();
         window.location.href = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>';
+    });
+    
+    // Individual flow test
+    console.log('Setting up individual flow test handlers');
+    $(document).on('click', '.modern-btn', function(e) {
+        console.log('Modern button clicked, text:', $(this).text().trim());
+        
+        if ($(this).text().trim() !== 'Test') {
+            return; // Not a test button, let default behavior continue
+        }
+        
+        e.preventDefault();
+        console.log('Test button clicked, preventing default and showing modal');
+        
+        const button = $(this);
+        const originalText = button.html();
+        const href = button.attr('href');
+        console.log('Button href:', href);
+        
+        const flowId = href ? href.match(/flow_id=(\d+)/) : null;
+        console.log('Extracted flow ID:', flowId);
+        
+        if (!flowId) {
+            console.error('Could not determine flow ID from href:', href);
+            showErrorModal('Error', 'Could not determine flow ID');
+            return;
+        }
+        
+        // Show progress modal
+        console.log('Showing progress modal for individual flow test');
+        showProgressModal('Running Test', 'Executing flow test...');
+        
+        button.html('<span class="dashicons dashicons-controls-play"></span> Testing...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_test_flow',
+                flow_id: flowId[1],
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                hideProgressModal();
+            if (response.success) {
+                    showSuccessModal('Test Complete!', 
+                        'Flow test executed successfully. ' + (response.data.message || ''));
+            } else {
+                    showErrorModal('Test Failed', response.data.message || 'Unknown error occurred');
+                }
+            },
+            error: function() {
+                hideProgressModal();
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
     });
     
     // Test all flows
@@ -294,11 +357,11 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 hideProgressModal();
-                if (response.success) {
+            if (response.success) {
                     showSuccessModal('Tests Started!', 
                         'All tests have been queued for execution. Check results in a few minutes.');
                     setTimeout(() => location.reload(), 2000);
-                } else {
+            } else {
                     showErrorModal('Test Failed', response.data.message || 'Unknown error occurred');
                 }
             },
@@ -314,6 +377,7 @@ jQuery(document).ready(function($) {
     
     // Modal functions
     function showProgressModal(title, message) {
+        console.log('showProgressModal called with title:', title, 'message:', message);
         const modal = $(`
             <div id="wp-tester-progress-modal" class="wp-tester-modal-overlay">
                 <div class="wp-tester-modal">

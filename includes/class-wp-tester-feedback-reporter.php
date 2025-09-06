@@ -99,9 +99,17 @@ class WP_Tester_Feedback_Reporter {
                 
                 if ($log_entry['level'] === 'success') {
                     $step_details[$current_step]['status'] = 'passed';
+                    // Extract execution time from step result data
+                    if (isset($log_entry['data']['execution_time'])) {
+                        $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
+                    }
                 } elseif ($log_entry['level'] === 'error') {
                     $step_details[$current_step]['status'] = 'failed';
                     $step_details[$current_step]['error'] = $log_entry['message'];
+                    // Extract execution time from failed step result data
+                    if (isset($log_entry['data']['execution_time'])) {
+                        $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
+                    }
                 }
             }
         }
@@ -110,6 +118,13 @@ class WP_Tester_Feedback_Reporter {
         foreach ($screenshots as $screenshot) {
             if (isset($step_details[$screenshot->step_number])) {
                 $step_details[$screenshot->step_number]['screenshot'] = $screenshot;
+            }
+        }
+        
+        // Ensure all steps have execution_time (fallback to 0 if not set)
+        foreach ($step_details as &$step) {
+            if (!isset($step['execution_time'])) {
+                $step['execution_time'] = 0;
             }
         }
         
@@ -609,17 +624,28 @@ class WP_Tester_Feedback_Reporter {
         $formatted = array();
         
         foreach ($results as $result) {
+            // Calculate total steps and steps completed
+            $steps_executed = $result->steps_executed ?: 0;
+            $steps_passed = $result->steps_passed ?: 0;
+            $steps_failed = $result->steps_failed ?: 0;
+            $total_steps = $steps_executed ?: ($steps_passed + $steps_failed);
+            
             $formatted[] = array(
                 'id' => $result->id,
-                'flow_name' => $result->flow_name,
-                'flow_type' => $result->flow_type,
-                'status' => $result->status,
+                'flow_name' => $result->flow_name ?: 'Unknown Flow',
+                'flow_type' => $result->flow_type ?: 'unknown',
+                'status' => $result->status ?: 'unknown',
                 'status_label' => $this->get_status_label($result->status),
                 'status_color' => $this->get_status_color($result->status),
-                'execution_time' => $result->execution_time,
+                'execution_time' => $result->execution_time ?: 0,
                 'started_at' => $result->started_at,
-                'success_rate' => $result->steps_executed > 0 
-                    ? round(($result->steps_passed / $result->steps_executed) * 100, 1) 
+                'steps_completed' => $steps_executed,
+                'total_steps' => $total_steps,
+                'steps_executed' => $steps_executed,
+                'steps_passed' => $steps_passed,
+                'steps_failed' => $steps_failed,
+                'success_rate' => $steps_executed > 0 
+                    ? round(($steps_passed / $steps_executed) * 100, 1) 
                     : 0
             );
         }

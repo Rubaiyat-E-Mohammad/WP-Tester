@@ -5,8 +5,15 @@
     'use strict';
     
     $(document).ready(function() {
-        // Replace "Visit plugin site" link with "View Details"
-        replacePluginLink();
+        // DO NOT manipulate plugin links - handled by PHP filter now
+        // replacePluginLink(); // DISABLED
+        
+        // NUCLEAR cleanup - remove ALL duplicate View Details links
+        cleanupDuplicateViewDetailsLinks();
+        
+        // Re-run cleanup after DOM changes (in case WordPress adds links dynamically)
+        setTimeout(cleanupDuplicateViewDetailsLinks, 1000);
+        setTimeout(cleanupDuplicateViewDetailsLinks, 2000);
         
         // Handle View Details click
         $(document).on('click', '.wp-tester-view-details', function(e) {
@@ -28,6 +35,37 @@
             }
         });
     });
+    
+    function cleanupDuplicateViewDetailsLinks() {
+        // Find the WP Tester plugin row
+        var pluginRow = $('tr[data-plugin*="wp-tester/wp-tester.php"]');
+        if (pluginRow.length === 0) {
+            // Try alternative selector
+            pluginRow = $('tr').filter(function() {
+                return $(this).find('.plugin-title strong').text().trim() === 'WP Tester';
+            });
+        }
+        
+        if (pluginRow.length > 0) {
+            var viewDetailsLinks = pluginRow.find('a').filter(function() {
+                var text = $(this).text().trim().toLowerCase();
+                return text.includes('view') && text.includes('detail');
+            });
+            
+            // If multiple View Details links found, keep only the first one with our class
+            if (viewDetailsLinks.length > 1) {
+                var customLink = viewDetailsLinks.filter('.wp-tester-view-details').first();
+                if (customLink.length > 0) {
+                    // Remove all other view details links
+                    viewDetailsLinks.not(customLink).remove();
+                } else {
+                    // Keep only the first one and add our class
+                    viewDetailsLinks.first().addClass('wp-tester-view-details').attr('href', '#');
+                    viewDetailsLinks.not(':first').remove();
+                }
+            }
+        }
+    }
     
     function replacePluginLink() {
         // Find the WP Tester plugin row

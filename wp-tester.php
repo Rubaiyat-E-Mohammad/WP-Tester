@@ -246,29 +246,34 @@ class WP_Tester {
     
     
     /**
-     * Add plugin row meta links (runs with high priority to override defaults)
+     * Add plugin row meta links - NUCLEAR APPROACH to eliminate duplicates
      */
     public function add_plugin_row_meta($links, $file) {
         if (plugin_basename(WP_TESTER_PLUGIN_FILE) === $file) {
-            // Remove ALL existing "View details" links with very aggressive matching
+            // NUCLEAR OPTION: Start completely fresh, only keep essential links
             $cleaned_links = array();
             
+            // Only keep essential links that are NOT view/details related
             foreach ($links as $key => $link) {
                 if (is_string($link)) {
-                    // More aggressive matching for "View details" variations
-                    if (preg_match('/view\s*details/i', $link) || 
-                        preg_match('/plugin\s*details/i', $link) ||
-                        preg_match('/more\s*information/i', $link) ||
-                        strpos(strtolower($link), 'view') !== false && strpos(strtolower($link), 'detail') !== false) {
-                        // Skip this link - don't add it to cleaned_links
-                        continue;
+                    $link_lower = strtolower($link);
+                    // Skip ANYTHING that could be a details/view link
+                    if (strpos($link_lower, 'view') !== false || 
+                        strpos($link_lower, 'detail') !== false ||
+                        strpos($link_lower, 'plugin') !== false ||
+                        strpos($link_lower, 'site') !== false ||
+                        strpos($link_lower, 'more') !== false ||
+                        strpos($link_lower, 'info') !== false ||
+                        strpos($link_lower, 'visit') !== false) {
+                        continue; // Skip completely
                     }
                 }
+                // Only keep safe, essential links (like version info)
                 $cleaned_links[$key] = $link;
             }
             
-            // Add our custom "View Details" link at the end
-            $cleaned_links['wp_tester_view_details'] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
+            // Add ONLY our custom "View Details" link
+            $cleaned_links = array('<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>');
             
             return $cleaned_links;
         }
