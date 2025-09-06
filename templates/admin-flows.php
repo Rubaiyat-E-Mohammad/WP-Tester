@@ -171,7 +171,17 @@ if (!defined('ABSPATH')) {
                                 </div>
                                 <div class="item-details">
                                     <h4><?php echo esc_html($flow->flow_name ?? 'Unnamed Flow'); ?></h4>
-                                    <p><?php echo esc_html($flow->flow_type ?? 'Generic'); ?> Flow • <?php echo esc_html(($flow->step_count ?? 0) . ' steps'); ?></p>
+                                    <p><?php 
+                                        echo esc_html($flow->flow_type ?? 'Generic') . ' Flow • ';
+                                        $steps = 0;
+                                        if (isset($flow->steps) && !empty($flow->steps)) {
+                                            $decoded_steps = json_decode($flow->steps, true);
+                                            if (is_array($decoded_steps)) {
+                                                $steps = count($decoded_steps);
+                                            }
+                                        }
+                                        echo esc_html($steps . ' steps');
+                                    ?></p>
                                 </div>
                             </div>
                             <div class="item-meta">
@@ -225,7 +235,10 @@ jQuery(document).ready(function($) {
         const button = $(this);
         const originalText = button.html();
         
-        button.html('<div class="spinner"></div> Discovering...').prop('disabled', true);
+        // Show progress modal
+        showProgressModal('Discovering Flows', 'Analyzing your site for testing opportunities...');
+        
+        button.html('<span class="dashicons dashicons-update-alt"></span> Discovering...').prop('disabled', true);
         
         $.ajax({
             url: ajaxurl,
@@ -235,19 +248,29 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-            if (response.success) {
-                location.reload();
-            } else {
-                    alert('Error discovering flows: ' + (response.data || 'Unknown error'));
+                hideProgressModal();
+                if (response.success) {
+                    showSuccessModal('Flow Discovery Complete!', 
+                        'Found ' + (response.data.discovered_flows || 0) + ' new testing flows. Refreshing page...');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showErrorModal('Discovery Failed', response.data.message || 'Unknown error occurred');
                 }
             },
             error: function() {
-                alert('Error connecting to server');
+                hideProgressModal();
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
             }
         });
+    });
+    
+    // Add New Flow
+    $('#add-new-flow, #create-flow-btn').on('click', function(e) {
+        e.preventDefault();
+        window.location.href = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>';
     });
     
     // Test all flows
@@ -257,7 +280,10 @@ jQuery(document).ready(function($) {
         const button = $(this);
         const originalText = button.html();
         
-        button.html('<div class="spinner"></div> Testing...').prop('disabled', true);
+        // Show progress modal
+        showProgressModal('Running Tests', 'Executing all active flows...');
+        
+        button.html('<span class="dashicons dashicons-controls-play"></span> Testing...').prop('disabled', true);
         
         $.ajax({
             url: ajaxurl,
@@ -267,15 +293,18 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-            if (response.success) {
-                    alert('All tests started successfully!');
-                location.reload();
-            } else {
-                    alert('Error running tests: ' + (response.data || 'Unknown error'));
+                hideProgressModal();
+                if (response.success) {
+                    showSuccessModal('Tests Started!', 
+                        'All tests have been queued for execution. Check results in a few minutes.');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showErrorModal('Test Failed', response.data.message || 'Unknown error occurred');
                 }
             },
             error: function() {
-                alert('Error connecting to server');
+                hideProgressModal();
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
@@ -283,10 +312,185 @@ jQuery(document).ready(function($) {
         });
     });
     
-    // Add new flow placeholder
-    $('#add-new-flow, #create-flow-btn').on('click', function(e) {
-        e.preventDefault();
-        alert('Flow creation interface coming soon!');
-    });
+    // Modal functions
+    function showProgressModal(title, message) {
+        const modal = $(`
+            <div id="wp-tester-progress-modal" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
+                    <div class="wp-tester-modal-header">
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <div class="wp-tester-progress-container">
+                            <div class="wp-tester-progress-bar">
+                                <div class="wp-tester-progress-fill"></div>
+                            </div>
+                            <p class="wp-tester-progress-message">${message}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+        $('body').append(modal);
+        modal.fadeIn(300);
+    }
+    
+    function hideProgressModal() {
+        $('#wp-tester-progress-modal').fadeOut(300, function() {
+            $(this).remove();
+        });
+    }
+    
+    function showSuccessModal(title, message) {
+        const modal = $(`
+            <div id="wp-tester-success-modal" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal wp-tester-modal-success">
+                    <div class="wp-tester-modal-header">
+                        <div class="wp-tester-modal-icon">
+                            <span class="dashicons dashicons-yes-alt"></span>
+                        </div>
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="wp-tester-modal-footer">
+                        <button class="modern-btn modern-btn-primary" onclick="$('#wp-tester-success-modal').fadeOut(300, function(){$(this).remove();})">OK</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        $('body').append(modal);
+        modal.fadeIn(300);
+    }
+    
+    function showErrorModal(title, message) {
+        const modal = $(`
+            <div id="wp-tester-error-modal" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal wp-tester-modal-error">
+                    <div class="wp-tester-modal-header">
+                        <div class="wp-tester-modal-icon">
+                            <span class="dashicons dashicons-dismiss"></span>
+                        </div>
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="wp-tester-modal-footer">
+                        <button class="modern-btn modern-btn-secondary" onclick="$('#wp-tester-error-modal').fadeOut(300, function(){$(this).remove();})">Close</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        $('body').append(modal);
+        modal.fadeIn(300);
+    }
 });
 </script>
+
+<style>
+/* Progress Modal Styles */
+.wp-tester-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+}
+
+.wp-tester-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    min-width: 400px;
+    max-width: 500px;
+    overflow: hidden;
+}
+
+.wp-tester-modal-header {
+    padding: 2rem 2rem 1rem 2rem;
+    text-align: center;
+}
+
+.wp-tester-modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.wp-tester-modal-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem auto;
+    font-size: 24px;
+}
+
+.wp-tester-modal-success .wp-tester-modal-icon {
+    background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%);
+    color: white;
+}
+
+.wp-tester-modal-error .wp-tester-modal-icon {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+}
+
+.wp-tester-modal-body {
+    padding: 0 2rem 1rem 2rem;
+}
+
+.wp-tester-modal-body p {
+    margin: 0;
+    color: #6b7280;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.wp-tester-modal-footer {
+    padding: 1rem 2rem 2rem 2rem;
+    text-align: center;
+}
+
+.wp-tester-progress-container {
+    text-align: center;
+}
+
+.wp-tester-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.wp-tester-progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%);
+    width: 0%;
+    animation: progressAnimation 2s ease-in-out infinite;
+}
+
+@keyframes progressAnimation {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+.wp-tester-progress-message {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin: 0;
+}
+</style>

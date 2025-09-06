@@ -249,6 +249,9 @@ class WP_Tester_Admin {
             case 'test':
                 $this->test_flow_page($flow_id);
                 break;
+            case 'add':
+                $this->add_flow_page();
+                break;
             default:
                 $this->list_flows_page();
         }
@@ -309,6 +312,41 @@ class WP_Tester_Admin {
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-flow-view.php';
     }
     
+    /**
+     * Add flow page
+     */
+    private function add_flow_page() {
+        // Handle form submission
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['wp_tester_nonce']) && wp_verify_nonce($_POST['wp_tester_nonce'], 'wp_tester_add_flow')) {
+            $flow_name = sanitize_text_field($_POST['flow_name'] ?? '');
+            $flow_type = sanitize_text_field($_POST['flow_type'] ?? 'login');
+            $start_url = esc_url_raw($_POST['start_url'] ?? '');
+            $priority = intval($_POST['priority'] ?? 5);
+            $is_active = isset($_POST['is_active']) ? 1 : 0;
+            
+            if ($flow_name && $start_url) {
+                $result = $this->database->save_flow($flow_name, $flow_type, $start_url, array(), '', $priority);
+                if ($result) {
+                    wp_redirect(admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . $this->database->get_flow_id_by_name($flow_name)));
+                    exit;
+                }
+            }
+        }
+        
+        // Create empty flow object for form
+        $flow = (object) array(
+            'id' => 0,
+            'flow_name' => '',
+            'flow_type' => 'login',
+            'start_url' => '',
+            'priority' => 5,
+            'is_active' => 1,
+            'steps' => '[]'
+        );
+        
+        include WP_TESTER_PLUGIN_DIR . 'templates/admin-flow-edit.php';
+    }
+
     /**
      * Edit flow page
      */

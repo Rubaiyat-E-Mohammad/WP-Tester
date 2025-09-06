@@ -7,8 +7,19 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Get flow steps
-$flow_steps = json_decode($flow->flow_steps, true) ?: array();
+// Ensure flow object exists
+if (!isset($flow) || !is_object($flow)) {
+    wp_die(__('Flow not found.', 'wp-tester'));
+}
+
+// Get flow steps safely
+$flow_steps = array();
+if (isset($flow->steps) && !empty($flow->steps)) {
+    $decoded_steps = json_decode($flow->steps, true);
+    if (is_array($decoded_steps)) {
+        $flow_steps = $decoded_steps;
+    }
+}
 ?>
 
 <div class="wp-tester-modern">
@@ -19,8 +30,8 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                 <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png'); ?>" 
                      alt="WP Tester" class="logo">
                 <div class="title-info">
-                    <h1><?php echo esc_html($flow->flow_name); ?></h1>
-                    <p class="subtitle"><?php echo esc_html(ucfirst($flow->flow_type)); ?> Flow Details</p>
+                    <h1><?php echo esc_html($flow->flow_name ?? 'Unnamed Flow'); ?></h1>
+                    <p class="subtitle"><?php echo esc_html(ucfirst($flow->flow_type ?? 'unknown')); ?> Flow Details</p>
                 </div>
             </div>
             <div class="header-actions">
@@ -28,11 +39,11 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                     <span class="dashicons dashicons-arrow-left-alt2"></span>
                     Back to Flows
                 </a>
-                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . $flow->id); ?>" class="modern-btn modern-btn-secondary modern-btn-small">
+                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . ($flow->id ?? 0)); ?>" class="modern-btn modern-btn-secondary modern-btn-small">
                     <span class="dashicons dashicons-edit"></span>
                     Edit Flow
                 </a>
-                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . $flow->id); ?>" class="modern-btn modern-btn-primary modern-btn-small">
+                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . ($flow->id ?? 0)); ?>" class="modern-btn modern-btn-primary modern-btn-small">
                     <span class="dashicons dashicons-controls-play"></span>
                     Test Flow
                 </a>
@@ -49,8 +60,8 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
             <div class="modern-card">
                 <div class="card-header">
                     <h2 class="card-title">Flow Information</h2>
-                    <div class="status-badge <?php echo $flow->is_active ? 'success' : 'pending'; ?>">
-                        <?php echo $flow->is_active ? 'Active' : 'Inactive'; ?>
+                    <div class="status-badge <?php echo ($flow->is_active ?? 0) ? 'success' : 'pending'; ?>">
+                        <?php echo ($flow->is_active ?? 0) ? 'Active' : 'Inactive'; ?>
                     </div>
                 </div>
                 
@@ -62,7 +73,7 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                             </div>
                             <div class="item-details">
                                 <h4>Flow Type</h4>
-                                <p><?php echo esc_html(ucfirst($flow->flow_type)); ?></p>
+                                <p><?php echo esc_html(ucfirst($flow->flow_type ?? 'unknown')); ?></p>
                             </div>
                         </div>
                     </div>
@@ -75,8 +86,8 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                             <div class="item-details">
                                 <h4>Start URL</h4>
                                 <p>
-                                    <a href="<?php echo esc_url($flow->start_url); ?>" target="_blank" style="color: #1FC09A;">
-                                        <?php echo esc_html($flow->start_url); ?>
+                                    <a href="<?php echo esc_url($flow->start_url ?? '#'); ?>" target="_blank" style="color: #1FC09A;">
+                                        <?php echo esc_html($flow->start_url ?? 'Not specified'); ?>
                                         <span class="dashicons dashicons-external" style="font-size: 12px;"></span>
                                     </a>
                                 </p>
@@ -91,7 +102,7 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                             </div>
                             <div class="item-details">
                                 <h4>Priority</h4>
-                                <p><?php echo esc_html($flow->priority); ?></p>
+                                <p><?php echo esc_html($flow->priority ?? 5); ?></p>
                             </div>
                         </div>
                     </div>
@@ -103,7 +114,7 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                             </div>
                             <div class="item-details">
                                 <h4>Created</h4>
-                                <p><?php echo esc_html(date('M j, Y g:i A', strtotime($flow->created_at))); ?></p>
+                                <p><?php echo esc_html(date('M j, Y g:i A', strtotime($flow->created_at ?? 'now'))); ?></p>
                             </div>
                         </div>
                     </div>
@@ -220,7 +231,7 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                     </div>
                     <h3>No Steps Configured</h3>
                     <p>This flow doesn't have any steps configured yet.</p>
-                    <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . $flow->id); ?>" class="modern-btn modern-btn-primary">
+                    <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . ($flow->id ?? 0)); ?>" class="modern-btn modern-btn-primary">
                         <span class="dashicons dashicons-edit"></span>
                         Configure Steps
                     </a>
@@ -229,7 +240,7 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
         </div>
 
         <!-- Recent Test Results -->
-        <?php if (!empty($recent_results)): ?>
+        <?php if (isset($recent_results) && !empty($recent_results) && is_array($recent_results)): ?>
         <div class="modern-card">
             <div class="card-header">
                 <h2 class="card-title">Recent Test Results</h2>
@@ -239,26 +250,27 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
             </div>
 
             <div class="modern-list">
-                <?php foreach (array_slice($recent_results, 0, 5) as $result): ?>
+                <?php foreach (array_slice($recent_results ?: [], 0, 5) as $result): ?>
+                    <?php if (!is_object($result)) continue; ?>
                     <div class="modern-list-item">
                         <div class="item-info">
                             <div class="item-icon">
-                                <span class="dashicons dashicons-<?php echo $result->status === 'passed' ? 'yes-alt' : 'dismiss'; ?>"></span>
+                                <span class="dashicons dashicons-<?php echo ($result->status ?? 'failed') === 'passed' ? 'yes-alt' : 'dismiss'; ?>"></span>
                             </div>
                             <div class="item-details">
-                                <h4>Test Run - <?php echo esc_html(date('M j, Y g:i A', strtotime($result->executed_at))); ?></h4>
+                                <h4>Test Run - <?php echo esc_html(date('M j, Y g:i A', strtotime($result->started_at ?? 'now'))); ?></h4>
                                 <p>
-                                    <?php echo esc_html($result->steps_completed); ?> of <?php echo esc_html($result->total_steps); ?> steps • 
-                                    <?php echo esc_html($result->execution_time); ?>s execution time
+                                    <?php echo esc_html($result->steps_executed ?? 0); ?> of <?php echo esc_html(($result->steps_executed ?? 0) + ($result->steps_failed ?? 0)); ?> steps • 
+                                    <?php echo esc_html(number_format($result->execution_time ?? 0, 3)); ?>s execution time
                                 </p>
                             </div>
                         </div>
                         <div class="item-meta">
-                            <div class="status-badge <?php echo esc_attr($result->status); ?>">
-                                <?php echo esc_html(ucfirst($result->status)); ?>
+                            <div class="status-badge <?php echo esc_attr($result->status ?? 'pending'); ?>">
+                                <?php echo esc_html(ucfirst($result->status ?? 'unknown')); ?>
                             </div>
                             <div style="margin-top: 0.5rem;">
-                                <a href="<?php echo admin_url('admin.php?page=wp-tester-results&action=view&result_id=' . $result->id); ?>" 
+                                <a href="<?php echo admin_url('admin.php?page=wp-tester-results&action=view&result_id=' . ($result->id ?? 0)); ?>" 
                                    class="modern-btn modern-btn-secondary modern-btn-small">
                                     View Details
                                 </a>

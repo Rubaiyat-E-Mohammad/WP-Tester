@@ -7,8 +7,19 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Get flow steps
-$flow_steps = json_decode($flow->flow_steps, true) ?: array();
+// Ensure flow object exists
+if (!isset($flow) || !is_object($flow)) {
+    wp_die(__('Flow not found.', 'wp-tester'));
+}
+
+// Get flow steps safely
+$flow_steps = array();
+if (isset($flow->steps) && !empty($flow->steps)) {
+    $decoded_steps = json_decode($flow->steps, true);
+    if (is_array($decoded_steps)) {
+        $flow_steps = $decoded_steps;
+    }
+}
 ?>
 
 <div class="wp-tester-modern">
@@ -19,16 +30,16 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                 <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png'); ?>" 
                      alt="WP Tester" class="logo">
                 <div class="title-info">
-                    <h1>Edit Flow: <?php echo esc_html($flow->flow_name); ?></h1>
-                    <p class="subtitle">Modify flow configuration and steps</p>
+                    <h1><?php echo ($flow->id ?? 0) > 0 ? 'Edit Flow: ' . esc_html($flow->flow_name ?? 'Unnamed Flow') : 'Add New Flow'; ?></h1>
+                    <p class="subtitle"><?php echo ($flow->id ?? 0) > 0 ? 'Modify flow configuration and steps' : 'Create a new testing flow'; ?></p>
                 </div>
             </div>
             <div class="header-actions">
-                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=view&flow_id=' . $flow->id); ?>" class="modern-btn modern-btn-secondary modern-btn-small">
+                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=view&flow_id=' . ($flow->id ?? 0)); ?>" class="modern-btn modern-btn-secondary modern-btn-small">
                     <span class="dashicons dashicons-arrow-left-alt2"></span>
                     Back to Flow
                 </a>
-                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . $flow->id); ?>" class="modern-btn modern-btn-primary modern-btn-small">
+                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . ($flow->id ?? 0)); ?>" class="modern-btn modern-btn-primary modern-btn-small">
                     <span class="dashicons dashicons-controls-play"></span>
                     Test Flow
                 </a>
@@ -40,7 +51,13 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
     <div class="wp-tester-content">
         
         <form method="post" action="">
-            <?php wp_nonce_field('wp_tester_edit_flow', 'wp_tester_nonce'); ?>
+            <?php 
+            if (($flow->id ?? 0) > 0) {
+                wp_nonce_field('wp_tester_edit_flow', 'wp_tester_nonce');
+            } else {
+                wp_nonce_field('wp_tester_add_flow', 'wp_tester_nonce');
+            }
+            ?>
             
             <!-- Basic Settings -->
             <div class="modern-card">
@@ -57,7 +74,7 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                             Flow Name
                         </label>
                         <input type="text" name="flow_name" id="flow_name" 
-                               value="<?php echo esc_attr($flow->flow_name); ?>"
+                               value="<?php echo esc_attr($flow->flow_name ?? ''); ?>"
                                style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;"
                                required>
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
@@ -72,13 +89,13 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                         </label>
                         <select name="flow_type" id="flow_type"
                                 style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                            <option value="login" <?php selected($flow->flow_type, 'login'); ?>>User Login</option>
-                            <option value="registration" <?php selected($flow->flow_type, 'registration'); ?>>User Registration</option>
-                            <option value="contact" <?php selected($flow->flow_type, 'contact'); ?>>Contact Form</option>
-                            <option value="search" <?php selected($flow->flow_type, 'search'); ?>>Search</option>
-                            <option value="woocommerce" <?php selected($flow->flow_type, 'woocommerce'); ?>>WooCommerce</option>
-                            <option value="navigation" <?php selected($flow->flow_type, 'navigation'); ?>>Navigation</option>
-                            <option value="modal" <?php selected($flow->flow_type, 'modal'); ?>>Modal Interaction</option>
+                            <option value="login" <?php selected($flow->flow_type ?? '', 'login'); ?>>User Login</option>
+                            <option value="registration" <?php selected($flow->flow_type ?? '', 'registration'); ?>>User Registration</option>
+                            <option value="contact" <?php selected($flow->flow_type ?? '', 'contact'); ?>>Contact Form</option>
+                            <option value="search" <?php selected($flow->flow_type ?? '', 'search'); ?>>Search</option>
+                            <option value="woocommerce" <?php selected($flow->flow_type ?? '', 'woocommerce'); ?>>WooCommerce</option>
+                            <option value="navigation" <?php selected($flow->flow_type ?? '', 'navigation'); ?>>Navigation</option>
+                            <option value="modal" <?php selected($flow->flow_type ?? '', 'modal'); ?>>Modal Interaction</option>
                         </select>
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
                             The type of user interaction this flow tests
@@ -91,7 +108,7 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                             Start URL
                         </label>
                         <input type="url" name="start_url" id="start_url" 
-                               value="<?php echo esc_attr($flow->start_url); ?>"
+                               value="<?php echo esc_attr($flow->start_url ?? ''); ?>"
                                style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;"
                                required>
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
@@ -107,17 +124,17 @@ $flow_steps = json_decode($flow->flow_steps, true) ?: array();
                             </label>
                             <select name="priority" id="priority"
                                     style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                                <option value="1" <?php selected($flow->priority, 1); ?>>Low (1)</option>
-                                <option value="5" <?php selected($flow->priority, 5); ?>>Medium (5)</option>
-                                <option value="9" <?php selected($flow->priority, 9); ?>>High (9)</option>
-                                <option value="10" <?php selected($flow->priority, 10); ?>>Critical (10)</option>
+                                <option value="1" <?php selected($flow->priority ?? 5, 1); ?>>Low (1)</option>
+                                <option value="5" <?php selected($flow->priority ?? 5, 5); ?>>Medium (5)</option>
+                                <option value="9" <?php selected($flow->priority ?? 5, 9); ?>>High (9)</option>
+                                <option value="10" <?php selected($flow->priority ?? 5, 10); ?>>Critical (10)</option>
                             </select>
                         </div>
                         
                         <div>
                             <label style="display: flex; align-items: center; gap: 0.75rem; font-weight: 600; color: #374151; font-size: 0.875rem; margin-top: 1.75rem;">
                                 <input type="checkbox" name="is_active" value="1" 
-                                       <?php checked($flow->is_active, 1); ?>
+                                       <?php checked($flow->is_active ?? 1, 1); ?>
                                        style="width: 18px; height: 18px; border: 2px solid #e2e8f0; border-radius: 4px;">
                                 Active Flow
                             </label>

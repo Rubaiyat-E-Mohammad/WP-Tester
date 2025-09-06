@@ -128,10 +128,8 @@ class WP_Tester {
         
         // Add plugin action links
         add_filter('plugin_action_links_' . plugin_basename(WP_TESTER_PLUGIN_FILE), array($this, 'add_plugin_action_links'));
-        add_filter('plugin_row_meta', array($this, 'add_plugin_row_meta'), 10, 2);
-        
-        // Add late-priority filter to ensure our custom View Details is the only one
-        add_filter('plugin_row_meta', array($this, 'cleanup_plugin_row_meta'), 999, 2);
+        // Add plugin row meta with high priority to override WordPress defaults
+        add_filter('plugin_row_meta', array($this, 'add_plugin_row_meta'), 999, 2);
     }
     
     /**
@@ -248,24 +246,28 @@ class WP_Tester {
     
     
     /**
-     * Add plugin row meta links
+     * Add plugin row meta links (runs with high priority to override defaults)
      */
     public function add_plugin_row_meta($links, $file) {
         if (plugin_basename(WP_TESTER_PLUGIN_FILE) === $file) {
-            // Remove ALL existing "View details" links first
+            // Remove ALL existing "View details" links with very aggressive matching
             $cleaned_links = array();
-            $found_view_details = false;
             
             foreach ($links as $key => $link) {
-                if (is_string($link) && preg_match('/view\s+details/i', $link)) {
-                    $found_view_details = true;
-                    // Skip this link - don't add it to cleaned_links
-                    continue;
+                if (is_string($link)) {
+                    // More aggressive matching for "View details" variations
+                    if (preg_match('/view\s*details/i', $link) || 
+                        preg_match('/plugin\s*details/i', $link) ||
+                        preg_match('/more\s*information/i', $link) ||
+                        strpos(strtolower($link), 'view') !== false && strpos(strtolower($link), 'detail') !== false) {
+                        // Skip this link - don't add it to cleaned_links
+                        continue;
+                    }
                 }
                 $cleaned_links[$key] = $link;
             }
             
-            // Add our custom "View Details" link
+            // Add our custom "View Details" link at the end
             $cleaned_links['wp_tester_view_details'] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
             
             return $cleaned_links;
@@ -273,43 +275,6 @@ class WP_Tester {
         return $links;
     }
     
-    /**
-     * Final cleanup to ensure only one View Details link
-     */
-    public function cleanup_plugin_row_meta($links, $file) {
-        if (plugin_basename(WP_TESTER_PLUGIN_FILE) === $file) {
-            // Count how many "View Details" links exist
-            $view_details_count = 0;
-            $custom_link_key = null;
-            
-            foreach ($links as $key => $link) {
-                if (is_string($link) && preg_match('/view\s+details/i', $link)) {
-                    $view_details_count++;
-                    if (strpos($link, 'wp-tester-view-details') !== false) {
-                        $custom_link_key = $key;
-                    }
-                }
-            }
-            
-            // If there are multiple View Details links, keep only our custom one
-            if ($view_details_count > 1) {
-                $cleaned_links = array();
-                foreach ($links as $key => $link) {
-                    if (is_string($link) && preg_match('/view\s+details/i', $link)) {
-                        // Only keep our custom link
-                        if ($key === $custom_link_key || strpos($link, 'wp-tester-view-details') !== false) {
-                            $cleaned_links[$key] = $link;
-                        }
-                        // Skip all other "View Details" links
-                    } else {
-                        $cleaned_links[$key] = $link;
-                    }
-                }
-                return $cleaned_links;
-            }
-        }
-        return $links;
-    }
     
     /**
      * Plugin uninstall

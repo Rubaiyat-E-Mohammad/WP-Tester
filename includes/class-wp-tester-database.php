@@ -245,6 +245,18 @@ class WP_Tester_Database {
     }
     
     /**
+     * Get flow ID by name
+     */
+    public function get_flow_id_by_name($flow_name) {
+        global $wpdb;
+        
+        return $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$this->flows_table} WHERE flow_name = %s ORDER BY id DESC LIMIT 1",
+            $flow_name
+        ));
+    }
+    
+    /**
      * Save test result
      */
     public function save_test_result($flow_id, $test_run_id, $status, $steps_executed, $steps_passed, $steps_failed, $execution_time, $error_message = '', $detailed_log = '', $suggestions = '') {
@@ -348,22 +360,44 @@ class WP_Tester_Database {
         $stats = array();
         
         // Total pages crawled
-        $stats['total_pages'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->crawl_results_table} WHERE status = 'active'");
+        $stats['total_pages'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->crawl_results_table} WHERE status = 'active'") ?: 0;
         
         // Total flows
-        $stats['total_flows'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->flows_table} WHERE is_active = 1");
+        $stats['total_flows'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->flows_table}") ?: 0;
         
-        // Recent test results
-        $stats['recent_tests'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+        // Active flows
+        $stats['active_flows'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->flows_table} WHERE is_active = 1") ?: 0;
         
-        // Success rate
-        $total_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
-        $successful_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed' AND started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+        // Tests executed in last 30 days
+        $stats['tests_executed_30d'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)") ?: 0;
         
-        $stats['success_rate'] = $total_tests > 0 ? round(($successful_tests / $total_tests) * 100, 1) : 0;
+        // Recent test results (24 hours)
+        $stats['recent_tests'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)") ?: 0;
+        
+        // Success rate (last 7 days)
+        $total_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)") ?: 0;
+        $successful_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed' AND started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)") ?: 0;
+        
+        $stats['success_rate'] = $total_tests > 0 ? round(($successful_tests / $total_tests) * 100, 1) : 100;
+        
+        // Average response time (execution time)
+        $avg_execution_time = $wpdb->get_var("SELECT AVG(execution_time) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND execution_time > 0");
+        $stats['avg_response_time'] = $avg_execution_time ? round($avg_execution_time, 2) : 0;
         
         // Critical issues (failed tests from last 24 hours)
-        $stats['critical_issues'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed' AND started_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+        $stats['critical_issues'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed' AND started_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)") ?: 0;
+        
+        // Last crawl
+        $last_crawl = $wpdb->get_var("SELECT MAX(last_crawled) FROM {$this->crawl_results_table}");
+        $stats['last_crawl'] = $last_crawl ?: 'Never';
+        
+        // Additional stats for comprehensive dashboard
+        $stats['total_errors'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed'") ?: 0;
+        
+        // Performance metrics
+        $stats['avg_load_time'] = $avg_execution_time ?: 0;
+        $stats['slowest_page'] = $wpdb->get_var("SELECT f.flow_name FROM {$this->test_results_table} tr LEFT JOIN {$this->flows_table} f ON tr.flow_id = f.id ORDER BY tr.execution_time DESC LIMIT 1") ?: '';
+        $stats['fastest_page'] = $wpdb->get_var("SELECT f.flow_name FROM {$this->test_results_table} tr LEFT JOIN {$this->flows_table} f ON tr.flow_id = f.id WHERE tr.execution_time > 0 ORDER BY tr.execution_time ASC LIMIT 1") ?: '';
         
         return $stats;
     }

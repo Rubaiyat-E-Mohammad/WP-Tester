@@ -63,14 +63,15 @@ class WP_Tester_Crawler {
             $this->crawl_special_pages($crawled_urls, $discovered_flows);
             
             // Discover and save flows
-            $this->process_discovered_flows($discovered_flows);
+            $saved_flows_count = $this->process_discovered_flows($discovered_flows);
             
             $execution_time = microtime(true) - $start_time;
             
             // Log crawl completion
             error_log(sprintf(
-                'WP Tester: Full crawl completed. Crawled %d URLs in %.2f seconds.',
+                'WP Tester: Full crawl completed. Crawled %d URLs, saved %d flows in %.2f seconds.',
                 count($crawled_urls),
+                $saved_flows_count,
                 $execution_time
             ));
             
@@ -78,7 +79,7 @@ class WP_Tester_Crawler {
                 'success' => true,
                 'crawled_count' => count($crawled_urls),
                 'execution_time' => $execution_time,
-                'discovered_flows' => count($discovered_flows)
+                'discovered_flows' => $saved_flows_count
             );
             
         } catch (Exception $e) {
@@ -565,11 +566,12 @@ class WP_Tester_Crawler {
         }
         
         // Save unique flows
+        $saved_count = 0;
         foreach ($unique_flows as $flow) {
             $steps = $this->generate_flow_steps($flow);
             $expected_outcome = $this->generate_expected_outcome($flow);
             
-            $this->database->save_flow(
+            $result = $this->database->save_flow(
                 $flow['name'],
                 $flow['type'],
                 $flow['start_url'],
@@ -577,7 +579,13 @@ class WP_Tester_Crawler {
                 $expected_outcome,
                 $flow['priority']
             );
+            
+            if ($result) {
+                $saved_count++;
+            }
         }
+        
+        return $saved_count;
     }
     
     /**

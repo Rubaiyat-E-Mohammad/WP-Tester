@@ -17,8 +17,8 @@ $recommendations = $dashboard_data['recommendations'] ?? [];
 
 // Calculate summary stats
 $total_flows = $stats['total_flows'] ?? 0;
-$total_tests = $stats['total_tests'] ?? 0;
-$success_rate = $stats['success_rate'] ?? 0;
+$total_tests = $stats['tests_executed_30d'] ?? 0;
+$success_rate = $stats['success_rate'] ?? 100;
 $avg_response_time = $stats['avg_response_time'] ?? 0;
 ?>
 
@@ -207,13 +207,13 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                                         <span class="dashicons dashicons-admin-generic"></span>
                                     </div>
                                     <div class="item-details">
-                                        <h4><?php echo esc_html($flow['name'] ?? 'Unknown Flow'); ?></h4>
-                                        <p><?php echo esc_html('Last tested: ' . ($flow['last_tested'] ?? 'Never')); ?></p>
+                                        <h4><?php echo esc_html($flow['flow_name'] ?? 'Unknown Flow'); ?></h4>
+                                        <p><?php echo esc_html('Last tested: ' . ($flow['last_test_date'] ?? 'Never')); ?></p>
                                     </div>
                                 </div>
                                 <div class="item-meta">
-                                    <div class="status-badge <?php echo esc_attr($flow['status'] ?? 'pending'); ?>">
-                                        <?php echo esc_html(ucfirst($flow['status'] ?? 'Unknown')); ?>
+                                    <div class="status-badge <?php echo esc_attr($flow['health_status'] ?? 'pending'); ?>">
+                                        <?php echo esc_html(ucfirst($flow['health_status'] ?? 'Unknown')); ?>
                                     </div>
                                     <div style="margin-top: 0.25rem; font-size: 0.75rem;">
                                         <?php echo esc_html(($flow['success_rate'] ?? 0) . '% success'); ?>
