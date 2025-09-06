@@ -219,7 +219,7 @@ class WP_Tester_Admin {
     public function dashboard_page() {
         $dashboard_data = $this->feedback_reporter->generate_dashboard_summary();
         
-        include WP_TESTER_PLUGIN_DIR . 'templates/admin-dashboard-modern.php';
+        include WP_TESTER_PLUGIN_DIR . 'templates/admin-dashboard.php';
     }
     
     /**
