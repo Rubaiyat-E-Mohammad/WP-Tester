@@ -251,16 +251,16 @@ class WP_Tester {
      */
     public function add_plugin_row_meta($links, $file) {
         if (plugin_basename(WP_TESTER_PLUGIN_FILE) === $file) {
-            // Only remove actual "View details" links, preserve version and author info
+            // Replace any existing "View details" link with our custom one
             foreach ($links as $key => $link) {
-                // Only remove if it's actually a "View details" link (contains href and the text)
-                if (is_string($link) && 
-                    preg_match('/<a[^>]+href[^>]*>.*view\s+details.*<\/a>/i', $link)) {
-                    unset($links[$key]);
+                if (is_string($link) && preg_match('/view\s+details/i', $link)) {
+                    // Replace the existing link with our custom one
+                    $links[$key] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
+                    return $links; // Exit early since we found and replaced it
                 }
             }
             
-            // Add our custom View Details link
+            // If no existing "View details" link found, add our custom one
             $links['wp_tester_view_details'] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
         }
         return $links;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Admin Flows Template
+ * Admin Flows Template - Modern UI
  */
 
 if (!defined('ABSPATH')) {
@@ -8,323 +8,285 @@ if (!defined('ABSPATH')) {
 }
 ?>
 
-<div class="wrap wp-tester-modern">
-    <!-- Modern Header with Logo -->
-    <div class="wp-tester-modern-header glass-nav">
+<div class="wp-tester-modern">
+    <!-- Modern Header -->
+    <div class="wp-tester-header">
         <div class="header-content">
             <div class="logo-section">
-                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png'); ?>" alt="WP Tester Logo" class="logo" />
-                <div class="title-section">
-                    <h1><?php _e('User Flows', 'wp-tester'); ?></h1>
-                    <div class="subtitle"><?php _e('Manage and test your user flows', 'wp-tester'); ?></div>
+                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png'); ?>" 
+                     alt="WP Tester" class="logo">
+                <div class="title-info">
+                    <h1>User Flows</h1>
+                    <p class="subtitle">Manage and test your user flows</p>
                 </div>
             </div>
             <div class="header-actions">
-                <button id="wp-tester-discover-flows" class="btn btn-primary btn-sm">
+                <a href="<?php echo admin_url('admin.php?page=wp-tester'); ?>" class="modern-btn modern-btn-secondary modern-btn-small">
+                    <span class="dashicons dashicons-arrow-left-alt2"></span>
+                    Dashboard
+                </a>
+                <button id="wp-tester-discover-flows" class="modern-btn modern-btn-primary modern-btn-small">
                     <span class="dashicons dashicons-search"></span>
-                    <?php _e('Discover New Flows', 'wp-tester'); ?>
-                </button>
+                    Discover Flows
+        </button>
             </div>
         </div>
     </div>
-    
+
+    <!-- Main Content -->
     <div class="wp-tester-content">
-    
-    <?php if (!empty($flows)): ?>
-    <div class="wp-tester-flows-filters">
-        <select id="wp-tester-flow-type-filter">
-            <option value=""><?php _e('All Flow Types', 'wp-tester'); ?></option>
-            <option value="registration"><?php _e('Registration', 'wp-tester'); ?></option>
-            <option value="login"><?php _e('Login', 'wp-tester'); ?></option>
-            <option value="contact"><?php _e('Contact', 'wp-tester'); ?></option>
-            <option value="search"><?php _e('Search', 'wp-tester'); ?></option>
-            <option value="woocommerce"><?php _e('WooCommerce', 'wp-tester'); ?></option>
-            <option value="navigation"><?php _e('Navigation', 'wp-tester'); ?></option>
-        </select>
         
-        <select id="wp-tester-priority-filter">
-            <option value=""><?php _e('All Priorities', 'wp-tester'); ?></option>
-            <option value="10"><?php _e('Critical (10)', 'wp-tester'); ?></option>
-            <option value="8-9"><?php _e('High (8-9)', 'wp-tester'); ?></option>
-            <option value="5-7"><?php _e('Medium (5-7)', 'wp-tester'); ?></option>
-            <option value="1-4"><?php _e('Low (1-4)', 'wp-tester'); ?></option>
-        </select>
-        
-        <input type="text" id="wp-tester-search-flows" placeholder="<?php _e('Search flows...', 'wp-tester'); ?>">
+        <!-- Flow Stats Overview -->
+        <div class="modern-grid grid-4">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Total Flows</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-admin-generic"></span>
+                    </div>
+                </div>
+                <div class="stat-value"><?php echo count($flows ?? []); ?></div>
+                <div class="stat-change neutral">
+                    <span class="dashicons dashicons-admin-generic"></span>
+                    Configured
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Active Flows</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-yes-alt"></span>
+                    </div>
+                </div>
+                <div class="stat-value"><?php 
+                    $active_count = 0;
+                    if (!empty($flows)) {
+                        foreach ($flows as $flow) {
+                            if (($flow['is_active'] ?? false)) $active_count++;
+                        }
+                    }
+                    echo $active_count;
+                ?></div>
+                <div class="stat-change positive">
+                    <span class="dashicons dashicons-yes-alt"></span>
+                    Running
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Success Rate</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-chart-area"></span>
+                    </div>
+                </div>
+                <div class="stat-value">
+                    <?php
+                    $success_rate = 0;
+                    if (!empty($flows)) {
+                        $total_success = 0;
+                        $total_flows = 0;
+                        foreach ($flows as $flow) {
+                            if (isset($flow['success_rate'])) {
+                                $total_success += $flow['success_rate'];
+                                $total_flows++;
+                            }
+                        }
+                        if ($total_flows > 0) {
+                            $success_rate = round($total_success / $total_flows, 1);
+                        }
+                    }
+                    echo $success_rate;
+                    ?>%
+                </div>
+                <div class="stat-change <?php echo $success_rate >= 90 ? 'positive' : ($success_rate >= 70 ? 'neutral' : 'negative'); ?>">
+                    <span class="dashicons dashicons-<?php echo $success_rate >= 90 ? 'arrow-up-alt' : ($success_rate >= 70 ? 'minus' : 'arrow-down-alt'); ?>"></span>
+                    Overall
+                </div>
     </div>
     
-    <div class="wp-tester-table-container">
-        <table class="wp-list-table widefat fixed striped" id="wp-tester-flows-table">
-            <thead>
-                <tr>
-                    <th class="check-column">
-                        <input type="checkbox" id="cb-select-all">
-                    </th>
-                    <th><?php _e('Flow Name', 'wp-tester'); ?></th>
-                    <th><?php _e('Type', 'wp-tester'); ?></th>
-                    <th><?php _e('Priority', 'wp-tester'); ?></th>
-                    <th><?php _e('Start URL', 'wp-tester'); ?></th>
-                    <th><?php _e('Steps', 'wp-tester'); ?></th>
-                    <th><?php _e('Status', 'wp-tester'); ?></th>
-                    <th><?php _e('Last Test', 'wp-tester'); ?></th>
-                    <th><?php _e('Actions', 'wp-tester'); ?></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($flows as $flow): 
-                    $steps = json_decode($flow->steps, true) ?: array();
-                    $recent_result = $this->database->get_test_results($flow->id, 1, 0);
-                    $last_result = !empty($recent_result) ? $recent_result[0] : null;
-                ?>
-                <tr data-flow-type="<?php echo esc_attr($flow->flow_type); ?>" data-priority="<?php echo esc_attr($flow->priority); ?>">
-                    <th class="check-column">
-                        <input type="checkbox" name="flow_ids[]" value="<?php echo $flow->id; ?>">
-                    </th>
-                    <td>
-                        <strong>
-                            <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=view&flow_id=' . $flow->id); ?>">
-                                <?php echo esc_html($flow->flow_name); ?>
-                            </a>
-                        </strong>
-                        <div class="row-actions">
-                            <span class="view">
-                                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=view&flow_id=' . $flow->id); ?>">
-                                    <?php _e('View', 'wp-tester'); ?>
-                                </a> |
-                            </span>
-                            <span class="edit">
-                                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . $flow->id); ?>">
-                                    <?php _e('Edit', 'wp-tester'); ?>
-                                </a> |
-                            </span>
-                            <span class="test">
-                                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . $flow->id); ?>" class="wp-tester-test-flow">
-                                    <?php _e('Test Now', 'wp-tester'); ?>
-                                </a> |
-                            </span>
-                            <span class="delete">
-                                <a href="#" class="wp-tester-delete-flow" data-flow-id="<?php echo $flow->id; ?>" style="color: #a00;">
-                                    <?php _e('Delete', 'wp-tester'); ?>
-                                </a>
-                            </span>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Last Test</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-clock"></span>
+                    </div>
+                </div>
+                <div class="stat-value" style="font-size: 1.25rem;">
+                    <?php
+                    $last_test = 'Never';
+                    if (!empty($flows)) {
+                        foreach ($flows as $flow) {
+                            if (!empty($flow['last_tested']) && $flow['last_tested'] !== 'Never') {
+                                $last_test = $flow['last_tested'];
+                                break;
+                            }
+                        }
+                    }
+                    echo esc_html($last_test);
+                    ?>
+                </div>
+                <div class="stat-change neutral">
+                    <span class="dashicons dashicons-clock"></span>
+                    Timestamp
+                </div>
+            </div>
+        </div>
+
+        <!-- Flows List -->
+        <div class="modern-card">
+            <div class="card-header">
+                <h2 class="card-title">All Flows</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="modern-btn modern-btn-secondary modern-btn-small" id="bulk-test-flows">
+                        <span class="dashicons dashicons-controls-play"></span>
+                        Test All
+                    </button>
+                    <button class="modern-btn modern-btn-primary modern-btn-small" id="add-new-flow">
+                        <span class="dashicons dashicons-plus-alt"></span>
+                        Add New
+                    </button>
+                </div>
+            </div>
+
+            <?php if (!empty($flows)) : ?>
+                <div class="modern-list">
+                    <?php foreach ($flows as $flow) : ?>
+                        <div class="modern-list-item" data-flow-id="<?php echo esc_attr($flow['id'] ?? ''); ?>">
+                            <div class="item-info">
+                                <div class="item-icon">
+                                    <span class="dashicons dashicons-<?php 
+                                        $flow_type = $flow['flow_type'] ?? 'generic';
+                                        $icons = [
+                                            'registration' => 'admin-users',
+                                            'login' => 'admin-network', 
+                                            'contact' => 'email-alt',
+                                            'search' => 'search',
+                                            'woocommerce' => 'cart',
+                                            'navigation' => 'menu'
+                                        ];
+                                        echo $icons[$flow_type] ?? 'admin-generic';
+                                    ?>"></span>
+                                </div>
+                                <div class="item-details">
+                                    <h4><?php echo esc_html($flow['flow_name'] ?? 'Unnamed Flow'); ?></h4>
+                                    <p><?php echo esc_html($flow['flow_type'] ?? 'Generic'); ?> Flow • <?php echo esc_html(($flow['step_count'] ?? 0) . ' steps'); ?></p>
+                                </div>
+                            </div>
+                            <div class="item-meta">
+                                <div class="status-badge <?php echo ($flow['is_active'] ?? false) ? 'success' : 'pending'; ?>">
+                                    <?php echo ($flow['is_active'] ?? false) ? 'Active' : 'Inactive'; ?>
+                                </div>
+                                <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                                    <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=view&flow_id=' . ($flow['id'] ?? '')); ?>" 
+                                       class="modern-btn modern-btn-secondary modern-btn-small">
+                                        View
+                                    </a>
+                                    <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . ($flow['id'] ?? '')); ?>" 
+                                       class="modern-btn modern-btn-primary modern-btn-small">
+                                        Test
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                    </td>
-                    <td>
-                        <?php echo wp_tester()->admin->get_flow_type_icon($flow->flow_type); ?>
-                        <?php echo esc_html(ucfirst($flow->flow_type)); ?>
-                    </td>
-                    <td>
-                        <span class="wp-tester-priority-badge wp-tester-priority-<?php echo $flow->priority >= 8 ? 'high' : ($flow->priority >= 5 ? 'medium' : 'low'); ?>">
-                            <?php echo $flow->priority; ?>
-                        </span>
-                    </td>
-                    <td>
-                        <a href="<?php echo esc_url($flow->start_url); ?>" target="_blank" title="<?php echo esc_attr($flow->start_url); ?>">
-                            <?php echo esc_html(wp_parse_url($flow->start_url, PHP_URL_PATH) ?: '/'); ?>
-                            <span class="dashicons dashicons-external"></span>
-                        </a>
-                    </td>
-                    <td><?php echo count($steps); ?> <?php _e('steps', 'wp-tester'); ?></td>
-                    <td>
-                        <?php if ($flow->is_active): ?>
-                            <span class="wp-tester-status-active"><?php _e('Active', 'wp-tester'); ?></span>
-                        <?php else: ?>
-                            <span class="wp-tester-status-inactive"><?php _e('Inactive', 'wp-tester'); ?></span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <?php if ($last_result): ?>
-                            <?php echo wp_tester()->admin->get_status_badge($last_result->status); ?>
-                            <br>
-                            <small><?php echo human_time_diff(strtotime($last_result->started_at), current_time('timestamp')); ?> <?php _e('ago', 'wp-tester'); ?></small>
-                        <?php else: ?>
-                            <span class="wp-tester-status-never"><?php _e('Never tested', 'wp-tester'); ?></span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <button class="button button-small wp-tester-test-single-flow" data-flow-id="<?php echo $flow->id; ?>">
-                            <?php _e('Test', 'wp-tester'); ?>
+                    <?php endforeach; ?>
+                </div>
+            <?php else : ?>
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <span class="dashicons dashicons-admin-generic"></span>
+                    </div>
+                    <h3>No Flows Found</h3>
+                    <p>Get started by discovering flows on your site or creating a new one manually.</p>
+                    <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                        <button class="modern-btn modern-btn-secondary" id="discover-flows-btn">
+                            <span class="dashicons dashicons-search"></span>
+                            Discover Flows
                         </button>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                        <button class="modern-btn modern-btn-primary" id="create-flow-btn">
+                            <span class="dashicons dashicons-plus-alt"></span>
+                            Create Flow
+                        </button>
+                    </div>
+    </div>
+            <?php endif; ?>
     </div>
     
-    <!-- Bulk Actions -->
-    <div class="wp-tester-bulk-actions">
-        <select id="wp-tester-bulk-action">
-            <option value=""><?php _e('Bulk Actions', 'wp-tester'); ?></option>
-            <option value="test"><?php _e('Test Selected Flows', 'wp-tester'); ?></option>
-            <option value="activate"><?php _e('Activate', 'wp-tester'); ?></option>
-            <option value="deactivate"><?php _e('Deactivate', 'wp-tester'); ?></option>
-            <option value="delete"><?php _e('Delete', 'wp-tester'); ?></option>
-        </select>
-        <button id="wp-tester-apply-bulk-action" class="button"><?php _e('Apply', 'wp-tester'); ?></button>
     </div>
-    
-    <?php else: ?>
-    <div class="wp-tester-empty-state">
-        <span class="dashicons dashicons-admin-generic"></span>
-        <h2><?php _e('No Flows Found', 'wp-tester'); ?></h2>
-        <p><?php _e('No user flows have been discovered yet. Run a site crawl to automatically detect flows.', 'wp-tester'); ?></p>
-        <button id="wp-tester-discover-flows" class="button button-primary">
-            <?php _e('Discover Flows Now', 'wp-tester'); ?>
-        </button>
-    </div>
-    <?php endif; ?>
-    </div> <!-- wp-tester-content -->
-</div> <!-- wp-tester-modern -->
+</div>
 
 <script>
 jQuery(document).ready(function($) {
-    // Filter flows
-    $('#wp-tester-flow-type-filter, #wp-tester-priority-filter').on('change', function() {
-        filterFlows();
-    });
-    
-    $('#wp-tester-search-flows').on('keyup', function() {
-        filterFlows();
-    });
-    
-    function filterFlows() {
-        var typeFilter = $('#wp-tester-flow-type-filter').val();
-        var priorityFilter = $('#wp-tester-priority-filter').val();
-        var searchTerm = $('#wp-tester-search-flows').val().toLowerCase();
-        
-        $('#wp-tester-flows-table tbody tr').each(function() {
-            var $row = $(this);
-            var flowType = $row.data('flow-type');
-            var priority = parseInt($row.data('priority'));
-            var flowName = $row.find('td:nth-child(2) strong a').text().toLowerCase();
-            
-            var showRow = true;
-            
-            // Type filter
-            if (typeFilter && flowType !== typeFilter) {
-                showRow = false;
-            }
-            
-            // Priority filter
-            if (priorityFilter && showRow) {
-                if (priorityFilter === '10' && priority !== 10) showRow = false;
-                else if (priorityFilter === '8-9' && (priority < 8 || priority > 9)) showRow = false;
-                else if (priorityFilter === '5-7' && (priority < 5 || priority > 7)) showRow = false;
-                else if (priorityFilter === '1-4' && (priority < 1 || priority > 4)) showRow = false;
-            }
-            
-            // Search filter
-            if (searchTerm && showRow && flowName.indexOf(searchTerm) === -1) {
-                showRow = false;
-            }
-            
-            $row.toggle(showRow);
-        });
-    }
-    
-    // Select all checkbox
-    $('#cb-select-all').on('change', function() {
-        $('input[name="flow_ids[]"]').prop('checked', this.checked);
-    });
-    
-    // Test single flow
-    $('.wp-tester-test-single-flow').on('click', function() {
-        var $button = $(this);
-        var flowId = $button.data('flow-id');
-        
-        $button.prop('disabled', true).text('<?php _e('Testing...', 'wp-tester'); ?>');
-        
-        $.post(ajaxurl, {
-            action: 'wp_tester_test_flow',
-            flow_id: flowId,
-            nonce: wpTesterAdmin.nonce
-        }, function(response) {
-            if (response.success) {
-                location.reload();
-            } else {
-                alert('<?php _e('Failed to run test. Please try again.', 'wp-tester'); ?>');
-            }
-        }).always(function() {
-            $button.prop('disabled', false).text('<?php _e('Test', 'wp-tester'); ?>');
-        });
-    });
-    
-    // Delete flow
-    $('.wp-tester-delete-flow').on('click', function(e) {
+    // Discover flows functionality
+    $('#wp-tester-discover-flows, #discover-flows-btn').on('click', function(e) {
         e.preventDefault();
         
-        if (!confirm('<?php _e('Are you sure you want to delete this flow?', 'wp-tester'); ?>')) {
-            return;
-        }
+        const button = $(this);
+        const originalText = button.html();
         
-        var flowId = $(this).data('flow-id');
+        button.html('<div class="spinner"></div> Discovering...').prop('disabled', true);
         
-        $.post(ajaxurl, {
-            action: 'wp_tester_delete_flow',
-            flow_id: flowId,
-            nonce: wpTesterAdmin.nonce
-        }, function(response) {
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_discover_flows',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
             if (response.success) {
                 location.reload();
             } else {
-                alert('<?php _e('Failed to delete flow. Please try again.', 'wp-tester'); ?>');
+                    alert('Error discovering flows: ' + (response.data || 'Unknown error'));
+                }
+            },
+            error: function() {
+                alert('Error connecting to server');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
             }
         });
     });
     
-    // Discover flows
-    $('#wp-tester-discover-flows').on('click', function() {
-        var $button = $(this);
-        $button.prop('disabled', true).text('<?php _e('Discovering...', 'wp-tester'); ?>');
+    // Test all flows
+    $('#bulk-test-flows').on('click', function(e) {
+        e.preventDefault();
         
-        $.post(ajaxurl, {
-            action: 'wp_tester_discover_flows',
-            nonce: wpTesterAdmin.nonce
-        }, function(response) {
+        const button = $(this);
+        const originalText = button.html();
+        
+        button.html('<div class="spinner"></div> Testing...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_run_all_tests',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
             if (response.success) {
+                    alert('All tests started successfully!');
                 location.reload();
             } else {
-                alert('<?php _e('Failed to discover flows. Please try again.', 'wp-tester'); ?>');
+                    alert('Error running tests: ' + (response.data || 'Unknown error'));
+                }
+            },
+            error: function() {
+                alert('Error connecting to server');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
             }
-        }).always(function() {
-            $button.prop('disabled', false).text('<?php _e('Discover New Flows', 'wp-tester'); ?>');
         });
     });
     
-    // Bulk actions
-    $('#wp-tester-apply-bulk-action').on('click', function() {
-        var action = $('#wp-tester-bulk-action').val();
-        var selectedFlows = $('input[name="flow_ids[]"]:checked').map(function() {
-            return this.value;
-        }).get();
-        
-        if (!action) {
-            alert('<?php _e('Please select an action.', 'wp-tester'); ?>');
-            return;
-        }
-        
-        if (selectedFlows.length === 0) {
-            alert('<?php _e('Please select at least one flow.', 'wp-tester'); ?>');
-            return;
-        }
-        
-        if (action === 'delete' && !confirm('<?php _e('Are you sure you want to delete the selected flows?', 'wp-tester'); ?>')) {
-            return;
-        }
-        
-        $.post(ajaxurl, {
-            action: 'wp_tester_bulk_action',
-            bulk_action: action,
-            flow_ids: selectedFlows,
-            nonce: wpTesterAdmin.nonce
-        }, function(response) {
-            if (response.success) {
-                location.reload();
-            } else {
-                alert('<?php _e('Failed to perform bulk action. Please try again.', 'wp-tester'); ?>');
-            }
-        });
+    // Add new flow placeholder
+    $('#add-new-flow, #create-flow-btn').on('click', function(e) {
+        e.preventDefault();
+        alert('Flow creation interface coming soon!');
     });
 });
 </script>

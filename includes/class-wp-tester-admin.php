@@ -38,14 +38,24 @@ class WP_Tester_Admin {
      */
     public function enqueue_admin_scripts($hook) {
         // Enqueue modern UI styles for all admin pages
+        // Note: Modern styles temporarily disabled to prevent sticky header issues
+        // Will be re-enabled after fixing sticky positioning
+        // wp_enqueue_style(
+        //     'wp-tester-modern-admin',
+        //     WP_TESTER_PLUGIN_URL . 'assets/dist/modern-styles.css',
+        //     array(),
+        //     WP_TESTER_VERSION
+        // );
+        
+        // Enqueue modern UI styles
         wp_enqueue_style(
-            'wp-tester-modern-admin',
-            WP_TESTER_PLUGIN_URL . 'assets/dist/modern-styles.css',
+            'wp-tester-modern-ui',
+            WP_TESTER_PLUGIN_URL . 'assets/css/modern-ui.css',
             array(),
             WP_TESTER_VERSION
         );
         
-        // Enqueue legacy admin styles for compatibility
+        // Enqueue legacy admin styles for menu icon compatibility
         wp_enqueue_style(
             'wp-tester-admin',
             WP_TESTER_PLUGIN_URL . 'assets/css/admin.css',
