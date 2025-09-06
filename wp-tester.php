@@ -128,9 +128,10 @@ class WP_Tester {
         
         // Add plugin action links
         add_filter('plugin_action_links_' . plugin_basename(WP_TESTER_PLUGIN_FILE), array($this, 'add_plugin_action_links'));
-        add_filter('plugin_row_meta', array($this, 'add_plugin_row_meta'), 999, 2);
+        add_filter('plugin_row_meta', array($this, 'add_plugin_row_meta'), 10, 2);
         
-        // Note: Removed aggressive JavaScript cleanup to preserve WordPress default behavior
+        // Add late-priority filter to ensure our custom View Details is the only one
+        add_filter('plugin_row_meta', array($this, 'cleanup_plugin_row_meta'), 999, 2);
     }
     
     /**
@@ -251,17 +252,61 @@ class WP_Tester {
      */
     public function add_plugin_row_meta($links, $file) {
         if (plugin_basename(WP_TESTER_PLUGIN_FILE) === $file) {
-            // Replace any existing "View details" link with our custom one
+            // Remove ALL existing "View details" links first
+            $cleaned_links = array();
+            $found_view_details = false;
+            
             foreach ($links as $key => $link) {
                 if (is_string($link) && preg_match('/view\s+details/i', $link)) {
-                    // Replace the existing link with our custom one
-                    $links[$key] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
-                    return $links; // Exit early since we found and replaced it
+                    $found_view_details = true;
+                    // Skip this link - don't add it to cleaned_links
+                    continue;
+                }
+                $cleaned_links[$key] = $link;
+            }
+            
+            // Add our custom "View Details" link
+            $cleaned_links['wp_tester_view_details'] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
+            
+            return $cleaned_links;
+        }
+        return $links;
+    }
+    
+    /**
+     * Final cleanup to ensure only one View Details link
+     */
+    public function cleanup_plugin_row_meta($links, $file) {
+        if (plugin_basename(WP_TESTER_PLUGIN_FILE) === $file) {
+            // Count how many "View Details" links exist
+            $view_details_count = 0;
+            $custom_link_key = null;
+            
+            foreach ($links as $key => $link) {
+                if (is_string($link) && preg_match('/view\s+details/i', $link)) {
+                    $view_details_count++;
+                    if (strpos($link, 'wp-tester-view-details') !== false) {
+                        $custom_link_key = $key;
+                    }
                 }
             }
             
-            // If no existing "View details" link found, add our custom one
-            $links['wp_tester_view_details'] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
+            // If there are multiple View Details links, keep only our custom one
+            if ($view_details_count > 1) {
+                $cleaned_links = array();
+                foreach ($links as $key => $link) {
+                    if (is_string($link) && preg_match('/view\s+details/i', $link)) {
+                        // Only keep our custom link
+                        if ($key === $custom_link_key || strpos($link, 'wp-tester-view-details') !== false) {
+                            $cleaned_links[$key] = $link;
+                        }
+                        // Skip all other "View Details" links
+                    } else {
+                        $cleaned_links[$key] = $link;
+                    }
+                }
+                return $cleaned_links;
+            }
         }
         return $links;
     }
