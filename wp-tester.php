@@ -184,6 +184,9 @@ class WP_Tester {
      * Plugin activation
      */
     public function activate() {
+        // Include required files for activation
+        $this->includes();
+        
         // Create database tables
         $this->database = new WP_Tester_Database();
         $this->database->create_tables();
@@ -249,6 +252,8 @@ class WP_Tester {
         $upload_dir = wp_upload_dir();
         $screenshots_dir = $upload_dir['basedir'] . '/wp-tester-screenshots';
         if (is_dir($screenshots_dir)) {
+            // Include functions file to access wp_tester_remove_directory
+            require_once WP_TESTER_PLUGIN_DIR . 'includes/functions.php';
             wp_tester_remove_directory($screenshots_dir);
         }
     }

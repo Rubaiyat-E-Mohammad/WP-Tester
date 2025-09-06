@@ -98,8 +98,7 @@ class WP_Tester_Database {
             KEY flow_id (flow_id),
             KEY test_run_id (test_run_id),
             KEY status (status),
-            KEY started_at (started_at),
-            FOREIGN KEY (flow_id) REFERENCES {$this->flows_table}(id) ON DELETE CASCADE
+            KEY started_at (started_at)
         ) $charset_collate;";
         
         // Screenshots table
@@ -113,8 +112,7 @@ class WP_Tester_Database {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             KEY test_result_id (test_result_id),
-            KEY step_number (step_number),
-            FOREIGN KEY (test_result_id) REFERENCES {$this->test_results_table}(id) ON DELETE CASCADE
+            KEY step_number (step_number)
         ) $charset_collate;";
         
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
