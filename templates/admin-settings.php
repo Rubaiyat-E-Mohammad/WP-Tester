@@ -12,8 +12,27 @@ $scheduling_status = $scheduler->get_scheduling_status();
 $system_requirements = wp_tester_check_system_requirements();
 ?>
 
-<div class="wrap">
-    <h1><?php _e('WP Tester Settings', 'wp-tester'); ?></h1>
+<div class="wrap wp-tester-modern">
+    <!-- Modern Header with Logo -->
+    <div class="wp-tester-modern-header glass-nav">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png'); ?>" alt="WP Tester Logo" class="logo" />
+                <div class="title-section">
+                    <h1><?php _e('WP Tester Settings', 'wp-tester'); ?></h1>
+                    <div class="subtitle"><?php _e('Configure general settings for WP Tester', 'wp-tester'); ?></div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="<?php echo admin_url('admin.php?page=wp-tester'); ?>" class="btn btn-outline btn-sm">
+                    <span class="dashicons dashicons-arrow-left-alt"></span>
+                    <?php _e('Back to Dashboard', 'wp-tester'); ?>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="wp-tester-content">
     
     <?php settings_errors(); ?>
     
@@ -402,3 +421,5 @@ jQuery(document).ready(function($) {
     });
 });
 </script>
+    </div> <!-- wp-tester-content -->
+</div> <!-- wp-tester-modern -->

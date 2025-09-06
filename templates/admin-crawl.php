@@ -8,8 +8,27 @@ if (!defined('ABSPATH')) {
 }
 ?>
 
-<div class="wrap">
-    <h1><?php _e('Crawl Results', 'wp-tester'); ?></h1>
+<div class="wrap wp-tester-modern">
+    <!-- Modern Header with Logo -->
+    <div class="wp-tester-modern-header glass-nav">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png'); ?>" alt="WP Tester Logo" class="logo" />
+                <div class="title-section">
+                    <h1><?php _e('Crawl Results', 'wp-tester'); ?></h1>
+                    <div class="subtitle"><?php _e('View your website crawl results', 'wp-tester'); ?></div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <a href="<?php echo admin_url('admin.php?page=wp-tester'); ?>" class="btn btn-outline btn-sm">
+                    <span class="dashicons dashicons-arrow-left-alt"></span>
+                    <?php _e('Back to Dashboard', 'wp-tester'); ?>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="wp-tester-content">
     
     <div class="wp-tester-crawl-results">
         <?php if (!empty($crawl_results)): ?>
@@ -44,3 +63,5 @@ if (!defined('ABSPATH')) {
         <?php endif; ?>
     </div>
 </div>
+    </div> <!-- wp-tester-content -->
+</div> <!-- wp-tester-modern -->
