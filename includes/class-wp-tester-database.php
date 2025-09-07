@@ -419,9 +419,15 @@ class WP_Tester_Database {
         // Recent test results (24 hours)
         $stats['recent_tests'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)") ?: 0;
         
-        // Success rate (last 7 days)
-        $total_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)") ?: 0;
-        $successful_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed' AND started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)") ?: 0;
+        // Success rate (last 30 days, fallback to all time if no recent tests)
+        $total_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)") ?: 0;
+        $successful_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed' AND started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)") ?: 0;
+        
+        // If no tests in last 30 days, check all time
+        if ($total_tests === 0) {
+            $total_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table}") ?: 0;
+            $successful_tests = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed'") ?: 0;
+        }
         
         $stats['success_rate'] = $total_tests > 0 ? round(($successful_tests / $total_tests) * 100, 1) : 0;
         

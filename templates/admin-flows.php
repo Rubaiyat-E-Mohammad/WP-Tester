@@ -415,8 +415,12 @@ jQuery(document).ready(function($) {
     }
     
     function showSuccessModal(title, message) {
+        // Remove any existing success modals first
+        $('#wp-tester-success-modal').remove();
+        
+        const modalId = 'wp-tester-success-modal-' + Date.now();
         const modal = $(`
-            <div id="wp-tester-success-modal" class="wp-tester-modal-overlay">
+            <div id="${modalId}" class="wp-tester-modal-overlay">
                 <div class="wp-tester-modal wp-tester-modal-success">
                     <div class="wp-tester-modal-header">
                         <div class="wp-tester-modal-icon">
@@ -428,18 +432,39 @@ jQuery(document).ready(function($) {
                         <p>${message}</p>
                     </div>
                     <div class="wp-tester-modal-footer">
-                        <button class="modern-btn modern-btn-primary" onclick="$('#wp-tester-success-modal').fadeOut(300, function(){$(this).remove();})">OK</button>
+                        <button class="modern-btn modern-btn-primary wp-tester-modal-close" data-modal-id="${modalId}">OK</button>
                     </div>
                 </div>
             </div>
         `);
         $('body').append(modal);
         modal.fadeIn(300);
+        
+        // Add click handler for the close button
+        modal.find('.wp-tester-modal-close').on('click', function() {
+            const targetModalId = $(this).data('modal-id');
+            $('#' + targetModalId).fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Add click handler for overlay to close modal
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                $(this).fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
     }
     
     function showErrorModal(title, message) {
+        // Remove any existing error modals first
+        $('[id^="wp-tester-error-modal"]').remove();
+        
+        const modalId = 'wp-tester-error-modal-' + Date.now();
         const modal = $(`
-            <div id="wp-tester-error-modal" class="wp-tester-modal-overlay">
+            <div id="${modalId}" class="wp-tester-modal-overlay">
                 <div class="wp-tester-modal wp-tester-modal-error">
                     <div class="wp-tester-modal-header">
                         <div class="wp-tester-modal-icon">
@@ -451,13 +476,30 @@ jQuery(document).ready(function($) {
                         <p>${message}</p>
                     </div>
                     <div class="wp-tester-modal-footer">
-                        <button class="modern-btn modern-btn-secondary" onclick="$('#wp-tester-error-modal').fadeOut(300, function(){$(this).remove();})">Close</button>
+                        <button class="modern-btn modern-btn-secondary wp-tester-modal-close" data-modal-id="${modalId}">Close</button>
                     </div>
                 </div>
             </div>
         `);
         $('body').append(modal);
         modal.fadeIn(300);
+        
+        // Add click handler for the close button
+        modal.find('.wp-tester-modal-close').on('click', function() {
+            const targetModalId = $(this).data('modal-id');
+            $('#' + targetModalId).fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Add click handler for overlay to close modal
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                $(this).fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
     }
     
     // Delete flow functionality

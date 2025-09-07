@@ -13,6 +13,7 @@ $flow = $report['flow'] ?? null;
 $execution_summary = $report['execution_summary'] ?? [];
 $step_details = $report['step_details'] ?? [];
 $failure_analysis = $report['failure_analysis'] ?? [];
+$visual_evidence = $report['visual_evidence'] ?? [];
 ?>
 
 <div class="wp-tester-modern">
@@ -253,6 +254,48 @@ $failure_analysis = $report['failure_analysis'] ?? [];
             </div>
             <?php endif; ?>
 
+            <!-- Screenshots -->
+            <?php if (!empty($visual_evidence)): ?>
+            <div class="modern-card">
+                <div class="card-header">
+                    <h2 class="card-title">Screenshots</h2>
+                    <div class="status-badge info"><?php echo count($visual_evidence); ?> images</div>
+                </div>
+
+                <div class="screenshots-grid">
+                    <?php foreach ($visual_evidence as $screenshot): ?>
+                        <div class="screenshot-item">
+                            <div class="screenshot-header">
+                                <h4>Step <?php echo esc_html($screenshot['step_number']); ?> - <?php echo esc_html(ucfirst($screenshot['type'])); ?></h4>
+                                <span class="status-badge <?php echo esc_attr($screenshot['type']); ?>">
+                                    <?php echo esc_html(ucfirst($screenshot['type'])); ?>
+                                </span>
+                            </div>
+                            
+                            <?php if ($screenshot['file_exists']): ?>
+                                <div class="screenshot-image">
+                                    <img src="<?php echo esc_url($screenshot['url']); ?>" 
+                                         alt="Screenshot for step <?php echo esc_attr($screenshot['step_number']); ?>"
+                                         onclick="openScreenshotModal('<?php echo esc_js($screenshot['url']); ?>', '<?php echo esc_js($screenshot['caption']); ?>')">
+                                </div>
+                            <?php else: ?>
+                                <div class="screenshot-placeholder">
+                                    <span class="dashicons dashicons-format-image"></span>
+                                    <p>Screenshot not available</p>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if (!empty($screenshot['caption'])): ?>
+                                <div class="screenshot-caption">
+                                    <p><?php echo esc_html($screenshot['caption']); ?></p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Failure Analysis -->
             <?php if (!empty($failure_analysis) && !empty($failure_analysis['failure_details'])): ?>
             <div class="modern-card">
@@ -303,3 +346,205 @@ $failure_analysis = $report['failure_analysis'] ?? [];
 
     </div>
 </div>
+
+<script>
+function openScreenshotModal(imageUrl, caption) {
+    const modal = $(`
+        <div id="screenshot-modal" class="screenshot-modal-overlay">
+            <div class="screenshot-modal">
+                <div class="screenshot-modal-header">
+                    <h3>Screenshot</h3>
+                    <button class="screenshot-modal-close">&times;</button>
+                </div>
+                <div class="screenshot-modal-body">
+                    <img src="${imageUrl}" alt="Screenshot" class="screenshot-modal-image">
+                    ${caption ? `<p class="screenshot-modal-caption">${caption}</p>` : ''}
+                </div>
+            </div>
+        </div>
+    `);
+    
+    $('body').append(modal);
+    modal.fadeIn(300);
+    
+    // Close modal handlers
+    modal.find('.screenshot-modal-close').on('click', function() {
+        modal.fadeOut(300, function() {
+            $(this).remove();
+        });
+    });
+    
+    modal.on('click', function(e) {
+        if (e.target === this) {
+            modal.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }
+    });
+}
+</script>
+
+<style>
+/* Screenshots Grid */
+.screenshots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+.screenshot-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.screenshot-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.screenshot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.screenshot-header h4 {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.screenshot-image {
+    padding: 1rem;
+    text-align: center;
+    background: white;
+}
+
+.screenshot-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.screenshot-image img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.screenshot-placeholder {
+    padding: 2rem;
+    text-align: center;
+    color: #64748b;
+    background: #f1f5f9;
+}
+
+.screenshot-placeholder .dashicons {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.screenshot-caption {
+    padding: 1rem;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+.screenshot-caption p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* Screenshot Modal */
+.screenshot-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+}
+
+.screenshot-modal {
+    background: white;
+    border-radius: 12px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.screenshot-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.screenshot-modal-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.screenshot-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.screenshot-modal-close:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.screenshot-modal-body {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.screenshot-modal-image {
+    max-width: 100%;
+    max-height: 70vh;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.screenshot-modal-caption {
+    margin: 1rem 0 0 0;
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-style: italic;
+}
+</style>

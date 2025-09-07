@@ -91,7 +91,7 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                 <div class="stat-change <?php echo $success_rate >= 90 ? 'positive' : ($success_rate >= 70 ? 'neutral' : 'negative'); ?>">
                     <span class="dashicons dashicons-<?php echo $success_rate >= 90 ? 'arrow-up-alt' : ($success_rate >= 70 ? 'minus' : 'arrow-down-alt'); ?>"></span>
                     <?php echo $success_rate >= 90 ? 'Excellent' : ($success_rate >= 70 ? 'Good' : 'Needs attention'); ?>
-                </div>
+        </div>
             </div>
 
             <div class="stat-card">
@@ -108,7 +108,7 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                 </div>
             </div>
         </div>
-
+        
         <!-- Quick Actions -->
         <div class="modern-card">
             <div class="card-header">
@@ -139,9 +139,9 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                     </div>
                     <h4 class="action-title">Settings</h4>
                 </a>
-            </div>
         </div>
-
+    </div>
+    
         <div class="modern-grid grid-2">
             <!-- Recent Test Results -->
             <div class="modern-card">
@@ -149,8 +149,8 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                     <h2 class="card-title">Recent Test Results</h2>
                     <a href="<?php echo admin_url('admin.php?page=wp-tester-results'); ?>" class="modern-btn modern-btn-secondary modern-btn-small">
                         View All
-                    </a>
-                </div>
+        </a>
+    </div>
                 <div class="modern-list">
                     <?php if (!empty($recent_results)) : ?>
                         <?php foreach (array_slice($recent_results, 0, 5) as $result) : ?>
@@ -170,10 +170,10 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                                     </div>
                                     <div style="margin-top: 0.25rem; font-size: 0.75rem;">
                                         <?php echo esc_html($result['execution_time'] ?? '0'); ?>s
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
+            </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
                     <?php else : ?>
                         <div class="empty-state">
                             <div class="empty-state-icon">
@@ -185,8 +185,8 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                                 <span class="dashicons dashicons-controls-play"></span>
                                 Run First Test
                             </a>
-                        </div>
-                    <?php endif; ?>
+    </div>
+    <?php endif; ?>
                 </div>
             </div>
 
@@ -225,19 +225,19 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                         <div class="empty-state">
                             <div class="empty-state-icon">
                                 <span class="dashicons dashicons-admin-generic"></span>
-                            </div>
+            </div>
                             <h3>No Flows Found</h3>
                             <p>Create your first flow to start testing</p>
                             <a href="<?php echo admin_url('admin.php?page=wp-tester-flows'); ?>" class="modern-btn modern-btn-primary">
                                 <span class="dashicons dashicons-plus-alt"></span>
                                 Create Flow
-                            </a>
-                        </div>
-                    <?php endif; ?>
+                </a>
+            </div>
+            <?php endif; ?>
                 </div>
             </div>
         </div>
-
+        
         <!-- Critical Issues & Recommendations -->
         <?php if (!empty($critical_issues) || !empty($recommendations)) : ?>
         <div class="modern-grid grid-2">
@@ -258,8 +258,8 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                                 <div class="item-details">
                                     <h4><?php echo esc_html($issue['title'] ?? 'Critical Issue'); ?></h4>
                                     <p><?php echo esc_html($issue['description'] ?? 'Issue description not available'); ?></p>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
                             <div class="item-meta">
                                 <span class="status-badge error">Critical</span>
                             </div>
@@ -296,7 +296,7 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                                 <button class="status-badge info recommendation-tip-btn" 
                                         data-recommendation='<?php echo esc_attr(json_encode($recommendation)); ?>'>
                                     Tip
-                                </button>
+                </button>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -327,16 +327,16 @@ jQuery(document).ready(function($) {
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'wp_tester_run_all_tests',
+            action: 'wp_tester_run_all_tests',
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
                 hideProgressModal();
-                if (response.success) {
+            if (response.success) {
                     showSuccessModal('Tests Complete!', 
                         'All tests have been executed successfully. ' + (response.data.message || ''));
                     setTimeout(() => location.reload(), 2000);
-                } else {
+            } else {
                     showErrorModal('Test Failed', response.data.message || 'Unknown error occurred');
                 }
             },
@@ -431,8 +431,12 @@ jQuery(document).ready(function($) {
     }
     
     function showSuccessModal(title, message) {
+        // Remove any existing success modals first
+        $('[id^="wp-tester-success-modal"]').remove();
+        
+        const modalId = 'wp-tester-success-modal-' + Date.now();
         const modal = $(`
-            <div id="wp-tester-success-modal" class="wp-tester-modal-overlay">
+            <div id="${modalId}" class="wp-tester-modal-overlay">
                 <div class="wp-tester-modal">
                     <div class="wp-tester-modal-header">
                         <div class="wp-tester-modal-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
@@ -444,18 +448,39 @@ jQuery(document).ready(function($) {
                         <p>${message}</p>
                     </div>
                     <div class="wp-tester-modal-footer">
-                        <button class="modern-btn modern-btn-primary" onclick="$('#wp-tester-success-modal').fadeOut(300, function(){$(this).remove();})">Close</button>
+                        <button class="modern-btn modern-btn-primary wp-tester-modal-close" data-modal-id="${modalId}">Close</button>
                     </div>
                 </div>
             </div>
         `);
         $('body').append(modal);
         modal.fadeIn(300);
+        
+        // Add click handler for the close button
+        modal.find('.wp-tester-modal-close').on('click', function() {
+            const targetModalId = $(this).data('modal-id');
+            $('#' + targetModalId).fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Add click handler for overlay to close modal
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                $(this).fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
     }
     
     function showErrorModal(title, message) {
+        // Remove any existing error modals first
+        $('[id^="wp-tester-error-modal"]').remove();
+        
+        const modalId = 'wp-tester-error-modal-' + Date.now();
         const modal = $(`
-            <div id="wp-tester-error-modal" class="wp-tester-modal-overlay">
+            <div id="${modalId}" class="wp-tester-modal-overlay">
                 <div class="wp-tester-modal">
                     <div class="wp-tester-modal-header">
                         <div class="wp-tester-modal-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
@@ -467,13 +492,30 @@ jQuery(document).ready(function($) {
                         <p>${message}</p>
                     </div>
                     <div class="wp-tester-modal-footer">
-                        <button class="modern-btn modern-btn-primary" onclick="$('#wp-tester-error-modal').fadeOut(300, function(){$(this).remove();})">Close</button>
+                        <button class="modern-btn modern-btn-primary wp-tester-modal-close" data-modal-id="${modalId}">Close</button>
                     </div>
                 </div>
             </div>
         `);
         $('body').append(modal);
         modal.fadeIn(300);
+        
+        // Add click handler for the close button
+        modal.find('.wp-tester-modal-close').on('click', function() {
+            const targetModalId = $(this).data('modal-id');
+            $('#' + targetModalId).fadeOut(300, function() {
+                $(this).remove();
+        });
+    });
+    
+        // Add click handler for overlay to close modal
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                $(this).fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
     }
 });
 </script>

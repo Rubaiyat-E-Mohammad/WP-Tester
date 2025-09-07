@@ -101,6 +101,7 @@ class WP_Tester_Flow_Executor {
         $start_time = microtime(true);
         $this->test_run_id = uniqid('test_', true);
         $this->execution_log = array();
+        $this->screenshots_to_save = array();
         
         try {
             // Get flow details
@@ -162,7 +163,13 @@ class WP_Tester_Flow_Executor {
                     if (isset($this->settings['screenshot_on_failure']) && $this->settings['screenshot_on_failure']) {
                         $screenshot_path = $this->take_screenshot($flow_id, $step_number + 1, 'failure', $step_result['error']);
                         if ($screenshot_path) {
-                            // Screenshot saved successfully, could be logged or stored
+                            // Store screenshot path for later database save
+                            $this->screenshots_to_save[] = array(
+                                'step_number' => $step_number + 1,
+                                'screenshot_path' => $screenshot_path,
+                                'screenshot_type' => 'failure',
+                                'caption' => $step_result['error']
+                            );
                             error_log("WP Tester: Screenshot saved for failed step: {$screenshot_path}");
                         }
                     }
@@ -196,6 +203,19 @@ class WP_Tester_Flow_Executor {
                 wp_json_encode($this->execution_log),
                 wp_json_encode($suggestions)
             );
+            
+            // Save screenshots to database
+            if ($result_id && !empty($this->screenshots_to_save)) {
+                foreach ($this->screenshots_to_save as $screenshot) {
+                    $this->database->save_screenshot(
+                        $result_id,
+                        $screenshot['step_number'],
+                        $screenshot['screenshot_path'],
+                        $screenshot['screenshot_type'],
+                        $screenshot['caption']
+                    );
+                }
+            }
             
             $this->log_step('info', 'Flow execution completed', array(
                 'status' => $overall_status,
