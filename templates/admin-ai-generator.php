@@ -245,41 +245,41 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
             
-            <div class="modern-grid grid-2" style="max-height: 500px; overflow-y: auto; gap: 1rem;">
+            <div class="modern-grid grid-4" style="max-height: 500px; overflow-y: auto; gap: 1rem;">
                 <?php foreach ($available_plugins as $plugin): ?>
                 <div class="stat-card plugin-card" 
                      data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
                      onclick="togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')"
-                     style="cursor: pointer; position: relative; height: 200px; display: flex; flex-direction: column; justify-content: space-between;">
+                     style="cursor: pointer; position: relative; height: 140px; display: flex; flex-direction: column; justify-content: space-between;">
                     
-                    <div class="stat-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <h3 class="stat-label" style="margin: 0; font-size: 1rem; font-weight: 600; color: #00265e; line-height: 1.3; flex: 1; margin-right: 0.5rem;">
+                    <div class="stat-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <h3 class="stat-label" style="margin: 0; font-size: 0.875rem; font-weight: 600; color: #00265e; line-height: 1.2; flex: 1; margin-right: 0.5rem;">
                             <?php echo esc_html($plugin['name']); ?>
                         </h3>
-                        <div class="stat-icon" style="width: 32px; height: 32px; border-radius: 6px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <span class="dashicons dashicons-admin-plugins" style="color: #00265e; font-size: 16px;"></span>
+                        <div class="stat-icon" style="width: 24px; height: 24px; border-radius: 4px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <span class="dashicons dashicons-admin-plugins" style="color: #00265e; font-size: 12px;"></span>
                         </div>
                     </div>
                     
-                    <div class="stat-value" style="margin-bottom: 0.75rem;">
-                        <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #e0f2fe; color: #0369a1; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                    <div class="stat-value" style="margin-bottom: 0.5rem;">
+                        <span style="display: inline-block; padding: 0.125rem 0.5rem; background: #e0f2fe; color: #0369a1; border-radius: 4px; font-size: 0.625rem; font-weight: 600; text-transform: uppercase;">
                             <?php echo esc_html($plugin['type']); ?>
                         </span>
                     </div>
                     
-                    <div class="stat-change neutral" style="margin-bottom: 1rem; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                        <p style="margin: 0; font-size: 0.875rem; color: #64748b; line-height: 1.4; flex: 1;">
-                            <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 12)); ?>
+                    <div class="stat-change neutral" style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                        <p style="margin: 0; font-size: 0.75rem; color: #64748b; line-height: 1.3; flex: 1;">
+                            <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 8)); ?>
                         </p>
-                        <div style="margin-top: 0.75rem; font-size: 0.75rem; color: #9ca3af;">
+                        <div style="margin-top: 0.5rem; font-size: 0.625rem; color: #9ca3af;">
                             <div>v<?php echo esc_html($plugin['version']); ?></div>
                             <div><?php echo esc_html($plugin['author']); ?></div>
                         </div>
                     </div>
                     
                     <!-- Selection Indicator -->
-                    <div class="plugin-selection-indicator" style="position: absolute; top: 1rem; right: 1rem; width: 24px; height: 24px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
-                        <div class="checkmark" style="width: 12px; height: 12px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
+                    <div class="plugin-selection-indicator" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')" style="position: absolute; top: 0.75rem; right: 0.75rem; width: 20px; height: 20px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;">
+                        <div class="checkmark" style="width: 8px; height: 8px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
                     </div>
                     
                     <!-- Hidden checkbox for form submission -->
@@ -892,8 +892,8 @@ jQuery(document).ready(function($) {
 /* Plugin card styling - using dashboard stat-card style */
 .plugin-card {
     transition: all 0.2s ease;
-    min-height: 200px;
-    height: 200px;
+    min-height: 140px;
+    height: 140px;
     width: 100%;
 }
 
@@ -952,22 +952,24 @@ jQuery(document).ready(function($) {
 }
 
 /* Ensure grid layout works properly */
-.modern-grid.grid-2 {
+.modern-grid.grid-4 {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
 }
 
 /* Ensure cards are clickable */
+.plugin-card {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
 .plugin-card * {
     pointer-events: none;
 }
 
-.plugin-card {
-    pointer-events: auto;
-}
-
 .plugin-selection-indicator {
     pointer-events: auto;
+    cursor: pointer;
 }
 </style>
