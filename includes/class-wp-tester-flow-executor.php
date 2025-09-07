@@ -67,7 +67,7 @@ class WP_Tester_Flow_Executor {
         if (!file_exists($screenshots_dir)) {
             $created = wp_mkdir_p($screenshots_dir);
             if (!$created) {
-                error_log("WP Tester: Failed to create screenshots directory: {$screenshots_dir}");
+                // Failed to create screenshots directory
                 // Fallback to temp directory
                 $screenshots_dir = sys_get_temp_dir() . '/wp-tester-screenshots';
                 if (!file_exists($screenshots_dir)) {
@@ -78,7 +78,7 @@ class WP_Tester_Flow_Executor {
         
         // Verify directory is writable
         if (!is_writable($screenshots_dir)) {
-            error_log("WP Tester: Screenshots directory is not writable: {$screenshots_dir}");
+            // Screenshots directory is not writable
             // Fallback to temp directory
             $screenshots_dir = sys_get_temp_dir() . '/wp-tester-screenshots';
             if (!file_exists($screenshots_dir)) {
@@ -166,7 +166,7 @@ class WP_Tester_Flow_Executor {
                     
                     // Take screenshot on failure if enabled
                     $screenshot_enabled = isset($this->settings['screenshot_on_failure']) && $this->settings['screenshot_on_failure'];
-                    error_log("WP Tester: Screenshot on failure enabled: " . ($screenshot_enabled ? 'Yes' : 'No'));
+                    // Screenshot on failure enabled
                     
                     if ($screenshot_enabled) {
                         $screenshot_path = $this->take_screenshot($flow_id, $step_number + 1, 'failure', $step_result['error']);
@@ -178,12 +178,12 @@ class WP_Tester_Flow_Executor {
                                 'screenshot_type' => 'failure',
                                 'caption' => $step_result['error']
                             );
-                            error_log("WP Tester: Screenshot saved for failed step: {$screenshot_path}");
+                            // Screenshot saved for failed step
                         } else {
-                            error_log("WP Tester: Failed to take screenshot for failed step");
+                            // Failed to take screenshot for failed step
                         }
                     } else {
-                        error_log("WP Tester: Screenshot on failure is disabled in settings");
+                        // Screenshot on failure is disabled in settings
                     }
                     
                     // Stop execution on critical failure
@@ -218,7 +218,7 @@ class WP_Tester_Flow_Executor {
             
             // Save screenshots to database
             if ($result_id && !empty($this->screenshots_to_save)) {
-                error_log("WP Tester: Saving " . count($this->screenshots_to_save) . " screenshots to database for result ID: {$result_id}");
+                // Saving screenshots to database
                 foreach ($this->screenshots_to_save as $screenshot) {
                     $screenshot_id = $this->database->save_screenshot(
                         $result_id,
@@ -227,10 +227,10 @@ class WP_Tester_Flow_Executor {
                         $screenshot['screenshot_type'],
                         $screenshot['caption']
                     );
-                    error_log("WP Tester: Saved screenshot with ID: {$screenshot_id}, Path: {$screenshot['screenshot_path']}");
+                    // Saved screenshot to database
                 }
             } else {
-                error_log("WP Tester: No screenshots to save. Result ID: {$result_id}, Screenshots count: " . count($this->screenshots_to_save));
+                // No screenshots to save
             }
             
             $this->log_step('info', 'Flow execution completed', array(
@@ -813,17 +813,17 @@ class WP_Tester_Flow_Executor {
         
         // Check if directory is writable before attempting to save
         if (!is_writable($screenshot_dir)) {
-            error_log("WP Tester: Screenshot directory is not writable: {$screenshot_dir}");
+            // Screenshot directory is not writable
             return null; // Return null instead of failing
         }
         
         $result = file_put_contents($screenshot_path, $placeholder_content);
         if ($result === false) {
-            error_log("WP Tester: Failed to save screenshot to: {$screenshot_path}");
+            // Failed to save screenshot
             return null; // Return null instead of failing
         }
         
-        error_log("WP Tester: Successfully saved screenshot to: {$screenshot_path} (Size: {$result} bytes)");
+        // Successfully saved screenshot
         
         // Save screenshot record (this would be called after saving test result)
         // $this->database->save_screenshot($test_result_id, $step_number, $screenshot_path, $type, $caption);

@@ -166,6 +166,15 @@ class WP_Tester_Admin {
             'wp-tester-settings',
             array($this, 'settings_page')
         );
+        
+        add_submenu_page(
+            'wp-tester',
+            __('AI Flow Generator', 'wp-tester'),
+            __('AI Flow Generator', 'wp-tester'),
+            'manage_options',
+            'wp-tester-ai-generator',
+            array($this, 'ai_generator_page')
+        );
     }
     
     /**
@@ -287,6 +296,13 @@ class WP_Tester_Admin {
      */
     public function settings_page() {
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-settings.php';
+    }
+    
+    /**
+     * AI Generator page
+     */
+    public function ai_generator_page() {
+        include WP_TESTER_PLUGIN_DIR . 'templates/admin-ai-generator.php';
     }
     
     /**
@@ -454,9 +470,9 @@ class WP_Tester_Admin {
         
         // Debug: Log screenshot information
         $screenshots = $this->database->get_screenshots($result_id);
-        error_log("WP Tester: Found " . count($screenshots) . " screenshots for result ID: {$result_id}");
+        // Found screenshots for result
         foreach ($screenshots as $screenshot) {
-            error_log("WP Tester: Screenshot - ID: {$screenshot->id}, Path: {$screenshot->screenshot_path}, Type: {$screenshot->screenshot_type}");
+            // Processing screenshot
         }
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-result-view.php';
@@ -541,6 +557,14 @@ class WP_Tester_Admin {
         
         if (isset($input['max_pages_per_crawl'])) {
             $sanitized['max_pages_per_crawl'] = max(10, min(1000, intval($input['max_pages_per_crawl'])));
+        }
+        
+        if (isset($input['include_admin_in_crawl'])) {
+            $sanitized['include_admin_in_crawl'] = (bool)$input['include_admin_in_crawl'];
+        }
+        
+        if (isset($input['prevent_duplicate_flows'])) {
+            $sanitized['prevent_duplicate_flows'] = (bool)$input['prevent_duplicate_flows'];
         }
         
         return $sanitized;

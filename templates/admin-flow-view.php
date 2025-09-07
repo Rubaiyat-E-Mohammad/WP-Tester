@@ -300,7 +300,7 @@ jQuery(document).ready(function($) {
         const originalText = button.html();
         
         if (!flowId || flowId === 0) {
-            alert('Invalid flow ID');
+            showErrorModal('Invalid Flow ID', 'Invalid flow ID provided');
             return;
         }
         

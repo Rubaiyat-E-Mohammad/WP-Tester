@@ -43,6 +43,9 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_reset_flows', array($this, 'reset_flows'));
         add_action('wp_ajax_wp_tester_export_data', array($this, 'export_data'));
         add_action('wp_ajax_wp_tester_system_check', array($this, 'system_check'));
+        add_action('wp_ajax_wp_tester_generate_ai_flows', array($this, 'generate_ai_flows'));
+        add_action('wp_ajax_wp_tester_set_ai_api_key', array($this, 'set_ai_api_key'));
+        add_action('wp_ajax_wp_tester_get_available_plugins', array($this, 'get_available_plugins'));
     }
     
     /**
@@ -733,12 +736,12 @@ class WP_Tester_Ajax {
      * Get test results statistics
      */
     public function get_test_results_stats() {
-        error_log("WP Tester: get_test_results_stats called");
+        // Get test results stats
         
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            error_log("WP Tester: get_test_results_stats failed - insufficient permissions");
+            // Insufficient permissions
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
@@ -747,14 +750,14 @@ class WP_Tester_Ajax {
             $database = new WP_Tester_Database();
             $stats = $database->get_test_results_stats();
             
-            error_log("WP Tester: get_test_results_stats success - stats: " . wp_json_encode($stats));
+            // Stats retrieved successfully
             
             wp_send_json_success(array(
                 'stats' => $stats
             ));
             
         } catch (Exception $e) {
-            error_log("WP Tester: get_test_results_stats error: " . $e->getMessage());
+            // Error getting stats
             wp_send_json_error(array(
                 'message' => __('Failed to get test results statistics: ', 'wp-tester') . $e->getMessage()
             ));
@@ -805,12 +808,10 @@ class WP_Tester_Ajax {
     public function bulk_test_results_action() {
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
-        // Debug: Log the incoming request
-        error_log("WP Tester: Bulk test results action called");
-        error_log("WP Tester: POST data: " . wp_json_encode($_POST));
+        // Bulk test results action
         
         if (!current_user_can('manage_options')) {
-            error_log("WP Tester: Bulk action failed - insufficient permissions");
+            // Insufficient permissions
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
@@ -818,11 +819,10 @@ class WP_Tester_Ajax {
         $action = sanitize_text_field($_POST['bulk_action'] ?? '');
         $result_ids = array_filter(array_map('intval', $_POST['result_ids'] ?? []));
         
-        error_log("WP Tester: Action: {$action}");
-        error_log("WP Tester: Result IDs: " . wp_json_encode($result_ids));
+        // Processing bulk action
         
         if (empty($action) || empty($result_ids)) {
-            error_log("WP Tester: Bulk action failed - empty action or result IDs");
+            // Empty action or result IDs
             wp_send_json_error(array(
                 'message' => __('Invalid action or no results selected.', 'wp-tester')
             ));
@@ -1094,20 +1094,33 @@ class WP_Tester_Ajax {
                 'test_results' => $database->get_test_results(),
                 'crawl_results' => $database->get_crawl_results(1000, 0),
                 'export_date' => current_time('mysql'),
-                'plugin_version' => WP_TESTER_VERSION
+                'plugin_version' => WP_TESTER_VERSION,
+                'site_url' => get_site_url(),
+                'exported_by' => wp_get_current_user()->display_name
             );
             
             // Generate filename
             $filename = 'wp-tester-export-' . date('Y-m-d-H-i-s') . '.json';
             
-            // Set headers for download
-            $json_data = wp_json_encode($data);
-            header('Content-Type: application/json');
-            header('Content-Disposition: attachment; filename="' . $filename . '"');
-            header('Content-Length: ' . strlen($json_data ?: ''));
+            // Create temporary file
+            $upload_dir = wp_upload_dir();
+            $temp_file = $upload_dir['path'] . '/' . $filename;
             
-            echo wp_json_encode($data, JSON_PRETTY_PRINT);
-            exit;
+            // Write data to file
+            $json_data = wp_json_encode($data, JSON_PRETTY_PRINT);
+            if (file_put_contents($temp_file, $json_data) === false) {
+                throw new Exception('Failed to create export file');
+            }
+            
+            // Return download URL
+            $download_url = $upload_dir['url'] . '/' . $filename;
+            
+            wp_send_json_success(array(
+                'message' => __('Data exported successfully!', 'wp-tester'),
+                'download_url' => $download_url,
+                'filename' => $filename,
+                'file_size' => size_format(filesize($temp_file))
+            ));
             
         } catch (Exception $e) {
             wp_send_json_error(array(
@@ -1181,13 +1194,186 @@ class WP_Tester_Ajax {
     }
     
     /**
+     * Generate AI flows
+     */
+    public function generate_ai_flows() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            // Set longer execution time for AI processing
+            set_time_limit(300); // 5 minutes
+            
+            $ai_generator = new WP_Tester_AI_Flow_Generator();
+            
+            // Get options from POST data
+            $options = array(
+                'include_admin' => isset($_POST['include_admin']) ? (bool)$_POST['include_admin'] : true,
+                'include_frontend' => isset($_POST['include_frontend']) ? (bool)$_POST['include_frontend'] : true,
+                'include_plugins' => isset($_POST['include_plugins']) ? (bool)$_POST['include_plugins'] : false,
+                'selected_plugins' => isset($_POST['selected_plugins']) ? array_filter($_POST['selected_plugins']) : array(),
+                'max_flows_per_area' => intval($_POST['max_flows_per_area'] ?? 10),
+                'max_flows_per_plugin' => intval($_POST['max_flows_per_plugin'] ?? 5),
+                'focus_areas' => array_filter(explode(',', $_POST['focus_areas'] ?? 'ecommerce,content,user_management,settings'))
+            );
+            
+            $result = $ai_generator->generate_ai_flows($options);
+            
+            if ($result['success']) {
+                wp_send_json_success(array(
+                    'message' => $result['message'],
+                    'results' => $result['results']
+                ));
+            } else {
+                wp_send_json_error(array(
+                    'message' => __('AI flow generation failed: ', 'wp-tester') . $result['error']
+                ));
+            }
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to generate AI flows: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Set AI API key
+     */
+    public function set_ai_api_key() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $api_key = sanitize_text_field($_POST['api_key'] ?? '');
+            $api_provider = sanitize_text_field($_POST['api_provider'] ?? 'openai');
+            
+            // Validate API key format (basic validation)
+            if (!empty($api_key) && strlen($api_key) < 10) {
+                wp_send_json_error(array(
+                    'message' => __('API key appears to be too short. Please check and try again.', 'wp-tester')
+                ));
+                return;
+            }
+            
+            // Save API key
+            update_option('wp_tester_ai_api_key', $api_key);
+            update_option('wp_tester_ai_api_provider', $api_provider);
+            
+            // Test API key if provided
+            if (!empty($api_key)) {
+                $test_result = $this->test_ai_api_key($api_key, $api_provider);
+                if (!$test_result['success']) {
+                    wp_send_json_error(array(
+                        'message' => __('API key saved but test failed: ', 'wp-tester') . $test_result['error']
+                    ));
+                    return;
+                }
+            }
+            
+            wp_send_json_success(array(
+                'message' => empty($api_key) ? 
+                    __('API key removed. AI flows will use fallback generation.', 'wp-tester') :
+                    __('API key saved and tested successfully!', 'wp-tester')
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to save API key: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Get available plugins for AI flow generation
+     */
+    public function get_available_plugins() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $ai_generator = new WP_Tester_AI_Flow_Generator();
+            $plugins = $ai_generator->get_available_plugins();
+            
+            wp_send_json_success(array(
+                'plugins' => $plugins,
+                'count' => count($plugins)
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to get available plugins: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Test AI API key
+     */
+    private function test_ai_api_key($api_key, $provider) {
+        try {
+            $test_prompt = "Test connection. Respond with 'OK' if you can read this.";
+            
+            switch ($provider) {
+                case 'openai':
+                    $response = wp_remote_post('https://api.openai.com/v1/chat/completions', array(
+                        'headers' => array(
+                            'Authorization' => 'Bearer ' . $api_key,
+                            'Content-Type' => 'application/json',
+                        ),
+                        'body' => wp_json_encode(array(
+                            'model' => 'gpt-3.5-turbo',
+                            'messages' => array(
+                                array(
+                                    'role' => 'user',
+                                    'content' => $test_prompt
+                                )
+                            ),
+                            'max_tokens' => 10
+                        )),
+                        'timeout' => 15
+                    ));
+                    break;
+                    
+                default:
+                    return array('success' => false, 'error' => 'Unsupported API provider');
+            }
+            
+            if (is_wp_error($response)) {
+                return array('success' => false, 'error' => $response->get_error_message());
+            }
+            
+            $body = wp_remote_retrieve_body($response);
+            $data = json_decode($body ?: '{}', true);
+            
+            if (isset($data['error'])) {
+                return array('success' => false, 'error' => $data['error']['message'] ?? 'Unknown API error');
+            }
+            
+            return array('success' => true);
+            
+        } catch (Exception $e) {
+            return array('success' => false, 'error' => $e->getMessage());
+        }
+    }
+    
+    /**
      * Debug bulk action - simple test endpoint
      */
     public function debug_bulk_action() {
-        error_log("WP Tester: Debug bulk action called");
-        error_log("WP Tester: POST data: " . wp_json_encode($_POST));
-        error_log("WP Tester: GET data: " . wp_json_encode($_GET));
-        error_log("WP Tester: REQUEST data: " . wp_json_encode($_REQUEST));
+        // Debug bulk action called
         
         wp_send_json_success(array(
             'message' => 'Debug endpoint working',

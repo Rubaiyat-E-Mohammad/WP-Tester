@@ -351,14 +351,14 @@ jQuery(document).ready(function($) {
                         message += 'No duplicate groups found.';
                     }
                     
-                    alert(message);
+                    showSuccessModal('Duplicate Check', message);
                 } else {
-                    alert('Error checking duplicates: ' + (response.data.message || 'Unknown error'));
+                    showErrorModal('Duplicate Check Failed', 'Error checking duplicates: ' + (response.data.message || 'Unknown error'));
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Check Duplicates AJAX Error:', {xhr, status, error});
-                alert('Error connecting to server');
+                showErrorModal('Connection Error', 'Error connecting to server');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
@@ -412,24 +412,24 @@ jQuery(document).ready(function($) {
     });
     
     // Individual flow test
-    console.log('Setting up individual flow test handlers');
+    // Setting up individual flow test handlers
     $(document).on('click', '.modern-btn', function(e) {
-        console.log('Modern button clicked, text:', $(this).text().trim());
+        // Modern button clicked
         
         if ($(this).text().trim() !== 'Test') {
             return; // Not a test button, let default behavior continue
         }
         
         e.preventDefault();
-        console.log('Test button clicked, preventing default and showing modal');
+        // Test button clicked
         
         const button = $(this);
         const originalText = button.html();
         const href = button.attr('href');
-        console.log('Button href:', href);
+        // Button href
         
         const flowId = href ? href.match(/flow_id=(\d+)/) : null;
-        console.log('Extracted flow ID:', flowId);
+        // Extracted flow ID
         
         if (!flowId) {
             console.error('Could not determine flow ID from href:', href);
@@ -438,7 +438,7 @@ jQuery(document).ready(function($) {
         }
         
         // Show progress modal
-        console.log('Showing progress modal for individual flow test');
+        // Showing progress modal
         showProgressModal('Running Test', 'Executing flow test...');
         
         button.html('<span class="dashicons dashicons-controls-play"></span> Testing...').prop('disabled', true);
@@ -511,7 +511,7 @@ jQuery(document).ready(function($) {
     
     // Modal functions
     function showProgressModal(title, message) {
-        console.log('showProgressModal called with title:', title, 'message:', message);
+        // Show progress modal
         const modal = $(`
             <div id="wp-tester-progress-modal" class="wp-tester-modal-overlay">
                 <div class="wp-tester-modal">
@@ -636,7 +636,7 @@ jQuery(document).ready(function($) {
         const flowName = button.closest('.modern-list-item').find('h4').text();
         
         if (!flowId || flowId === 0) {
-            alert('Invalid flow ID');
+            showErrorModal('Invalid Flow ID', 'Invalid flow ID provided');
             return;
         }
         

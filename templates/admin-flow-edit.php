@@ -365,7 +365,7 @@ jQuery(document).ready(function($) {
         
         // Validate required fields
         if (!formData.action || !formData.target) {
-            alert('Please fill in all required fields.');
+            showErrorModal('Validation Error', 'Please fill in all required fields.');
             return;
         }
         

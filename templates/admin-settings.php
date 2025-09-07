@@ -64,6 +64,39 @@ if (!defined('ABSPATH')) {
                         </p>
                     </div>
 
+                    <!-- Max Pages per Crawl -->
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                            Max Pages per Crawl
+                        </label>
+                        <input type="number" name="wp_tester_settings[max_pages_per_crawl]" value="<?php echo esc_attr($settings['max_pages_per_crawl'] ?? 100); ?>" min="10" max="1000" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                            Maximum number of pages to crawl in a single crawl session
+                        </p>
+                    </div>
+
+                    <!-- Include Admin Panel in Crawl -->
+                    <div>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" name="wp_tester_settings[include_admin_in_crawl]" value="1" <?php checked(($settings['include_admin_in_crawl'] ?? true), true); ?> style="accent-color: #1FC09A;">
+                            <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">Include Admin Panel in Crawl</span>
+                        </label>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                            Automatically discover and create flows for WordPress admin pages
+                        </p>
+                    </div>
+
+                    <!-- Prevent Duplicate Flows -->
+                    <div>
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" name="wp_tester_settings[prevent_duplicate_flows]" value="1" <?php checked(($settings['prevent_duplicate_flows'] ?? true), true); ?> style="accent-color: #1FC09A;">
+                            <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">Prevent Duplicate Flows</span>
+                        </label>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                            Automatically prevent creation of duplicate flows during crawling
+                        </p>
+                    </div>
+
                     <!-- Test Timeout -->
                     <div>
                         <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
@@ -258,13 +291,13 @@ jQuery(document).ready(function($) {
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert('Cache cleared successfully!');
+                        showSuccessModal('Cache Cleared', 'Cache cleared successfully!');
                     } else {
-                        alert('Failed to clear cache: ' + (response.data.message || 'Unknown error'));
+                        showErrorModal('Cache Clear Failed', response.data.message || 'Unknown error occurred');
                     }
                 },
                 error: function() {
-                    alert('Error connecting to server. Please try again.');
+                    showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
                 },
                 complete: function() {
                     button.html(originalText).prop('disabled', false);
@@ -289,13 +322,13 @@ jQuery(document).ready(function($) {
                 },
                 success: function(response) {
                     if (response.success) {
-                        alert('Flows reset successfully!');
+                        showSuccessModal('Flows Reset', 'All flows have been reset successfully!');
                     } else {
-                        alert('Failed to reset flows: ' + (response.data.message || 'Unknown error'));
+                        showErrorModal('Reset Failed', response.data.message || 'Unknown error occurred');
                     }
                 },
                 error: function() {
-                    alert('Error connecting to server. Please try again.');
+                    showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
                 },
                 complete: function() {
                     button.html(originalText).prop('disabled', false);
@@ -318,31 +351,30 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-                if (response.success) {
+            if (response.success) {
                     // Create download link
-                    const blob = new Blob([response.data], {type: 'application/json'});
-                    const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'wp-tester-export-' + new Date().toISOString().slice(0,19).replace(/:/g, '-') + '.json';
+                    a.href = response.data.download_url;
+                    a.download = response.data.filename;
                     document.body.appendChild(a);
                     a.click();
-                    window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
-                    alert('Data exported successfully!');
-                } else {
-                    alert('Failed to export data: ' + (response.data.message || 'Unknown error'));
+                    
+                    showSuccessModal('Data exported successfully!', 
+                        'Export file: ' + response.data.filename + '<br>File size: ' + response.data.file_size);
+            } else {
+                    showErrorModal('Export Failed', response.data.message || 'Unknown error occurred');
                 }
             },
             error: function() {
-                alert('Error connecting to server. Please try again.');
+                showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
             }
         });
     });
-
+    
     $('#system-check').on('click', function(e) {
         e.preventDefault();
         const button = $(this);
@@ -358,30 +390,138 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
-                    let message = 'System check completed!\n\n';
-                    if (response.data.checks) {
-                        Object.keys(response.data.checks).forEach(category => {
-                            message += category.toUpperCase() + ':\n';
-                            Object.keys(response.data.checks[category]).forEach(check => {
-                                const status = response.data.checks[category][check].status;
-                                const statusIcon = status === 'ok' ? '✓' : (status === 'warning' ? '⚠' : '✗');
-                                message += `  ${statusIcon} ${check}: ${response.data.checks[category][check].message}\n`;
-                            });
-                            message += '\n';
-                        });
-                    }
-                    alert(message);
+                    showSystemCheckModal(response.data.checks);
                 } else {
-                    alert('System check failed: ' + (response.data.message || 'Unknown error'));
+                    showErrorModal('System Check Failed', response.data.message || 'Unknown error occurred');
                 }
             },
             error: function() {
-                alert('Error connecting to server. Please try again.');
+                showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
             }
         });
     });
+    
+    // Modal functions
+    function showSuccessModal(title, message) {
+        const modalId = 'success-modal-' + Date.now();
+        const modal = $(`
+            <div id="${modalId}" class="modern-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <div style="width: 60px; height: 60px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                            <span class="dashicons dashicons-yes" style="color: white; font-size: 30px;"></span>
+                        </div>
+                        <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">${title}</h3>
+                    </div>
+                    <div style="color: #64748b; line-height: 1.6; margin-bottom: 2rem; text-align: center;">
+                        ${message}
+                    </div>
+                    <div style="text-align: center;">
+                        <button class="modal-close-btn" style="background: #1FC09A; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(modal);
+        
+        modal.find('.modal-close-btn, .modern-modal').on('click', function(e) {
+            if (e.target === this) {
+                modal.remove();
+            }
+        });
+    }
+    
+    function showErrorModal(title, message) {
+        const modalId = 'error-modal-' + Date.now();
+        const modal = $(`
+            <div id="${modalId}" class="modern-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <div style="width: 60px; height: 60px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                            <span class="dashicons dashicons-warning" style="color: white; font-size: 30px;"></span>
+                        </div>
+                        <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">${title}</h3>
+                    </div>
+                    <div style="color: #64748b; line-height: 1.6; margin-bottom: 2rem; text-align: center;">
+                        ${message}
+                    </div>
+                    <div style="text-align: center;">
+                        <button class="modal-close-btn" style="background: #ef4444; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(modal);
+        
+        modal.find('.modal-close-btn, .modern-modal').on('click', function(e) {
+            if (e.target === this) {
+                modal.remove();
+            }
+        });
+    }
+    
+    function showSystemCheckModal(checks) {
+        const modalId = 'system-check-modal-' + Date.now();
+        let content = '<div style="max-height: 400px; overflow-y: auto;">';
+        
+        Object.keys(checks).forEach(category => {
+            content += `<div style="margin-bottom: 1.5rem;">
+                <h4 style="margin: 0 0 0.75rem 0; color: #374151; font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">${category}</h4>`;
+            
+            Object.keys(checks[category]).forEach(check => {
+                const status = checks[category][check].status;
+                const statusIcon = status === 'ok' ? '✓' : (status === 'warning' ? '⚠' : '✗');
+                const statusColor = status === 'ok' ? '#10b981' : (status === 'warning' ? '#f59e0b' : '#ef4444');
+                
+                content += `<div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6;">
+                    <span style="color: ${statusColor}; font-weight: bold; font-size: 1.125rem;">${statusIcon}</span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #374151; font-size: 0.875rem;">${check.replace(/_/g, ' ')}</div>
+                        <div style="color: #64748b; font-size: 0.8125rem;">${checks[category][check].message}</div>
+                    </div>
+                </div>`;
+            });
+            
+            content += '</div>';
+        });
+        
+        content += '</div>';
+        
+        const modal = $(`
+            <div id="${modalId}" class="modern-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 600px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <div style="width: 60px; height: 60px; background: #1FC09A; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                            <span class="dashicons dashicons-admin-tools" style="color: white; font-size: 30px;"></span>
+                        </div>
+                        <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">System Check Results</h3>
+                    </div>
+                    ${content}
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button class="modal-close-btn" style="background: #1FC09A; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(modal);
+        
+        modal.find('.modal-close-btn, .modern-modal').on('click', function(e) {
+            if (e.target === this) {
+                modal.remove();
+            }
+        });
+    }
 });
 </script>

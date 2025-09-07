@@ -292,8 +292,7 @@ jQuery(document).ready(function($) {
     // Cleanup test results functionality
     $('#cleanup-test-results').on('click', function(e) {
         e.preventDefault();
-        console.log('WP Tester: Cleanup results button clicked');
-        alert('Cleanup button clicked! Check console for details.');
+        // Cleanup results button clicked
         showCleanupModal();
     });
 
@@ -346,13 +345,13 @@ jQuery(document).ready(function($) {
     // Export results
     $('#export-results').on('click', function(e) {
         e.preventDefault();
-        alert('Export feature coming soon!');
+        showExportModal();
     });
 
     // Load more results
     $('#load-more').on('click', function(e) {
         e.preventDefault();
-        alert('Pagination feature coming soon!');
+        showErrorModal('Feature Coming Soon', 'Pagination feature will be available in a future update.');
     });
 
     // Run test
@@ -474,8 +473,7 @@ jQuery(document).ready(function($) {
 
     // Cleanup modal functions
     function showCleanupModal() {
-        console.log('WP Tester: showCleanupModal called');
-        console.log('WP Tester: ajaxurl available:', typeof ajaxurl !== 'undefined');
+        // Show cleanup modal
         
         // First get current stats
         $.ajax({
@@ -486,13 +484,13 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-                console.log('WP Tester: get_test_results_stats response:', response);
+                // Get test results stats response
                 if (response.success) {
                     const stats = response.data.stats;
-                    console.log('WP Tester: stats received:', stats);
+                    // Stats received
                     showCleanupModalWithStats(stats);
                 } else {
-                    console.log('WP Tester: get_test_results_stats failed:', response.data);
+                    // Failed to get stats
                     showErrorModal('Error', 'Failed to load test results statistics');
                 }
             },
@@ -504,7 +502,7 @@ jQuery(document).ready(function($) {
     }
 
     function showCleanupModalWithStats(stats) {
-        console.log('WP Tester: showCleanupModalWithStats called with stats:', stats);
+        // Show cleanup modal with stats
         const modal = $(`
             <div id="cleanup-test-results-modal" class="wp-tester-modal-overlay">
                 <div class="wp-tester-modal wp-tester-cleanup-modal">
@@ -687,7 +685,7 @@ jQuery(document).ready(function($) {
     
     // Debug bulk action
     $('#debug-bulk-action').on('click', function() {
-        console.log('WP Tester: Debug button clicked');
+        // Debug button clicked
         
         $.ajax({
             url: ajaxurl,
@@ -698,12 +696,12 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-                console.log('WP Tester: Debug response:', response);
-                alert('Debug test successful! Check console for details.');
+                // Debug response received
+                showSuccessModal('Debug Test Successful', 'Debug test completed successfully! Check console for details.');
             },
             error: function(xhr, status, error) {
                 console.error('WP Tester: Debug error:', {xhr, status, error});
-                alert('Debug test failed! Check console for details.');
+                showErrorModal('Debug Test Failed', 'Debug test failed! Check console for details.');
             }
         });
     });
@@ -716,13 +714,10 @@ jQuery(document).ready(function($) {
         }).get();
         
         // Debug: Log the action and selected IDs
-        console.log('WP Tester: Bulk action clicked');
-        console.log('WP Tester: Action:', action);
-        console.log('WP Tester: Selected IDs:', selectedIds);
-        console.log('WP Tester: Checked checkboxes:', $('.result-checkbox:checked').length);
+        // Bulk action clicked
         
         if (!action || selectedIds.length === 0) {
-            console.log('WP Tester: No action or no IDs selected');
+            // No action or IDs selected
             showErrorModal('Invalid Action', 'Please select an action and at least one result.');
             return;
         }
@@ -744,21 +739,21 @@ jQuery(document).ready(function($) {
             nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
         };
         
-        console.log('WP Tester: Sending AJAX data:', ajaxData);
+        // Sending AJAX data
         
         $.ajax({
             url: ajaxurl,
             type: 'POST',
             data: ajaxData,
             success: function(response) {
-                console.log('WP Tester: AJAX Success Response:', response);
+                // AJAX success response
                 if (response.success) {
-                    console.log('WP Tester: Bulk action successful:', response.data.message);
+                    // Bulk action successful
                     showSuccessModal('Bulk Action Complete!', 
                         response.data.message || 'Action completed successfully. Refreshing page...');
                     setTimeout(() => location.reload(), 2000);
                 } else {
-                    console.log('WP Tester: Bulk action failed:', response.data.message);
+                    // Bulk action failed
                     showErrorModal('Bulk Action Failed', response.data.message || 'Unknown error occurred');
                 }
             },
@@ -772,6 +767,113 @@ jQuery(document).ready(function($) {
             }
         });
     });
+    
+    // Export modal function
+    function showExportModal() {
+        const modalId = 'export-modal-' + Date.now();
+        const modal = $(`
+            <div id="${modalId}" class="modern-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <div style="width: 60px; height: 60px; background: #1FC09A; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                            <span class="dashicons dashicons-download" style="color: white; font-size: 30px;"></span>
+                        </div>
+                        <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">Export Test Results</h3>
+                    </div>
+                    <div style="color: #64748b; line-height: 1.6; margin-bottom: 2rem; text-align: center;">
+                        Choose export format and options for your test results.
+                    </div>
+                    <div style="margin-bottom: 2rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Export Format:</label>
+                            <select id="export-format" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                                <option value="json">JSON (Complete Data)</option>
+                                <option value="csv">CSV (Spreadsheet)</option>
+                                <option value="pdf">PDF Report</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Range:</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <input type="date" id="export-date-from" style="padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <input type="date" id="export-date-to" style="padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                                <input type="checkbox" id="export-include-screenshots" style="accent-color: #1FC09A;">
+                                <span style="font-size: 0.875rem; color: #374151;">Include screenshots in export</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button class="modal-close-btn" style="background: #6b7280; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            Cancel
+                        </button>
+                        <button id="export-confirm" style="background: #1FC09A; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(modal);
+        
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        const lastMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        modal.find('#export-date-to').val(today);
+        modal.find('#export-date-from').val(lastMonth);
+        
+        modal.find('.modal-close-btn, .modern-modal').on('click', function(e) {
+            if (e.target === this) {
+                modal.remove();
+            }
+        });
+        
+        modal.find('#export-confirm').on('click', function() {
+            const format = modal.find('#export-format').val();
+            const dateFrom = modal.find('#export-date-from').val();
+            const dateTo = modal.find('#export-date-to').val();
+            const includeScreenshots = modal.find('#export-include-screenshots').is(':checked');
+            
+            // Call export AJAX
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_export_report',
+                    format: format,
+                    date_from: dateFrom,
+                    date_to: dateTo,
+                    include_screenshots: includeScreenshots,
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                },
+                success: function(response) {
+                    modal.remove();
+                    if (response.success) {
+                        // Create download link
+                        const a = document.createElement('a');
+                        a.href = response.data.download_url;
+                        a.download = response.data.filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        
+                        showSuccessModal('Export Complete!', 
+                            'Test results exported successfully.<br>File: ' + response.data.filename);
+                    } else {
+                        showErrorModal('Export Failed', response.data.message || 'Unknown error occurred');
+                    }
+                },
+                error: function() {
+                    modal.remove();
+                    showErrorModal('Export Error', 'Error connecting to server. Please try again.');
+                }
+            });
+        });
+    }
 });
 </script>
 

@@ -301,7 +301,7 @@ class WP_Tester_Database {
         $removed_count = 0;
         
         // Debug: Log the table name being used
-        error_log("WP Tester: Cleanup duplicates using table: {$this->flows_table}");
+        // Cleanup duplicates
         
         // Get all flows grouped by type and URL
         $flow_groups = $wpdb->get_results(
@@ -312,30 +312,30 @@ class WP_Tester_Database {
         );
         
         // Debug: Log how many duplicate groups were found
-        error_log("WP Tester: Found " . count($flow_groups) . " duplicate groups");
+        // Found duplicate groups
         
         foreach ($flow_groups as $group) {
-            error_log("WP Tester: Processing duplicate group - Type: {$group->flow_type}, URL: {$group->start_url}, Count: {$group->count}, IDs: {$group->ids}");
+            // Processing duplicate group
             
             $ids = explode(',', $group->ids);
             $keep_id = array_shift($ids); // Keep the first (oldest) one
             
-            error_log("WP Tester: Keeping ID: {$keep_id}, Deleting IDs: " . implode(',', $ids));
+            // Keeping one ID, deleting others
             
             if (!empty($ids)) {
                 // Delete all duplicates except the first one
                 $ids_placeholder = implode(',', array_fill(0, count($ids), '%d'));
                 $delete_query = "DELETE FROM {$this->flows_table} WHERE id IN ($ids_placeholder)";
-                error_log("WP Tester: Executing delete query: {$delete_query} with IDs: " . implode(',', $ids));
+                // Executing delete query
                 
                 $deleted_rows = $wpdb->query($wpdb->prepare($delete_query, $ids));
-                error_log("WP Tester: Delete query affected {$deleted_rows} rows");
+                // Delete query executed
                 
                 $removed_count += count($ids);
             }
         }
         
-        error_log("WP Tester: Total removed count: {$removed_count}");
+        // Total removed count
         return $removed_count;
     }
     
@@ -439,13 +439,12 @@ class WP_Tester_Database {
         $removed_count = 0;
         
         // Debug: Log cleanup options
-        error_log("WP Tester: Cleanup test results with options: " . wp_json_encode($options));
-        error_log("WP Tester: Using test results table: {$this->test_results_table}");
+        // Cleanup test results
         
         // Remove old test results
         if ($options['older_than_days'] > 0) {
             $cutoff_date = date('Y-m-d H:i:s', strtotime("-{$options['older_than_days']} days"));
-            error_log("WP Tester: Cutoff date for cleanup: {$cutoff_date}");
+            // Cutoff date for cleanup
             
             $where_conditions = array("started_at < %s");
             $where_values = array($cutoff_date);
@@ -467,18 +466,17 @@ class WP_Tester_Database {
             }
             
             $sql = "DELETE FROM {$this->test_results_table} WHERE " . implode(' AND ', $where_conditions);
-            error_log("WP Tester: Executing cleanup SQL: {$sql}");
-            error_log("WP Tester: With values: " . wp_json_encode($where_values));
+            // Executing cleanup SQL
             
             $deleted_rows = $wpdb->query($wpdb->prepare($sql, $where_values));
-            error_log("WP Tester: Deleted {$deleted_rows} old test results");
+            // Deleted old test results
             $removed_count += $deleted_rows;
         }
         
         // Keep only the most recent results per flow
         if ($options['max_results_per_flow'] > 0) {
             $flows = $wpdb->get_results("SELECT DISTINCT flow_id FROM {$this->test_results_table}");
-            error_log("WP Tester: Found " . count($flows) . " flows with test results");
+            // Found flows with test results
             
             foreach ($flows as $flow) {
                 $recent_results = $wpdb->get_results($wpdb->prepare(
@@ -501,7 +499,7 @@ class WP_Tester_Database {
                     ));
                     
                     if ($deleted_from_flow > 0) {
-                        error_log("WP Tester: Deleted {$deleted_from_flow} old results from flow {$flow->flow_id}");
+                        // Deleted old results from flow
                     }
                     
                     $removed_count += $deleted_from_flow;
@@ -509,7 +507,7 @@ class WP_Tester_Database {
             }
         }
         
-        error_log("WP Tester: Total test results removed: {$removed_count}");
+        // Total test results removed
         return $removed_count;
     }
     
@@ -519,14 +517,13 @@ class WP_Tester_Database {
     public function get_test_results_stats() {
         global $wpdb;
         
-        error_log("WP Tester: get_test_results_stats called");
-        error_log("WP Tester: Using test results table: {$this->test_results_table}");
+        // Get test results stats
         
         $stats = array();
         
         // Total test results
         $stats['total'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table}");
-        error_log("WP Tester: Total test results: " . ($stats['total'] ?: 0));
+        // Total test results
         
         // By status
         $stats['passed'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed'");
@@ -542,7 +539,7 @@ class WP_Tester_Database {
         $stats['oldest'] = $wpdb->get_var("SELECT MIN(started_at) FROM {$this->test_results_table}");
         $stats['newest'] = $wpdb->get_var("SELECT MAX(started_at) FROM {$this->test_results_table}");
         
-        error_log("WP Tester: Final stats: " . wp_json_encode($stats));
+        // Final stats
         return $stats;
     }
     

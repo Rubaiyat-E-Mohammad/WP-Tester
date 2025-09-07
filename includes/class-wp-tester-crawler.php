@@ -34,12 +34,18 @@ class WP_Tester_Crawler {
     }
     
     /**
-     * Run full site crawl
+     * Run full site crawl (frontend and admin)
      */
-    public function run_full_crawl() {
+    public function run_full_crawl($include_admin = true) {
         $start_time = microtime(true);
         
         try {
+            // Get settings
+            $settings = get_option('wp_tester_settings', array());
+            $max_pages = $settings['max_pages_per_crawl'] ?? 100;
+            $include_admin_setting = $settings['include_admin_in_crawl'] ?? true;
+            $prevent_duplicates = $settings['prevent_duplicate_flows'] ?? true;
+            
             // Get all public post types
             $post_types = get_post_types(array('public' => true), 'names');
             
@@ -50,30 +56,44 @@ class WP_Tester_Crawler {
             $home_url = home_url('/');
             $this->crawl_url($home_url, 'homepage', $crawled_urls, $discovered_flows);
             
-            // Crawl posts and pages
+            // Crawl posts and pages (with limit)
+            $pages_crawled = 1; // Homepage already crawled
             foreach ($post_types ?: [] as $post_type) {
-                $this->crawl_post_type($post_type, $crawled_urls, $discovered_flows);
+                if ($pages_crawled >= $max_pages) {
+                    break;
+                }
+                $pages_crawled += $this->crawl_post_type($post_type, $crawled_urls, $discovered_flows, $max_pages - $pages_crawled);
             }
             
-            // Crawl archives
-            $this->crawl_archives($crawled_urls, $discovered_flows);
+            // Crawl archives (with remaining limit)
+            if ($pages_crawled < $max_pages) {
+                $pages_crawled += $this->crawl_archives($crawled_urls, $discovered_flows, $max_pages - $pages_crawled);
+            }
             
-            // Crawl special WordPress pages
-            $this->crawl_special_pages($crawled_urls, $discovered_flows);
+            // Crawl special WordPress pages (with remaining limit)
+            if ($pages_crawled < $max_pages) {
+                $pages_crawled += $this->crawl_special_pages($crawled_urls, $discovered_flows, $max_pages - $pages_crawled);
+            }
             
-            // Discover and save flows
-            $saved_flows_count = $this->process_discovered_flows($discovered_flows);
+            // Discover and save flows (with duplicate prevention)
+            $saved_flows_count = $this->process_discovered_flows($discovered_flows, $prevent_duplicates);
             
             $execution_time = microtime(true) - $start_time;
             
-            // Update last crawl timestamp
+            // Crawl admin panel if requested and setting allows
+            $admin_flows = 0;
+            if ($include_admin && $include_admin_setting) {
+                $admin_flows = $this->crawl_admin_panel();
+            }
+            
             $this->database->update_last_crawl_timestamp();
             
             // Log crawl completion
             error_log(sprintf(
-                'WP Tester: Full crawl completed. Crawled %d URLs, saved %d flows in %.2f seconds.',
+                'WP Tester: Full crawl completed. Crawled %d URLs, saved %d frontend flows, %d admin flows in %.2f seconds.',
                 count($crawled_urls),
                 $saved_flows_count,
+                $admin_flows,
                 $execution_time
             ));
             
@@ -81,7 +101,9 @@ class WP_Tester_Crawler {
                 'success' => true,
                 'crawled_count' => count($crawled_urls),
                 'execution_time' => $execution_time,
-                'discovered_flows' => $saved_flows_count
+                'discovered_flows' => $saved_flows_count + $admin_flows,
+                'frontend_flows' => $saved_flows_count,
+                'admin_flows' => $admin_flows
             );
             
         } catch (Exception $e) {
@@ -363,6 +385,91 @@ class WP_Tester_Crawler {
     }
     
     /**
+     * Crawl admin panel
+     */
+    private function crawl_admin_panel() {
+        $admin_flows = 0;
+        
+        try {
+            // Get admin pages to crawl
+            $admin_pages = array(
+                'dashboard' => admin_url('index.php'),
+                'posts' => admin_url('edit.php'),
+                'pages' => admin_url('edit.php?post_type=page'),
+                'media' => admin_url('upload.php'),
+                'comments' => admin_url('edit-comments.php'),
+                'appearance' => admin_url('themes.php'),
+                'plugins' => admin_url('plugins.php'),
+                'users' => admin_url('users.php'),
+                'tools' => admin_url('tools.php'),
+                'settings' => admin_url('options-general.php'),
+                'wp_tester' => admin_url('admin.php?page=wp-tester'),
+                'wp_tester_flows' => admin_url('admin.php?page=wp-tester-flows'),
+                'wp_tester_results' => admin_url('admin.php?page=wp-tester-results'),
+                'wp_tester_crawl' => admin_url('admin.php?page=wp-tester-crawl'),
+                'wp_tester_settings' => admin_url('admin.php?page=wp-tester-settings')
+            );
+            
+            // Add WooCommerce admin pages if available
+            if (class_exists('WooCommerce')) {
+                $woo_pages = array(
+                    'woo_orders' => admin_url('edit.php?post_type=shop_order'),
+                    'woo_products' => admin_url('edit.php?post_type=product'),
+                    'woo_customers' => admin_url('admin.php?page=wc-admin'),
+                    'woo_reports' => admin_url('admin.php?page=wc-reports'),
+                    'woo_settings' => admin_url('admin.php?page=wc-settings')
+                );
+                $admin_pages = array_merge($admin_pages, $woo_pages);
+            }
+            
+            foreach ($admin_pages as $name => $url) {
+                $flow_data = array(
+                    'flow_name' => 'Admin: ' . ucwords(str_replace('_', ' ', $name)),
+                    'flow_type' => 'admin',
+                    'start_url' => $url,
+                    'steps' => array(
+                        array(
+                            'action' => 'visit',
+                            'target' => $url,
+                            'value' => '',
+                            'expected_result' => 'Admin page loads successfully'
+                        ),
+                        array(
+                            'action' => 'wait',
+                            'target' => '2',
+                            'value' => '',
+                            'expected_result' => 'Page fully loads'
+                        )
+                    ),
+                    'description' => "Admin panel test for {$name}",
+                    'priority' => 'medium',
+                    'tags' => array('admin', 'auto-generated'),
+                    'is_active' => true,
+                    'created_by' => 'crawler'
+                );
+                
+                // Save admin flow
+                $flow_id = $this->database->save_flow(
+                    $flow_data['flow_name'],
+                    $flow_data['flow_type'],
+                    $flow_data['start_url'],
+                    $flow_data['steps'],
+                    $flow_data['expected_outcome'] ?? '',
+                    $flow_data['priority'] ?? 5
+                );
+                if ($flow_id) {
+                    $admin_flows++;
+                }
+            }
+            
+        } catch (Exception $e) {
+            error_log('WP Tester Admin Crawl Error: ' . $e->getMessage());
+        }
+        
+        return $admin_flows;
+    }
+    
+    /**
      * Discover flows based on page content
      */
     private function discover_flows($html, $url, $page_type, $interactive_elements) {
@@ -556,7 +663,7 @@ class WP_Tester_Crawler {
     /**
      * Process discovered flows and save them
      */
-    private function process_discovered_flows($discovered_flows) {
+    private function process_discovered_flows($discovered_flows, $prevent_duplicates = true) {
         // Group flows by type and name to avoid duplicates
         $unique_flows = array();
         
@@ -681,7 +788,7 @@ class WP_Tester_Crawler {
         $this->crawl_url($url, $post_after->post_type, $crawled_urls, $discovered_flows, $post_after);
         
         if (!empty($discovered_flows)) {
-            $this->process_discovered_flows($discovered_flows);
+            $this->process_discovered_flows($discovered_flows, true);
         }
     }
     

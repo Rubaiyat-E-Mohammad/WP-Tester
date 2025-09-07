@@ -6,6 +6,9 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+// Get settings
+$settings = get_option('wp_tester_settings', array());
 ?>
 
 <div class="wp-tester-modern">
@@ -303,7 +306,7 @@ if (!defined('ABSPATH')) {
                     </h4>
                     <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
                         <?php 
-                        $next_crawl = wp_next_scheduled('wp_tester_auto_crawl');
+                        $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
                         echo $next_crawl ? date('M j, Y H:i', $next_crawl) : 'Not scheduled';
                         ?>
                     </p>
@@ -416,24 +419,24 @@ jQuery(document).ready(function($) {
     $('.create-flow').on('click', function(e) {
         e.preventDefault();
         const url = $(this).data('url');
-        alert('Flow creation for ' + url + ' coming soon!');
+        showErrorModal('Feature Coming Soon', 'Flow creation for ' + url + ' will be available in a future update.');
     });
 
     // Export crawl results
     $('#export-crawl').on('click', function(e) {
         e.preventDefault();
-        alert('Crawl export feature coming soon!');
+        showErrorModal('Feature Coming Soon', 'Crawl export feature will be available in a future update.');
     });
 
     // Load more functionality
     $('#load-more-crawl').on('click', function(e) {
         e.preventDefault();
-        alert('Pagination feature coming soon!');
+        showErrorModal('Feature Coming Soon', 'Pagination feature will be available in a future update.');
     });
     
     // Modal functions
     function showProgressModal(title, message) {
-        console.log('showProgressModal called with title:', title, 'message:', message);
+        // Show progress modal
         const modal = $(`
             <div id="wp-tester-progress-modal" class="wp-tester-modal-overlay">
                 <div class="wp-tester-modal">
@@ -576,7 +579,7 @@ jQuery(document).ready(function($) {
         }).get();
         
         if (!action || selectedIds.length === 0) {
-            alert('Please select an action and at least one crawl result.');
+            showErrorModal('Selection Required', 'Please select an action and at least one crawl result.');
             return;
         }
         
@@ -601,15 +604,15 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
-                    alert('Bulk action completed successfully! ' + (response.data.message || ''));
+                    showSuccessModal('Bulk Action Completed', 'Bulk action completed successfully! ' + (response.data.message || ''));
                     location.reload();
                 } else {
-                    alert('Bulk action failed: ' + (response.data.message || 'Unknown error occurred'));
+                    showErrorModal('Bulk Action Failed', 'Bulk action failed: ' + (response.data.message || 'Unknown error occurred'));
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Bulk Action AJAX Error:', {xhr, status, error});
-                alert('Error connecting to server. Please try again.');
+                showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
@@ -636,15 +639,15 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
-                    alert('Cleanup completed successfully! ' + (response.data.message || '') + ' Refreshing page...');
+                    showSuccessModal('Cleanup Completed', 'Cleanup completed successfully! ' + (response.data.message || '') + ' Refreshing page...');
                     location.reload();
                 } else {
-                    alert('Cleanup failed: ' + (response.data.message || 'Unknown error occurred'));
+                    showErrorModal('Cleanup Failed', 'Cleanup failed: ' + (response.data.message || 'Unknown error occurred'));
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Cleanup AJAX Error:', {xhr, status, error});
-                alert('Error connecting to server. Please try again.');
+                showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
