@@ -36,14 +36,14 @@ $available_plugins = $ai_generator->get_available_plugins();
     <div class="modern-header" style="background: linear-gradient(135deg, #00265e 0%, #0F9D7A 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; position: relative; overflow: hidden;">
         <div style="position: relative; z-index: 2;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                <div class="logo-container" style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; flex-shrink: 0; position: relative; overflow: hidden;">
-                    <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/WP Tester Logo.png'); ?>" 
-                         alt="WP Tester" class="logo-image" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" 
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="logo-fallback" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.2rem; font-weight: bold;">WP</div>
+                <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: white;">
+                        <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V7.5C15 8.3 14.3 9 13.5 9H10.5C9.7 9 9 8.3 9 7.5V6.5L3 7V9L9 8.5V9.5C9 10.3 9.7 11 10.5 11H13.5C14.3 11 15 10.3 15 9.5V8.5L21 9ZM6.5 12C5.7 12 5 12.7 5 13.5V16.5C5 17.3 5.7 18 6.5 18H7.5V22H9V18H15V22H16.5V18H17.5C18.3 18 19 17.3 19 16.5V13.5C19 12.7 18.3 12 17.5 12H6.5Z" fill="currentColor"/>
+                    </svg>
+                    <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.2rem; font-weight: bold; color: white;">🤖</div>
                 </div>
                 <div>
-                    <h1 style="margin: 0; font-size: 2rem; font-weight: 700;">AI Flow Generator</h1>
+                    <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: white;">AI Flow Generator</h1>
                     <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 1.1rem;">Intelligent flow detection for frontend and backend</p>
                 </div>
             </div>
@@ -55,7 +55,7 @@ $available_plugins = $ai_generator->get_available_plugins();
     <!-- AI Configuration Card -->
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; align-items: center; justify-content: between; margin-bottom: 1.5rem;">
-            <h2 style="margin: 0; color: #1f2937; font-size: 1.5rem; font-weight: 600;">AI Configuration</h2>
+            <h2 style="margin: 0; color: #00265e; font-size: 1.5rem; font-weight: 600;">AI Configuration</h2>
             <div class="status-badge <?php echo $has_api_key ? 'success' : 'warning'; ?>" style="margin-left: auto;">
                 <?php echo $has_api_key ? 'AI Enabled' : 'Fallback Mode'; ?>
             </div>
@@ -66,7 +66,7 @@ $available_plugins = $ai_generator->get_available_plugins();
             <div>
                 <!-- AI Model Selection -->
                 <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                    <label style="display: block; font-weight: 600; color: #00265e; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         AI Model
                     </label>
                     <select id="ai-model-select" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
@@ -80,7 +80,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                 
                 <!-- API Key Input (Hidden by default) -->
                 <div id="api-key-section" style="margin-bottom: 1.5rem; display: none;">
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                    <label style="display: block; font-weight: 600; color: #00265e; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         API Key
                     </label>
                     <input type="password" id="ai-api-key" 
@@ -101,7 +101,7 @@ $available_plugins = $ai_generator->get_available_plugins();
             
             <!-- Site Analysis -->
             <div>
-                <h3 style="margin: 0 0 1rem 0; color: #374151; font-size: 1.125rem; font-weight: 600;">Site Analysis</h3>
+                <h3 style="margin: 0 0 1rem 0; color: #00265e; font-size: 1.125rem; font-weight: 600;">Site Analysis</h3>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; text-align: center;">
@@ -134,8 +134,8 @@ $available_plugins = $ai_generator->get_available_plugins();
                 </div>
                 
                 <div style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #00265e;">
-                    <div style="font-weight: 600; color: #1e40af; margin-bottom: 0.5rem;">Theme: <?php echo esc_html($site_analysis['theme']); ?></div>
-                    <div style="font-size: 0.875rem; color: #1e40af;">
+                    <div style="font-weight: 600; color: #00265e; margin-bottom: 0.5rem;">Theme: <?php echo esc_html($site_analysis['theme']); ?></div>
+                    <div style="font-size: 0.875rem; color: #00265e;">
                         AI will analyze your site structure and generate intelligent test flows based on your content and functionality.
                     </div>
                 </div>
@@ -145,18 +145,18 @@ $available_plugins = $ai_generator->get_available_plugins();
 
     <!-- Flow Generation Options -->
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <h2 style="margin: 0 0 1.5rem 0; color: #1f2937; font-size: 1.5rem; font-weight: 600;">Flow Generation Options</h2>
+        <h2 style="margin: 0 0 1.5rem 0; color: #00265e; font-size: 1.5rem; font-weight: 600;">Flow Generation Options</h2>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
             <!-- Target Areas -->
             <div>
-                <h3 style="margin: 0 0 1rem 0; color: #374151; font-size: 1.125rem; font-weight: 600;">Target Areas</h3>
+                <h3 style="margin: 0 0 1rem 0; color: #00265e; font-size: 1.125rem; font-weight: 600;">Target Areas</h3>
                 
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                     <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
                         <input type="checkbox" id="include-frontend" checked style="width: 1.25rem; height: 1.25rem; accent-color: #00265e;">
                         <div>
-                            <div style="font-weight: 600; color: #374151;">Frontend Pages</div>
+                            <div style="font-weight: 600; color: #00265e;">Frontend Pages</div>
                             <div style="font-size: 0.8125rem; color: #64748b;">Public pages, posts, and user-facing content</div>
                         </div>
                     </label>
@@ -164,7 +164,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                     <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
                         <input type="checkbox" id="include-admin" checked style="width: 1.25rem; height: 1.25rem; accent-color: #00265e;">
                         <div>
-                            <div style="font-weight: 600; color: #374151;">Admin Panel</div>
+                            <div style="font-weight: 600; color: #00265e;">Admin Panel</div>
                             <div style="font-size: 0.8125rem; color: #64748b;">WordPress admin, settings, and management areas</div>
                         </div>
                     </label>
@@ -172,7 +172,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                     <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
                         <input type="checkbox" id="include-plugins" style="width: 1.25rem; height: 1.25rem; accent-color: #00265e;">
                         <div>
-                            <div style="font-weight: 600; color: #374151;">Plugin-Specific Flows</div>
+                            <div style="font-weight: 600; color: #00265e;">Plugin-Specific Flows</div>
                             <div style="font-size: 0.8125rem; color: #64748b;">AI-generated flows for selected plugins</div>
                         </div>
                     </label>
@@ -181,10 +181,10 @@ $available_plugins = $ai_generator->get_available_plugins();
             
             <!-- Generation Settings -->
             <div>
-                <h3 style="margin: 0 0 1rem 0; color: #374151; font-size: 1.125rem; font-weight: 600;">Generation Settings</h3>
+                <h3 style="margin: 0 0 1rem 0; color: #00265e; font-size: 1.125rem; font-weight: 600;">Generation Settings</h3>
                 
                 <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                    <label style="display: block; font-weight: 600; color: #00265e; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         Max Flows per Area
                     </label>
                     <input type="number" id="max-flows" value="10" min="1" max="50" 
@@ -195,7 +195,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                 </div>
                 
                 <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                    <label style="display: block; font-weight: 600; color: #00265e; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         Max Flows per Plugin
                     </label>
                     <input type="number" id="max-flows-per-plugin" value="5" min="1" max="20" 
@@ -206,7 +206,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                 </div>
                 
                 <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                    <label style="display: block; font-weight: 600; color: #00265e; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         Focus Areas
                     </label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
@@ -233,7 +233,7 @@ $available_plugins = $ai_generator->get_available_plugins();
         
         <!-- Plugin Selection -->
         <div id="plugin-selection-section" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
-            <h3 style="margin: 0 0 1rem 0; color: #374151; font-size: 1.125rem; font-weight: 600;">Select Plugins for Flow Generation</h3>
+            <h3 style="margin: 0 0 1rem 0; color: #00265e; font-size: 1.125rem; font-weight: 600;">Select Plugins for Flow Generation</h3>
             <p style="margin: 0 0 1.5rem 0; color: #64748b; font-size: 0.875rem;">
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
@@ -266,7 +266,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                     
                     <!-- Plugin Name -->
                     <div style="text-align: center; margin-bottom: 0.25rem;">
-                        <h4 style="margin: 0; font-weight: 600; color: #374151; font-size: 0.75rem; line-height: 1.2;"><?php echo esc_html($plugin['name']); ?></h4>
+                        <h4 style="margin: 0; font-weight: 600; color: #00265e; font-size: 0.75rem; line-height: 1.2;"><?php echo esc_html($plugin['name']); ?></h4>
                     </div>
                     
                     <!-- Plugin Type Badge -->
@@ -334,7 +334,7 @@ $available_plugins = $ai_generator->get_available_plugins();
 
     <!-- Generate Flows Button -->
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-align: center;">
-        <h2 style="margin: 0 0 1rem 0; color: #1f2937; font-size: 1.5rem; font-weight: 600;">Ready to Generate AI Flows?</h2>
+        <h2 style="margin: 0 0 1rem 0; color: #00265e; font-size: 1.5rem; font-weight: 600;">Ready to Generate AI Flows?</h2>
         <p style="margin: 0 0 2rem 0; color: #64748b; font-size: 1.125rem;">
             AI will analyze your site and create intelligent test flows for both frontend and backend areas.
         </p>
@@ -347,7 +347,7 @@ $available_plugins = $ai_generator->get_available_plugins();
         <div id="generation-progress" style="display: none; margin-top: 2rem;">
             <div style="background: #f3f4f6; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
                 <div style="display: flex; align-items: center; justify-content: between; margin-bottom: 0.5rem;">
-                    <span style="font-weight: 600; color: #374151;">Generating Flows...</span>
+                    <span style="font-weight: 600; color: #00265e;">Generating Flows...</span>
                     <span id="progress-percentage" style="font-weight: 600; color: #00265e;">0%</span>
                 </div>
                 <div style="background: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden;">
@@ -363,15 +363,13 @@ $available_plugins = $ai_generator->get_available_plugins();
     <!-- Recent AI Generated Flows -->
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-            <div class="logo-container" style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #00265e; flex-shrink: 0;">
-                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/WP Tester Logo.png'); ?>" 
-                     alt="WP Tester" class="logo-image" style="max-width: 100%; max-height: 100%; border-radius: 8px; object-fit: contain; display: block;" 
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="logo-fallback" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold;">WP</div>
+            <div style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #00265e;">
+                    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V7.5C15 8.3 14.3 9 13.5 9H10.5C9.7 9 9 8.3 9 7.5V6.5L3 7V9L9 8.5V9.5C9 10.3 9.7 11 10.5 11H13.5C14.3 11 15 10.3 15 9.5V8.5L21 9ZM6.5 12C5.7 12 5 12.7 5 13.5V16.5C5 17.3 5.7 18 6.5 18H7.5V22H9V18H15V22H16.5V18H17.5C18.3 18 19 17.3 19 16.5V13.5C19 12.7 18.3 12 17.5 12H6.5Z" fill="currentColor"/>
+                </svg>
+                <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold; color: #00265e;">🤖</div>
             </div>
-            <div style="flex: 1;">
-                <h2 style="margin: 0; color: #1f2937; font-size: 1.5rem; font-weight: 600; line-height: 1.2;">Recent AI Generated Flows</h2>
-            </div>
+            <h2 style="margin: 0; color: #00265e; font-size: 1.5rem; font-weight: 600; line-height: 1.2;">Recent AI Generated Flows</h2>
         </div>
         
         <div id="ai-flows-list">
@@ -873,33 +871,7 @@ jQuery(document).ready(function($) {
     box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15) !important;
 }
 
-/* Logo container fixes */
-.logo-container {
-    position: relative;
-    overflow: hidden;
-}
-
-.logo-image {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border-radius: 8px;
-    display: block;
-    margin: auto;
-}
-
-.logo-fallback {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    font-weight: bold;
-}
+/* Logo fixes - simplified approach */
 
 /* Plugin card styling */
 .plugin-card {

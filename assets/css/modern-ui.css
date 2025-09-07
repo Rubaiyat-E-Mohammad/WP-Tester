@@ -58,7 +58,7 @@
     margin: 0;
     font-size: 1.5rem;
     font-weight: 600;
-    color: #0f172a;
+    color: #00265e;
 }
 
 .wp-tester-header .title-info .subtitle {
@@ -159,7 +159,7 @@
     border-radius: 12px;
     padding: 1.5rem;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px 0 #00265e;
     transition: all 0.2s ease;
     margin-bottom: 1.5rem;
 }
@@ -197,7 +197,7 @@
 .stat-card .stat-value {
     font-size: 2rem;
     font-weight: 700;
-    color: #0f172a;
+    color: #00265e;
     margin: 0.5rem 0;
     line-height: 1;
 }
@@ -211,11 +211,11 @@
 }
 
 .stat-card .stat-change.positive {
-    color: #10b981;
+    color: #00265e;
 }
 
 .stat-card .stat-change.negative {
-    color: #ef4444;
+    color: #6a0404;
 }
 
 .stat-card .stat-change.neutral {
@@ -244,7 +244,7 @@
 }
 
 .modern-btn-primary:hover {
-    background: #16a085;
+    background: #00265e;
     color: white;
     text-decoration: none;
 }
@@ -314,7 +314,7 @@
     margin: 0 0 0.25rem 0;
     font-size: 0.875rem;
     font-weight: 500;
-    color: #0f172a;
+    color: #00265e;
 }
 
 .modern-list-item .item-details p {
@@ -346,7 +346,7 @@
 
 .status-badge.error {
     background: #fecaca;
-    color: #991b1b;
+    color: #790202;
 }
 
 .status-badge.warning {
@@ -356,7 +356,7 @@
 
 .status-badge.info {
     background: #dbeafe;
-    color: #1e40af;
+    color: #00265e;
 }
 
 .status-badge.pending {
@@ -385,7 +385,7 @@
 .chart-title {
     font-size: 1.125rem;
     font-weight: 600;
-    color: #0f172a;
+    color: #00265e;
     margin: 0;
 }
 
