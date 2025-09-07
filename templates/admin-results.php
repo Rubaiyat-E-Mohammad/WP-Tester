@@ -41,7 +41,7 @@ if (!defined('ABSPATH')) {
     <div class="wp-tester-content">
         
         <!-- Results Overview -->
-        <div class="modern-grid grid-4">
+        <div class="modern-grid grid-6">
             <div class="stat-card">
                 <div class="stat-header">
                     <h3 class="stat-label">Total Tests</h3>
@@ -92,7 +92,8 @@ if (!defined('ABSPATH')) {
                     $failed_count = 0;
                     if (!empty($results)) {
                         foreach ($results as $result) {
-                            if (($result->status ?? '') === 'failed') $failed_count++;
+                            $status = $result->status ?? '';
+                            if ($status === 'failed' || $status === 'partial') $failed_count++;
                         }
                     }
                     echo $failed_count;
@@ -126,6 +127,108 @@ if (!defined('ABSPATH')) {
                     Overall
                 </div>
             </div>
+
+            <!-- Skipped Tests Card -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Skipped</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-controls-skipforward"></span>
+                    </div>
+                </div>
+                <div class="stat-value">
+                    <?php
+                    $skipped_count = 0;
+                    if (!empty($results)) {
+                        foreach ($results as $result) {
+                            if (($result->status ?? '') === 'skipped') $skipped_count++;
+                        }
+                    }
+                    echo $skipped_count;
+                    ?>
+                </div>
+                <div class="stat-change neutral">
+                    <span class="dashicons dashicons-controls-skipforward"></span>
+                    Skipped
+                </div>
+            </div>
+
+            <!-- Not Executed Card -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Not Executed</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-clock"></span>
+                    </div>
+                </div>
+                <div class="stat-value">
+                    <?php
+                    $not_executed_count = 0;
+                    if (!empty($results)) {
+                        foreach ($results as $result) {
+                            if (($result->status ?? '') === 'not_executed' || ($result->status ?? '') === 'pending') $not_executed_count++;
+                        }
+                    }
+                    echo $not_executed_count;
+                    ?>
+                </div>
+                <div class="stat-change neutral">
+                    <span class="dashicons dashicons-clock"></span>
+                    Pending
+                </div>
+            </div>
+
+            <!-- Total Executed Card -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Total Executed</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-yes-alt"></span>
+                    </div>
+                </div>
+                <div class="stat-value">
+                    <?php
+                    $executed_count = 0;
+                    if (!empty($results)) {
+                        foreach ($results as $result) {
+                            $status = $result->status ?? '';
+                            if (in_array($status, ['passed', 'failed', 'partial'])) $executed_count++;
+                        }
+                    }
+                    echo $executed_count;
+                    ?>
+                </div>
+                <div class="stat-change positive">
+                    <span class="dashicons dashicons-yes-alt"></span>
+                    Completed
+                </div>
+            </div>
+
+            <!-- Total Time Card -->
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Total Time</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-clock"></span>
+                    </div>
+                </div>
+                <div class="stat-value">
+                    <?php
+                    $total_time = 0;
+                    if (!empty($results)) {
+                        foreach ($results as $result) {
+                            $execution_time = floatval($result->execution_time ?? 0);
+                            $total_time += $execution_time;
+                        }
+                    }
+                    echo $total_time > 0 ? number_format($total_time, 1) . 's' : '0s';
+                    ?>
+                </div>
+                <div class="stat-change neutral">
+                    <span class="dashicons dashicons-clock"></span>
+                    All Tests
+                </div>
+            </div>
         </div>
 
         <!-- Test Results List -->
@@ -136,8 +239,9 @@ if (!defined('ABSPATH')) {
                     <select id="filter-status" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem;">
                         <option value="">All Status</option>
                         <option value="passed">Passed</option>
-                        <option value="failed">Failed</option>
-                        <option value="partial">Partial</option>
+                        <option value="failed">Failed (including Partial)</option>
+                        <option value="skipped">Skipped</option>
+                        <option value="not_executed">Not Executed</option>
                         <option value="running">Running</option>
                     </select>
                     <button class="modern-btn modern-btn-secondary modern-btn-small" id="export-results">
@@ -181,7 +285,11 @@ if (!defined('ABSPATH')) {
                 
                 <div class="modern-list" id="results-list">
                     <?php foreach ($results as $result) : ?>
-                        <div class="modern-list-item" data-status="<?php echo esc_attr($result->status ?? ''); ?>">
+                        <div class="modern-list-item" data-status="<?php 
+                            $status = $result->status ?? '';
+                            $display_status = ($status === 'partial') ? 'failed' : $status;
+                            echo esc_attr($display_status);
+                        ?>">
                             <div class="item-checkbox">
                                 <input type="checkbox" class="result-checkbox" value="<?php echo esc_attr($result->id ?? ''); ?>" id="result-<?php echo esc_attr($result->id ?? ''); ?>">
                                 <label for="result-<?php echo esc_attr($result->id ?? ''); ?>"></label>
@@ -190,9 +298,10 @@ if (!defined('ABSPATH')) {
                                 <div class="item-icon">
                                     <span class="dashicons dashicons-<?php 
                                         $status = $result->status ?? 'unknown';
-                                        echo $status === 'passed' ? 'yes-alt' : 
-                                            ($status === 'failed' ? 'dismiss' : 
-                                            ($status === 'running' ? 'update' : 'clock'));
+                                        $display_status = ($status === 'partial') ? 'failed' : $status;
+                                        echo $display_status === 'passed' ? 'yes-alt' : 
+                                            ($display_status === 'failed' ? 'dismiss' : 
+                                            ($display_status === 'running' ? 'update' : 'clock'));
                                     ?>"></span>
                                 </div>
                                 <div class="item-details">
@@ -214,8 +323,16 @@ if (!defined('ABSPATH')) {
                                 </div>
                             </div>
                             <div class="item-meta">
-                                <div class="status-badge <?php echo esc_attr($result->status ?? 'pending'); ?>">
-                                    <?php echo esc_html(ucfirst($result->status ?? 'Unknown')); ?>
+                                <div class="status-badge <?php 
+                                    $status = $result->status ?? 'pending';
+                                    $display_status = ($status === 'partial') ? 'failed' : $status;
+                                    echo esc_attr($display_status);
+                                ?>">
+                                    <?php 
+                                    $status = $result->status ?? 'Unknown';
+                                    $display_text = ($status === 'partial') ? 'Failed (Partial)' : ucfirst($status);
+                                    echo esc_html($display_text);
+                                    ?>
                                 </div>
                                 <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
                                     <?php echo esc_html(number_format($result->execution_time ?? 0, 3) . 's execution time'); ?>
@@ -225,7 +342,9 @@ if (!defined('ABSPATH')) {
                                        class="modern-btn modern-btn-secondary modern-btn-small">
                                         View Details
                                     </a>
-                                    <?php if (($result->status ?? '') === 'failed') : ?>
+                                    <?php 
+                                    $status = $result->status ?? '';
+                                    if ($status === 'failed' || $status === 'partial') : ?>
                                         <button class="modern-btn modern-btn-primary modern-btn-small retry-test" 
                                                 data-flow-id="<?php echo esc_attr($result->flow_id ?? ''); ?>">
                                             Retry
@@ -292,8 +411,42 @@ jQuery(document).ready(function($) {
     // Cleanup test results functionality
     $('#cleanup-test-results').on('click', function(e) {
         e.preventDefault();
-        // Cleanup results button clicked
-        showCleanupModal();
+        
+        if (!confirm('Are you sure you want to remove ALL test results? This action cannot be undone.')) {
+            return;
+        }
+        
+        const button = $(this);
+        const originalText = button.html();
+        
+        button.html('<span class="dashicons dashicons-update-alt"></span> Removing...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_cleanup_all_test_results',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessModal('Cleanup Complete!', 
+                        'Successfully removed ' + response.data.removed_count + ' test results.');
+                    // Reload the page to show updated results
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    showErrorModal('Cleanup Failed', response.data.message || 'Unknown error occurred.');
+                }
+            },
+            error: function() {
+                showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
     });
 
     // Retry test functionality

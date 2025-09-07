@@ -36,8 +36,12 @@ $available_plugins = $ai_generator->get_available_plugins();
     <div class="modern-header" style="background: linear-gradient(135deg, #1FC09A 0%, #0F9D7A 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; position: relative; overflow: hidden;">
         <div style="position: relative; z-index: 2;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . '../assets/images/WP Tester.png'); ?>" 
-                     alt="WP Tester" style="width: 48px; height: 48px; border-radius: 8px;">
+                <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; flex-shrink: 0;">
+                    <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . '../assets/WP Tester Logo.png'); ?>" 
+                         alt="WP Tester" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.2rem; font-weight: bold;">WP</div>
+                </div>
                 <div>
                     <h1 style="margin: 0; font-size: 2rem; font-weight: 700;">AI Flow Generator</h1>
                     <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 1.1rem;">Intelligent flow detection for frontend and backend</p>
@@ -90,6 +94,32 @@ $available_plugins = $ai_generator->get_available_plugins();
                     <span class="dashicons dashicons-saved"></span>
                     Save API Key
                 </button>
+                
+                <!-- AI Model Selection -->
+                <div style="margin-top: 1.5rem;">
+                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                        AI Model
+                    </label>
+                    <select id="ai-model" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo (OpenAI) - Free Tier</option>
+                        <option value="gemini-pro">Gemini Pro (Google) - Free Tier</option>
+                        <option value="grok-beta">Grok Beta (X.AI) - Free Tier</option>
+                        <option value="deepseek-chat">DeepSeek Chat - Free Tier</option>
+                        <option value="deepseek-coder">DeepSeek Coder - Free Tier</option>
+                        <option value="starcoder">StarCoder (Hugging Face) - Free</option>
+                        <option value="starcoder2">StarCoder2 (Hugging Face) - Free</option>
+                        <option value="santacoder">SantaCoder (Hugging Face) - Free</option>
+                        <option value="codellama">Code LLaMA (Meta) - Free</option>
+                        <option value="claude-3-haiku">Claude 3 Haiku (Anthropic) - Free Tier</option>
+                        <option value="mistral-7b">Mistral 7B - Free Tier</option>
+                        <option value="codemistral">CodeMistral - Free Tier</option>
+                        <option value="gpt-4">GPT-4 (OpenAI) - Paid</option>
+                        <option value="claude-3-sonnet">Claude 3 Sonnet (Anthropic) - Paid</option>
+                    </select>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                        Choose the AI model for flow generation. Free models are recommended for testing.
+                    </p>
+                </div>
             </div>
             
             <!-- Site Analysis -->
@@ -231,23 +261,23 @@ $available_plugins = $ai_generator->get_available_plugins();
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; max-height: 400px; overflow-y: auto;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; max-height: 400px; overflow-y: auto; padding: 0.5rem;">
                 <?php foreach ($available_plugins as $plugin): ?>
-                <div class="plugin-card" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb; transition: all 0.2s ease;">
-                    <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; width: 100%;">
+                <div class="plugin-card" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb; transition: all 0.2s ease; min-height: 120px; display: flex; flex-direction: column;">
+                    <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; width: 100%; flex: 1;">
                         <input type="checkbox" class="plugin-checkbox" value="<?php echo esc_attr($plugin['slug']); ?>" 
-                               style="width: 1.25rem; height: 1.25rem; accent-color: #1FC09A; margin-top: 0.125rem;">
-                        <div style="flex: 1;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <div style="font-weight: 600; color: #374151; font-size: 0.875rem;"><?php echo esc_html($plugin['name']); ?></div>
-                                <span class="plugin-type-badge" style="padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; background: #e0f2fe; color: #0369a1;">
+                               style="width: 1.25rem; height: 1.25rem; accent-color: #1FC09A; margin-top: 0.125rem; flex-shrink: 0;">
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                                <div style="font-weight: 600; color: #374151; font-size: 0.875rem; word-break: break-word;"><?php echo esc_html($plugin['name']); ?></div>
+                                <span class="plugin-type-badge" style="padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; background: #e0f2fe; color: #0369a1; white-space: nowrap;">
                                     <?php echo esc_html($plugin['type']); ?>
                                 </span>
                             </div>
-                            <div style="font-size: 0.8125rem; color: #64748b; line-height: 1.4; margin-bottom: 0.5rem;">
+                            <div style="font-size: 0.8125rem; color: #64748b; line-height: 1.4; margin-bottom: 0.5rem; word-break: break-word;">
                                 <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 15)); ?>
                             </div>
-                            <div style="font-size: 0.75rem; color: #9ca3af;">
+                            <div style="font-size: 0.75rem; color: #9ca3af; word-break: break-word;">
                                 Version <?php echo esc_html($plugin['version']); ?> • <?php echo esc_html($plugin['author']); ?>
                             </div>
                         </div>
@@ -310,7 +340,15 @@ $available_plugins = $ai_generator->get_available_plugins();
 
     <!-- Recent AI Generated Flows -->
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <h2 style="margin: 0 0 1.5rem 0; color: #1f2937; font-size: 1.5rem; font-weight: 600;">Recent AI Generated Flows</h2>
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 32px; height: 32px; border-radius: 6px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #1FC09A; flex-shrink: 0;">
+                <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . '../assets/WP Tester Logo.png'); ?>" 
+                     alt="WP Tester" style="width: 100%; height: 100%; border-radius: 6px; object-fit: contain;" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold;">WP</div>
+            </div>
+            <h2 style="margin: 0; color: #1f2937; font-size: 1.5rem; font-weight: 600;">Recent AI Generated Flows</h2>
+        </div>
         
         <div id="ai-flows-list">
             <div style="text-align: center; padding: 2rem; color: #64748b;">
@@ -373,6 +411,36 @@ $available_plugins = $ai_generator->get_available_plugins();
     font-size: 1.25rem;
     line-height: 1;
 }
+
+.plugin-card:hover {
+    border-color: #1FC09A;
+    background: #f0fdfa;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(31, 192, 154, 0.1);
+}
+
+.plugin-card input[type="checkbox"]:checked + div {
+    color: #1FC09A;
+}
+
+.plugin-type-badge {
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .plugin-card {
+        min-height: 100px !important;
+    }
+    
+    .plugin-card label {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    .plugin-card input[type="checkbox"] {
+        margin-top: 0 !important;
+    }
+}
 </style>
 
 <script>
@@ -413,7 +481,10 @@ jQuery(document).ready(function($) {
                 showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
             },
             complete: function() {
-                button.html(originalText).prop('disabled', false);
+                // Always reset button state, even on success
+                setTimeout(function() {
+                    button.html(originalText).prop('disabled', false);
+                }, 1000);
             }
         });
     });
@@ -459,6 +530,7 @@ jQuery(document).ready(function($) {
         const includePlugins = $('#include-plugins').is(':checked');
         const maxFlows = $('#max-flows').val();
         const maxFlowsPerPlugin = $('#max-flows-per-plugin').val() || 5;
+        const aiModel = $('#ai-model').val() || 'gpt-3.5-turbo';
         const focusAreas = [];
         const selectedPlugins = [];
         
@@ -516,6 +588,7 @@ jQuery(document).ready(function($) {
                 max_flows_per_area: maxFlows,
                 max_flows_per_plugin: maxFlowsPerPlugin,
                 focus_areas: focusAreas.join(','),
+                ai_model: aiModel,
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             timeout: 300000, // 5 minutes

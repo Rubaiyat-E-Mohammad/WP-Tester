@@ -15,15 +15,215 @@ class WP_Tester_AI_Flow_Generator {
     private $ai_model;
     private $admin_pages;
     private $frontend_pages;
+    private $available_models;
     
     /**
      * Constructor
      */
     public function __construct() {
         $this->database = new WP_Tester_Database();
-        $this->ai_model = 'gpt-3.5-turbo'; // Free tier available
+        $this->ai_model = 'gpt-3.5-turbo'; // Default model
         $this->admin_pages = array();
         $this->frontend_pages = array();
+        $this->available_models = $this->get_available_models();
+    }
+    
+    /**
+     * Get all available AI models with their configurations
+     */
+    private function get_available_models() {
+        return array(
+            // OpenAI Models
+            'gpt-3.5-turbo' => array(
+                'name' => 'GPT-3.5 Turbo',
+                'provider' => 'OpenAI',
+                'type' => 'chat',
+                'free_tier' => true,
+                'api_url' => 'https://api.openai.com/v1/chat/completions',
+                'max_tokens' => 1000,
+                'temperature' => 0.7,
+                'description' => 'Fast and efficient for most tasks'
+            ),
+            'gpt-4' => array(
+                'name' => 'GPT-4',
+                'provider' => 'OpenAI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.openai.com/v1/chat/completions',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Most capable model for complex tasks'
+            ),
+            
+            // Google Gemini Models
+            'gemini-pro' => array(
+                'name' => 'Gemini Pro',
+                'provider' => 'Google',
+                'type' => 'chat',
+                'free_tier' => true,
+                'api_url' => 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+                'max_tokens' => 1000,
+                'temperature' => 0.7,
+                'description' => 'Google\'s advanced AI model with free tier'
+            ),
+            'gemini-pro-vision' => array(
+                'name' => 'Gemini Pro Vision',
+                'provider' => 'Google',
+                'type' => 'multimodal',
+                'free_tier' => true,
+                'api_url' => 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent',
+                'max_tokens' => 1000,
+                'temperature' => 0.7,
+                'description' => 'Multimodal model for text and image understanding'
+            ),
+            
+            // Grok Models (X.AI)
+            'grok-beta' => array(
+                'name' => 'Grok Beta',
+                'provider' => 'X.AI',
+                'type' => 'chat',
+                'free_tier' => true,
+                'api_url' => 'https://api.x.ai/v1/chat/completions',
+                'max_tokens' => 1000,
+                'temperature' => 0.7,
+                'description' => 'X.AI\'s conversational AI with real-time knowledge'
+            ),
+            
+            // DeepSeek Models
+            'deepseek-chat' => array(
+                'name' => 'DeepSeek Chat',
+                'provider' => 'DeepSeek',
+                'type' => 'chat',
+                'free_tier' => true,
+                'api_url' => 'https://api.deepseek.com/v1/chat/completions',
+                'max_tokens' => 1000,
+                'temperature' => 0.7,
+                'description' => 'Advanced reasoning and coding capabilities'
+            ),
+            'deepseek-coder' => array(
+                'name' => 'DeepSeek Coder',
+                'provider' => 'DeepSeek',
+                'type' => 'code',
+                'free_tier' => true,
+                'api_url' => 'https://api.deepseek.com/v1/chat/completions',
+                'max_tokens' => 1000,
+                'temperature' => 0.3,
+                'description' => 'Specialized for code generation and analysis'
+            ),
+            
+            // Hugging Face Models
+            'starcoder' => array(
+                'name' => 'StarCoder',
+                'provider' => 'Hugging Face',
+                'type' => 'code',
+                'free_tier' => true,
+                'api_url' => 'https://api-inference.huggingface.co/models/bigcode/starcoder',
+                'max_tokens' => 1000,
+                'temperature' => 0.3,
+                'description' => 'Open-source code generation model'
+            ),
+            'starcoder2' => array(
+                'name' => 'StarCoder2',
+                'provider' => 'Hugging Face',
+                'type' => 'code',
+                'free_tier' => true,
+                'api_url' => 'https://api-inference.huggingface.co/models/bigcode/starcoder2-15b',
+                'max_tokens' => 1000,
+                'temperature' => 0.3,
+                'description' => 'Improved version of StarCoder with better performance'
+            ),
+            'santacoder' => array(
+                'name' => 'SantaCoder',
+                'provider' => 'Hugging Face',
+                'type' => 'code',
+                'free_tier' => true,
+                'api_url' => 'https://api-inference.huggingface.co/models/bigcode/santacoder',
+                'max_tokens' => 1000,
+                'temperature' => 0.3,
+                'description' => 'Lightweight code generation model'
+            ),
+            
+            // Meta Models
+            'codellama' => array(
+                'name' => 'Code LLaMA',
+                'provider' => 'Meta',
+                'type' => 'code',
+                'free_tier' => true,
+                'api_url' => 'https://api-inference.huggingface.co/models/codellama/CodeLlama-7b-hf',
+                'max_tokens' => 1000,
+                'temperature' => 0.3,
+                'description' => 'Meta\'s code generation model based on LLaMA'
+            ),
+            
+            // Anthropic Models
+            'claude-3-haiku' => array(
+                'name' => 'Claude 3 Haiku',
+                'provider' => 'Anthropic',
+                'type' => 'chat',
+                'free_tier' => true,
+                'api_url' => 'https://api.anthropic.com/v1/messages',
+                'max_tokens' => 1000,
+                'temperature' => 0.7,
+                'description' => 'Fast and efficient Claude model'
+            ),
+            'claude-3-sonnet' => array(
+                'name' => 'Claude 3 Sonnet',
+                'provider' => 'Anthropic',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.anthropic.com/v1/messages',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Balanced performance and capability'
+            ),
+            
+            // Mistral Models
+            'mistral-7b' => array(
+                'name' => 'Mistral 7B',
+                'provider' => 'Mistral AI',
+                'type' => 'chat',
+                'free_tier' => true,
+                'api_url' => 'https://api.mistral.ai/v1/chat/completions',
+                'max_tokens' => 1000,
+                'temperature' => 0.7,
+                'description' => 'Efficient open-source model'
+            ),
+            'codemistral' => array(
+                'name' => 'CodeMistral',
+                'provider' => 'Mistral AI',
+                'type' => 'code',
+                'free_tier' => true,
+                'api_url' => 'https://api.mistral.ai/v1/chat/completions',
+                'max_tokens' => 1000,
+                'temperature' => 0.3,
+                'description' => 'Specialized for code generation'
+            )
+        );
+    }
+    
+    /**
+     * Get available models for UI display
+     */
+    public function get_available_models_for_ui() {
+        return $this->available_models;
+    }
+    
+    /**
+     * Set the AI model to use
+     */
+    public function set_ai_model($model_id) {
+        if (isset($this->available_models[$model_id])) {
+            $this->ai_model = $model_id;
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Get current AI model configuration
+     */
+    public function get_current_model_config() {
+        return $this->available_models[$this->ai_model] ?? $this->available_models['gpt-3.5-turbo'];
     }
     
     /**
@@ -690,9 +890,7 @@ class WP_Tester_AI_Flow_Generator {
      * Call AI API (using OpenAI or similar)
      */
     private function call_ai_api($prompt) {
-        // For now, we'll use a fallback system since we need API keys
-        // In production, you would integrate with OpenAI, Anthropic, or similar
-        
+        $model_config = $this->get_current_model_config();
         $api_key = get_option('wp_tester_ai_api_key', '');
         
         if (empty($api_key)) {
@@ -700,8 +898,34 @@ class WP_Tester_AI_Flow_Generator {
             return $this->generate_fallback_flow($prompt);
         }
         
-        // OpenAI API call (example)
-        $response = wp_remote_post('https://api.openai.com/v1/chat/completions', array(
+        // Call the appropriate API based on the model
+        switch ($model_config['provider']) {
+            case 'OpenAI':
+                return $this->call_openai_api($prompt, $model_config, $api_key);
+            case 'Google':
+                return $this->call_gemini_api($prompt, $model_config, $api_key);
+            case 'X.AI':
+                return $this->call_grok_api($prompt, $model_config, $api_key);
+            case 'DeepSeek':
+                return $this->call_deepseek_api($prompt, $model_config, $api_key);
+            case 'Hugging Face':
+                return $this->call_huggingface_api($prompt, $model_config, $api_key);
+            case 'Anthropic':
+                return $this->call_claude_api($prompt, $model_config, $api_key);
+            case 'Mistral AI':
+                return $this->call_mistral_api($prompt, $model_config, $api_key);
+            case 'Meta':
+                return $this->call_meta_api($prompt, $model_config, $api_key);
+            default:
+                return $this->generate_fallback_flow($prompt);
+        }
+    }
+    
+    /**
+     * Call OpenAI API
+     */
+    private function call_openai_api($prompt, $model_config, $api_key) {
+        $response = wp_remote_post($model_config['api_url'], array(
             'headers' => array(
                 'Authorization' => 'Bearer ' . $api_key,
                 'Content-Type' => 'application/json',
@@ -714,8 +938,8 @@ class WP_Tester_AI_Flow_Generator {
                         'content' => $prompt
                     )
                 ),
-                'max_tokens' => 1000,
-                'temperature' => 0.7
+                'max_tokens' => $model_config['max_tokens'],
+                'temperature' => $model_config['temperature']
             )),
             'timeout' => 30
         ));
@@ -733,6 +957,240 @@ class WP_Tester_AI_Flow_Generator {
         }
         
         return $this->generate_fallback_flow($prompt);
+    }
+    
+    /**
+     * Call Google Gemini API
+     */
+    private function call_gemini_api($prompt, $model_config, $api_key) {
+        $response = wp_remote_post($model_config['api_url'] . '?key=' . $api_key, array(
+            'headers' => array(
+                'Content-Type' => 'application/json',
+            ),
+            'body' => wp_json_encode(array(
+                'contents' => array(
+                    array(
+                        'parts' => array(
+                            array('text' => $prompt)
+                        )
+                    )
+                ),
+                'generationConfig' => array(
+                    'maxOutputTokens' => $model_config['max_tokens'],
+                    'temperature' => $model_config['temperature']
+                )
+            )),
+            'timeout' => 30
+        ));
+        
+        if (is_wp_error($response)) {
+            return $this->generate_fallback_flow($prompt);
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body ?: '{}', true);
+        
+        if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+            $content = $data['candidates'][0]['content']['parts'][0]['text'];
+            return json_decode($content, true);
+        }
+        
+        return $this->generate_fallback_flow($prompt);
+    }
+    
+    /**
+     * Call Grok API (X.AI)
+     */
+    private function call_grok_api($prompt, $model_config, $api_key) {
+        $response = wp_remote_post($model_config['api_url'], array(
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $api_key,
+                'Content-Type' => 'application/json',
+            ),
+            'body' => wp_json_encode(array(
+                'model' => 'grok-beta',
+                'messages' => array(
+                    array(
+                        'role' => 'user',
+                        'content' => $prompt
+                    )
+                ),
+                'max_tokens' => $model_config['max_tokens'],
+                'temperature' => $model_config['temperature']
+            )),
+            'timeout' => 30
+        ));
+        
+        if (is_wp_error($response)) {
+            return $this->generate_fallback_flow($prompt);
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body ?: '{}', true);
+        
+        if (isset($data['choices'][0]['message']['content'])) {
+            $content = $data['choices'][0]['message']['content'];
+            return json_decode($content, true);
+        }
+        
+        return $this->generate_fallback_flow($prompt);
+    }
+    
+    /**
+     * Call DeepSeek API
+     */
+    private function call_deepseek_api($prompt, $model_config, $api_key) {
+        $response = wp_remote_post($model_config['api_url'], array(
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $api_key,
+                'Content-Type' => 'application/json',
+            ),
+            'body' => wp_json_encode(array(
+                'model' => $this->ai_model,
+                'messages' => array(
+                    array(
+                        'role' => 'user',
+                        'content' => $prompt
+                    )
+                ),
+                'max_tokens' => $model_config['max_tokens'],
+                'temperature' => $model_config['temperature']
+            )),
+            'timeout' => 30
+        ));
+        
+        if (is_wp_error($response)) {
+            return $this->generate_fallback_flow($prompt);
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body ?: '{}', true);
+        
+        if (isset($data['choices'][0]['message']['content'])) {
+            $content = $data['choices'][0]['message']['content'];
+            return json_decode($content, true);
+        }
+        
+        return $this->generate_fallback_flow($prompt);
+    }
+    
+    /**
+     * Call Hugging Face API
+     */
+    private function call_huggingface_api($prompt, $model_config, $api_key) {
+        $response = wp_remote_post($model_config['api_url'], array(
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $api_key,
+                'Content-Type' => 'application/json',
+            ),
+            'body' => wp_json_encode(array(
+                'inputs' => $prompt,
+                'parameters' => array(
+                    'max_new_tokens' => $model_config['max_tokens'],
+                    'temperature' => $model_config['temperature'],
+                    'return_full_text' => false
+                )
+            )),
+            'timeout' => 30
+        ));
+        
+        if (is_wp_error($response)) {
+            return $this->generate_fallback_flow($prompt);
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body ?: '{}', true);
+        
+        if (isset($data[0]['generated_text'])) {
+            $content = $data[0]['generated_text'];
+            return json_decode($content, true);
+        }
+        
+        return $this->generate_fallback_flow($prompt);
+    }
+    
+    /**
+     * Call Claude API (Anthropic)
+     */
+    private function call_claude_api($prompt, $model_config, $api_key) {
+        $response = wp_remote_post($model_config['api_url'], array(
+            'headers' => array(
+                'x-api-key' => $api_key,
+                'Content-Type' => 'application/json',
+                'anthropic-version' => '2023-06-01'
+            ),
+            'body' => wp_json_encode(array(
+                'model' => $this->ai_model,
+                'max_tokens' => $model_config['max_tokens'],
+                'messages' => array(
+                    array(
+                        'role' => 'user',
+                        'content' => $prompt
+                    )
+                )
+            )),
+            'timeout' => 30
+        ));
+        
+        if (is_wp_error($response)) {
+            return $this->generate_fallback_flow($prompt);
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body ?: '{}', true);
+        
+        if (isset($data['content'][0]['text'])) {
+            $content = $data['content'][0]['text'];
+            return json_decode($content, true);
+        }
+        
+        return $this->generate_fallback_flow($prompt);
+    }
+    
+    /**
+     * Call Mistral API
+     */
+    private function call_mistral_api($prompt, $model_config, $api_key) {
+        $response = wp_remote_post($model_config['api_url'], array(
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $api_key,
+                'Content-Type' => 'application/json',
+            ),
+            'body' => wp_json_encode(array(
+                'model' => $this->ai_model,
+                'messages' => array(
+                    array(
+                        'role' => 'user',
+                        'content' => $prompt
+                    )
+                ),
+                'max_tokens' => $model_config['max_tokens'],
+                'temperature' => $model_config['temperature']
+            )),
+            'timeout' => 30
+        ));
+        
+        if (is_wp_error($response)) {
+            return $this->generate_fallback_flow($prompt);
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body ?: '{}', true);
+        
+        if (isset($data['choices'][0]['message']['content'])) {
+            $content = $data['choices'][0]['message']['content'];
+            return json_decode($content, true);
+        }
+        
+        return $this->generate_fallback_flow($prompt);
+    }
+    
+    /**
+     * Call Meta API (Code LLaMA via Hugging Face)
+     */
+    private function call_meta_api($prompt, $model_config, $api_key) {
+        // Meta models are typically accessed via Hugging Face
+        return $this->call_huggingface_api($prompt, $model_config, $api_key);
     }
     
     /**

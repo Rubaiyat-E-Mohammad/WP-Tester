@@ -51,7 +51,7 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
     <div class="wp-tester-content">
         
         <!-- Key Metrics -->
-        <div class="modern-grid grid-4">
+        <div class="modern-grid grid-5">
             <div class="stat-card">
                 <div class="stat-header">
                     <h3 class="stat-label">Total Flows</h3>
@@ -63,6 +63,27 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                 <div class="stat-change positive">
                     <span class="dashicons dashicons-arrow-up-alt"></span>
                     Active monitoring
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Last Test</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-clock"></span>
+                    </div>
+                </div>
+                <div class="stat-value"><?php 
+                    $last_test = $stats['last_test'] ?? 'Never';
+                    if ($last_test !== 'Never') {
+                        echo esc_html(human_time_diff(strtotime($last_test), current_time('timestamp')) . ' ago');
+                    } else {
+                        echo esc_html('Never');
+                    }
+                ?></div>
+                <div class="stat-change neutral">
+                    <span class="dashicons dashicons-<?php echo ($last_test !== 'Never') ? 'yes-alt' : 'dismiss'; ?>"></span>
+                    <?php echo ($last_test !== 'Never') ? 'Recent activity' : 'No tests run'; ?>
                 </div>
             </div>
 
@@ -136,7 +157,7 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                 <a href="<?php echo admin_url('admin.php?page=wp-tester-settings'); ?>" class="quick-action-card">
                     <div class="action-icon">
                         <span class="dashicons dashicons-admin-settings"></span>
-                    </div>
+            </div>
                     <h4 class="action-title">Settings</h4>
                 </a>
         </div>
@@ -311,9 +332,16 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
 
 <script>
 jQuery(document).ready(function($) {
+    // Debug: Check if buttons exist
+    console.log('Run All Tests button found:', $('#run-all-tests').length);
+    console.log('Run First Test button found:', $('#run-first-test').length);
+    
     // Run all tests functionality
     $('#run-all-tests, #run-first-test').on('click', function(e) {
         e.preventDefault();
+        
+        console.log('Run Test button clicked!');
+        console.log('wpTesterData available:', typeof wpTesterData !== 'undefined');
         
         const button = $(this);
         const originalText = button.html();
@@ -323,12 +351,15 @@ jQuery(document).ready(function($) {
         button.html('<span class="dashicons dashicons-update-alt"></span> Running...').prop('disabled', true);
         
         // AJAX call to run tests
+        const ajaxUrl = (typeof wpTesterData !== 'undefined' && wpTesterData.ajaxurl) ? wpTesterData.ajaxurl : '<?php echo admin_url('admin-ajax.php'); ?>';
+        const nonce = (typeof wpTesterData !== 'undefined' && wpTesterData.nonce) ? wpTesterData.nonce : '<?php echo wp_create_nonce('wp_tester_nonce'); ?>';
+        
         $.ajax({
-            url: ajaxurl,
+            url: ajaxUrl,
             type: 'POST',
             data: {
             action: 'wp_tester_run_all_tests',
-                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                nonce: nonce
             },
             success: function(response) {
                 hideProgressModal();

@@ -152,6 +152,19 @@ if (!defined('ABSPATH')) {
                         </p>
                     </div>
 
+                    <!-- Screenshot on Success (Debug) -->
+                    <div>
+                        <label style="display: flex; align-items: center; gap: 0.75rem; font-weight: 600; color: #374151; font-size: 0.875rem;">
+                            <input type="checkbox" name="wp_tester_settings[screenshot_on_success]" 
+                                   value="1" <?php checked(($settings['screenshot_on_success'] ?? false), true); ?>
+                                   style="width: 18px; height: 18px; border: 2px solid #e2e8f0; border-radius: 4px;">
+                            Take Screenshots on Success (Debug)
+                        </label>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                            Also capture screenshots for successful steps (useful for debugging)
+                        </p>
+                    </div>
+
                 </div>
             </div>
 

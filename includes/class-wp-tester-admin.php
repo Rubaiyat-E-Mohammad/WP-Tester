@@ -151,8 +151,8 @@ class WP_Tester_Admin {
         
         add_submenu_page(
             'wp-tester',
-            __('Crawl Results', 'wp-tester'),
-            __('Crawl Results', 'wp-tester'),
+            __('Crawled Pages', 'wp-tester'),
+            __('Crawled Pages', 'wp-tester'),
             'manage_options',
             'wp-tester-crawl',
             array($this, 'crawl_page')
@@ -219,6 +219,14 @@ class WP_Tester_Admin {
             'screenshot_on_failure',
             __('Take Screenshots on Failure', 'wp-tester'),
             array($this, 'screenshot_on_failure_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'screenshot_on_success',
+            __('Take Screenshots on Success (Debug)', 'wp-tester'),
+            array($this, 'screenshot_on_success_callback'),
             'wp_tester_settings',
             'wp_tester_general'
         );
@@ -522,6 +530,14 @@ class WP_Tester_Admin {
         echo '<label>' . __('Take screenshots when steps fail for visual debugging.', 'wp-tester') . '</label>';
     }
     
+    public function screenshot_on_success_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['screenshot_on_success']) ? $settings['screenshot_on_success'] : false;
+        
+        echo '<input type="checkbox" name="wp_tester_settings[screenshot_on_success]" value="1" ' . checked($value, true, false) . ' />';
+        echo '<label>' . __('Also take screenshots for successful steps (useful for debugging).', 'wp-tester') . '</label>';
+    }
+    
     public function max_pages_per_crawl_callback() {
         $settings = get_option('wp_tester_settings', array());
         $value = isset($settings['max_pages_per_crawl']) ? $settings['max_pages_per_crawl'] : 100;
@@ -553,6 +569,10 @@ class WP_Tester_Admin {
         
         if (isset($input['screenshot_on_failure'])) {
             $sanitized['screenshot_on_failure'] = (bool) $input['screenshot_on_failure'];
+        }
+        
+        if (isset($input['screenshot_on_success'])) {
+            $sanitized['screenshot_on_success'] = (bool) $input['screenshot_on_success'];
         }
         
         if (isset($input['max_pages_per_crawl'])) {

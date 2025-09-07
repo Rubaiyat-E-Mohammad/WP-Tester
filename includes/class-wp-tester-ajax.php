@@ -34,6 +34,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_cleanup_duplicates', array($this, 'cleanup_duplicates'));
         add_action('wp_ajax_wp_tester_get_duplicate_flows_info', array($this, 'get_duplicate_flows_info'));
         add_action('wp_ajax_wp_tester_cleanup_test_results', array($this, 'cleanup_test_results'));
+        add_action('wp_ajax_wp_tester_cleanup_all_test_results', array($this, 'cleanup_all_test_results'));
         add_action('wp_ajax_wp_tester_get_test_results_stats', array($this, 'get_test_results_stats'));
         add_action('wp_ajax_wp_tester_bulk_test_results_action', array($this, 'bulk_test_results_action'));
         add_action('wp_ajax_wp_tester_bulk_crawl_action', array($this, 'bulk_crawl_action'));
@@ -46,6 +47,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_generate_ai_flows', array($this, 'generate_ai_flows'));
         add_action('wp_ajax_wp_tester_set_ai_api_key', array($this, 'set_ai_api_key'));
         add_action('wp_ajax_wp_tester_get_available_plugins', array($this, 'get_available_plugins'));
+        add_action('wp_ajax_wp_tester_get_available_ai_models', array($this, 'get_available_ai_models'));
     }
     
     /**
@@ -803,6 +805,33 @@ class WP_Tester_Ajax {
     }
     
     /**
+     * Simple cleanup - remove all test results
+     */
+    public function cleanup_all_test_results() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $database = new WP_Tester_Database();
+            $removed_count = $database->cleanup_all_test_results();
+            
+            wp_send_json_success(array(
+                'message' => sprintf(__('Removed all %d test results.', 'wp-tester'), $removed_count),
+                'removed_count' => $removed_count
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to cleanup test results: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
      * Bulk actions for test results
      */
     public function bulk_test_results_action() {
@@ -1218,8 +1247,15 @@ class WP_Tester_Ajax {
                 'selected_plugins' => isset($_POST['selected_plugins']) ? array_filter($_POST['selected_plugins']) : array(),
                 'max_flows_per_area' => intval($_POST['max_flows_per_area'] ?? 10),
                 'max_flows_per_plugin' => intval($_POST['max_flows_per_plugin'] ?? 5),
-                'focus_areas' => array_filter(explode(',', $_POST['focus_areas'] ?? 'ecommerce,content,user_management,settings'))
+                'focus_areas' => array_filter(explode(',', $_POST['focus_areas'] ?? 'ecommerce,content,user_management,settings')),
+                'ai_model' => isset($_POST['ai_model']) ? sanitize_text_field($_POST['ai_model']) : 'gpt-3.5-turbo'
             );
+            
+            // Set the selected AI model
+            if (!$ai_generator->set_ai_model($options['ai_model'])) {
+                wp_send_json_error(array('message' => __('Invalid AI model selected', 'wp-tester')));
+                return;
+            }
             
             $result = $ai_generator->generate_ai_flows($options);
             
@@ -1315,6 +1351,33 @@ class WP_Tester_Ajax {
         } catch (Exception $e) {
             wp_send_json_error(array(
                 'message' => __('Failed to get available plugins: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Get available AI models
+     */
+    public function get_available_ai_models() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $ai_generator = new WP_Tester_AI_Flow_Generator();
+            $models = $ai_generator->get_available_models_for_ui();
+            
+            wp_send_json_success(array(
+                'models' => $models,
+                'count' => count($models)
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to get available AI models: ', 'wp-tester') . $e->getMessage()
             ));
         }
     }

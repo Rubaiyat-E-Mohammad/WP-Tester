@@ -19,7 +19,7 @@ $settings = get_option('wp_tester_settings', array());
                 <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/wp-tester-logo.png'); ?>" 
                      alt="WP Tester" class="logo">
                 <div class="title-info">
-                    <h1>Crawl Results</h1>
+                    <h1>Crawled Pages</h1>
                     <p class="subtitle">Site crawling and discovery results</p>
                 </div>
             </div>
@@ -258,7 +258,7 @@ $settings = get_option('wp_tester_settings', array());
                     <div class="empty-state-icon">
                         <span class="dashicons dashicons-search"></span>
                     </div>
-                    <h3>No Crawl Results</h3>
+                    <h3>No Crawled Pages</h3>
                     <p>Start your first crawl to discover pages, forms, and potential user flows on your site.</p>
                     <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
                         <button class="modern-btn modern-btn-primary" id="start-first-crawl">

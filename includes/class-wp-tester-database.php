@@ -512,6 +512,18 @@ class WP_Tester_Database {
     }
     
     /**
+     * Simple cleanup - remove all test results
+     */
+    public function cleanup_all_test_results() {
+        global $wpdb;
+        
+        // Delete all test results
+        $deleted_count = $wpdb->query("DELETE FROM {$this->test_results_table}");
+        
+        return $deleted_count;
+    }
+    
+    /**
      * Get test results statistics for cleanup
      */
     public function get_test_results_stats() {
@@ -732,6 +744,10 @@ class WP_Tester_Database {
         
         // Critical issues (failed tests from last 24 hours)
         $stats['critical_issues'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed' AND started_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)") ?: 0;
+        
+        // Last test - get the most recent test execution
+        $last_test = $wpdb->get_var("SELECT MAX(started_at) FROM {$this->test_results_table}");
+        $stats['last_test'] = $last_test ?: 'Never';
         
         // Last crawl - check both crawl results and a dedicated last crawl timestamp
         $last_crawl_from_results = $wpdb->get_var("SELECT MAX(last_crawled) FROM {$this->crawl_results_table}");
