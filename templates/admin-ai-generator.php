@@ -10,6 +10,7 @@ if (!defined('ABSPATH')) {
 // Get current AI settings
 $ai_api_key = get_option('wp_tester_ai_api_key', '');
 $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
+$ai_model = get_option('wp_tester_ai_model', '');
 $has_api_key = !empty($ai_api_key);
 
 // Get site analysis
@@ -29,6 +30,10 @@ $site_analysis = array(
 // Get available plugins
 $ai_generator = new WP_Tester_AI_Flow_Generator();
 $available_plugins = $ai_generator->get_available_plugins();
+
+// Get AI generated flows
+$database = new WP_Tester_Database();
+$ai_generated_flows = $database->get_ai_generated_flows(5);
 ?>
 
 <div class="wrap">
@@ -262,8 +267,8 @@ $available_plugins = $ai_generator->get_available_plugins();
                     </div>
                     
                     <!-- Selection Indicator -->
-                    <div class="plugin-selection-indicator" style="position: absolute; top: 1rem; right: 1rem; width: 20px; height: 20px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
-                        <div class="checkmark" style="width: 10px; height: 10px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
+                    <div class="plugin-selection-indicator" style="position: absolute; top: 1rem; right: 1rem; width: 24px; height: 24px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
+                        <div class="checkmark" style="width: 12px; height: 12px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
                     </div>
                     
                     <!-- Hidden checkbox for form submission -->
@@ -337,17 +342,50 @@ $available_plugins = $ai_generator->get_available_plugins();
         </div>
         
         <div id="ai-flows-list">
-            <div style="text-align: center; padding: 2rem; color: #64748b;">
-                <div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #d1d5db;">
-                        <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V7.5C15 8.3 14.3 9 13.5 9H10.5C9.7 9 9 8.3 9 7.5V6.5L3 7V9L9 8.5V9.5C9 10.3 9.7 11 10.5 11H13.5C14.3 11 15 10.3 15 9.5V8.5L21 9ZM6.5 12C5.7 12 5 12.7 5 13.5V16.5C5 17.3 5.7 18 6.5 18H7.5V22H9V18H15V22H16.5V18H17.5C18.3 18 19 17.3 19 16.5V13.5C19 12.7 18.3 12 17.5 12H6.5Z" fill="currentColor"/>
-                    </svg>
-                    <div>
-                        <p style="margin: 0; font-size: 1.125rem;">No AI flows generated yet</p>
-                        <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Click "Generate AI Flows" to create intelligent test flows</p>
+            <?php if (!empty($ai_generated_flows)): ?>
+                <div class="modern-list">
+                    <?php foreach ($ai_generated_flows as $flow): ?>
+                        <div class="modern-list-item" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 0.75rem; background: white; transition: all 0.2s ease;">
+                            <div class="item-info" style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 32px; height: 32px; border-radius: 6px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <span class="dashicons dashicons-admin-generic" style="color: #00265e; font-size: 16px;"></span>
+                                    </div>
+                                    <div>
+                                        <h4 style="margin: 0; font-size: 1rem; font-weight: 600; color: #00265e;"><?php echo esc_html($flow->flow_name); ?></h4>
+                                        <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #64748b;">
+                                            <?php echo esc_html($flow->flow_type); ?> • 
+                                            <?php echo esc_html(human_time_diff(strtotime($flow->created_at), current_time('timestamp'))); ?> ago
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="item-actions" style="display: flex; align-items: center; gap: 0.5rem;">
+                                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=view&flow_id=' . $flow->id); ?>" class="modern-btn modern-btn-secondary modern-btn-small">
+                                    <span class="dashicons dashicons-visibility"></span>
+                                    View
+                                </a>
+                                <a href="<?php echo admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . $flow->id); ?>" class="modern-btn modern-btn-primary modern-btn-small">
+                                    <span class="dashicons dashicons-controls-play"></span>
+                                    Test
+                                </a>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div style="text-align: center; padding: 2rem; color: #64748b;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #d1d5db;">
+                            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V7.5C15 8.3 14.3 9 13.5 9H10.5C9.7 9 9 8.3 9 7.5V6.5L3 7V9L9 8.5V9.5C9 10.3 9.7 11 10.5 11H13.5C14.3 11 15 10.3 15 9.5V8.5L21 9ZM6.5 12C5.7 12 5 12.7 5 13.5V16.5C5 17.3 5.7 18 6.5 18H7.5V22H9V18H15V22H16.5V18H17.5C18.3 18 19 17.3 19 16.5V13.5C19 12.7 18.3 12 17.5 12H6.5Z" fill="currentColor"/>
+                        </svg>
+                        <div>
+                            <p style="margin: 0; font-size: 1.125rem;">No AI flows generated yet</p>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Click "Generate AI Flows" to create intelligent test flows</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -452,6 +490,9 @@ jQuery(document).ready(function($) {
         const selectedModel = $('#ai-model-select').val();
         const apiKey = $('#ai-api-key').val();
         
+        console.log('Save AI Config - Selected Model:', selectedModel);
+        console.log('Save AI Config - API Key:', apiKey ? '***' + apiKey.slice(-4) : 'empty');
+        
         if (!selectedModel) {
             showErrorModal('Model Selection Required', 'Please select an AI model first.');
             button.html(originalText).prop('disabled', false);
@@ -480,6 +521,7 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
+                console.log('Save AI Config - AJAX Response:', response);
                 if (response.success) {
                     // Reset button state immediately
                     button.html(originalText).prop('disabled', false);
@@ -570,6 +612,7 @@ jQuery(document).ready(function($) {
     
     // Load available models on page load
     function loadAvailableModels() {
+        console.log('Loading available AI models...');
         $.ajax({
             url: ajaxurl,
             type: 'POST',
@@ -578,18 +621,22 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
+                console.log('AI Models Response:', response);
                 if (response.success) {
                     availableModels = response.data;
                     populateModelDropdown();
+                } else {
+                    console.error('Failed to load AI models:', response.data.message);
                 }
             },
-            error: function() {
-                console.error('Failed to load AI models');
+            error: function(xhr, status, error) {
+                console.error('Error loading AI models:', {xhr, status, error});
             }
         });
     }
     
     function populateModelDropdown() {
+        console.log('Populating model dropdown with:', availableModels);
         const modelSelect = $('#ai-model-select');
         const description = $('#ai-model-description');
         
@@ -701,6 +748,15 @@ jQuery(document).ready(function($) {
     
     // Load models on page load
     loadAvailableModels();
+    
+    // Set current model after models are loaded
+    setTimeout(function() {
+        const currentModel = '<?php echo esc_js($ai_model); ?>';
+        if (currentModel) {
+            $('#ai-model-select').val(currentModel);
+            updateApiKeySection();
+        }
+    }, 1000);
     
     // Generate AI Flows
     $('#generate-ai-flows').on('click', function(e) {
@@ -821,6 +877,12 @@ jQuery(document).ready(function($) {
 .plugin-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px -8px rgba(31, 192, 154, 0.3);
+    border-color: #00265e;
+}
+
+.plugin-card:hover .plugin-selection-indicator {
+    border-color: #00265e;
+    transform: scale(1.1);
 }
 
 .plugin-card.selected {
@@ -851,10 +913,13 @@ jQuery(document).ready(function($) {
 .plugin-card.selected .plugin-selection-indicator {
     border-color: #00265e !important;
     background: #00265e !important;
+    box-shadow: 0 2px 4px rgba(0, 38, 94, 0.2) !important;
 }
 
 .plugin-card.selected .checkmark {
     opacity: 1 !important;
     background: white !important;
+    width: 12px !important;
+    height: 12px !important;
 }
 </style>

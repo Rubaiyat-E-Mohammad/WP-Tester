@@ -71,12 +71,15 @@ class WP_Tester_Database {
             expected_outcome text,
             priority int(11) DEFAULT 5,
             is_active tinyint(1) DEFAULT 1,
+            ai_generated tinyint(1) DEFAULT 0,
+            ai_provider varchar(100) DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             KEY flow_type (flow_type),
             KEY priority (priority),
-            KEY is_active (is_active)
+            KEY is_active (is_active),
+            KEY ai_generated (ai_generated)
         ) $charset_collate;";
         
         // Test results table
@@ -229,7 +232,7 @@ class WP_Tester_Database {
     /**
      * Save flow
      */
-    public function save_flow($flow_name, $flow_type, $start_url, $steps, $expected_outcome = '', $priority = 5) {
+    public function save_flow($flow_name, $flow_type, $start_url, $steps, $expected_outcome = '', $priority = 5, $ai_generated = false, $ai_provider = null) {
         global $wpdb;
         
         // Check if flow already exists to prevent duplicates
@@ -268,9 +271,11 @@ class WP_Tester_Database {
                 'steps' => wp_json_encode($steps),
                 'expected_outcome' => $expected_outcome,
                 'priority' => $priority,
-                'is_active' => 1
+                'is_active' => 1,
+                'ai_generated' => $ai_generated ? 1 : 0,
+                'ai_provider' => $ai_provider
             ),
-            array('%s', '%s', '%s', '%s', '%s', '%d', '%d')
+            array('%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s')
         );
     }
     
@@ -614,6 +619,23 @@ class WP_Tester_Database {
         } else {
             return $wpdb->get_results($sql);
         }
+    }
+
+    /**
+     * Get AI generated flows
+     */
+    public function get_ai_generated_flows($limit = 5) {
+        global $wpdb;
+        
+        $sql = $wpdb->prepare(
+            "SELECT * FROM {$this->flows_table} 
+             WHERE ai_generated = 1 
+             ORDER BY created_at DESC 
+             LIMIT %d",
+            $limit
+        );
+        
+        return $wpdb->get_results($sql);
     }
     
     /**

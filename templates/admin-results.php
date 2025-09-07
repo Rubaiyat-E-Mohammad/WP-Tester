@@ -510,7 +510,46 @@ jQuery(document).ready(function($) {
     // Run test
     $('#run-test').on('click', function(e) {
         e.preventDefault();
-        window.location.href = '<?php echo admin_url('admin.php?page=wp-tester-flows'); ?>';
+        
+        console.log('Run Test button clicked!');
+        
+        const button = $(this);
+        const originalText = button.html();
+        
+        // Show progress modal
+        showProgressModal('Running Tests', 'Executing all configured flows...');
+        button.html('<span class="dashicons dashicons-update-alt"></span> Running...').prop('disabled', true);
+        
+        // AJAX call to run tests
+        const ajaxUrl = (typeof wpTesterData !== 'undefined' && wpTesterData.ajaxurl) ? wpTesterData.ajaxurl : '<?php echo admin_url('admin-ajax.php'); ?>';
+        const nonce = (typeof wpTesterData !== 'undefined' && wpTesterData.nonce) ? wpTesterData.nonce : '<?php echo wp_create_nonce('wp_tester_nonce'); ?>';
+        
+        $.ajax({
+            url: ajaxUrl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_run_all_tests',
+                nonce: nonce
+            },
+            success: function(response) {
+                hideProgressModal();
+                if (response.success) {
+                    showSuccessModal('Tests Complete!', 
+                        'All tests have been executed successfully. ' + (response.data.message || ''));
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showErrorModal('Test Failed', response.data.message || 'Unknown error occurred');
+                }
+            },
+            error: function(xhr, status, error) {
+                hideProgressModal();
+                console.error('Run All Tests AJAX Error:', {xhr, status, error});
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
     });
 
     // Modal functions

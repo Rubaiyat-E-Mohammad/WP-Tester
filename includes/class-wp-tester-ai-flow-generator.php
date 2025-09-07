@@ -1557,7 +1557,9 @@ class WP_Tester_AI_Flow_Generator {
                 $flow_data['start_url'] ?? '',
                 $flow_data['steps'] ?? [],
                 $flow_data['expected_outcome'] ?? '',
-                $flow_data['priority'] ?? 5
+                $flow_data['priority'] ?? 5,
+                true, // ai_generated = true
+                $this->ai_model // ai_provider
             );
         } catch (Exception $e) {
             error_log('WP Tester: Failed to save AI flow: ' . $e->getMessage());
