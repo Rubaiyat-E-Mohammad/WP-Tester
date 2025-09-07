@@ -361,8 +361,10 @@ $available_plugins = $ai_generator->get_available_plugins();
         
         <div id="ai-flows-list">
             <div style="text-align: center; padding: 2rem; color: #64748b;">
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                    <div class="dashicons dashicons-admin-generic" style="font-size: 3rem; color: #d1d5db;"></div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #d1d5db;">
+                        <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V7.5C15 8.3 14.3 9 13.5 9H10.5C9.7 9 9 8.3 9 7.5V6.5L3 7V9L9 8.5V9.5C9 10.3 9.7 11 10.5 11H13.5C14.3 11 15 10.3 15 9.5V8.5L21 9ZM6.5 12C5.7 12 5 12.7 5 13.5V16.5C5 17.3 5.7 18 6.5 18H7.5V22H9V18H15V22H16.5V18H17.5C18.3 18 19 17.3 19 16.5V13.5C19 12.7 18.3 12 17.5 12H6.5Z" fill="currentColor"/>
+                    </svg>
                     <div>
                         <p style="margin: 0; font-size: 1.125rem;">No AI flows generated yet</p>
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Click "Generate AI Flows" to create intelligent test flows</p>
