@@ -248,40 +248,17 @@ $available_plugins = $ai_generator->get_available_plugins();
                     <div class="stat-header">
                         <h3 class="stat-label"><?php echo esc_html($plugin['name']); ?></h3>
                         <div class="stat-icon">
-                            <?php 
-                            $plugin_name = $plugin['name'];
-                            $initials = '';
-                            $words = explode(' ', $plugin_name);
-                            foreach ($words as $word) {
-                                if (strpos($word, 'WP') === 0) {
-                                    $initials .= 'W';
-                                } else {
-                                    $initials .= strtoupper(substr($word, 0, 1));
-                                }
-                                if (strlen($initials) >= 2) break;
-                            }
-                            echo esc_html($initials);
-                            ?>
+                            <span class="dashicons dashicons-admin-plugins"></span>
                         </div>
                     </div>
                     
-                    <div class="stat-value" style="font-size: 1.25rem; margin: 0.5rem 0;">
+                    <div class="stat-value">
                         <?php echo esc_html($plugin['type']); ?>
                     </div>
                     
-                    <div class="stat-change neutral" style="font-size: 0.75rem; line-height: 1.3;">
-                        <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 12)); ?>
-                    </div>
-                    
-                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9; font-size: 0.75rem; color: #9ca3af;">
-                        v<?php echo esc_html($plugin['version']); ?> • 
-                        <?php if (!empty($plugin['author_uri'])): ?>
-                            <a href="<?php echo esc_url($plugin['author_uri']); ?>" target="_blank" style="color: #00265e; text-decoration: none;">
-                                <?php echo esc_html($plugin['author']); ?>
-                            </a>
-                        <?php else: ?>
-                            <?php echo esc_html($plugin['author']); ?>
-                        <?php endif; ?>
+                    <div class="stat-change neutral">
+                        <span class="dashicons dashicons-info"></span>
+                        <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 8)); ?>
                     </div>
                     
                     <!-- Selection Indicator -->
