@@ -208,7 +208,7 @@ class WP_Tester {
         
         // Set default options
         add_option('wp_tester_settings', array(
-            'crawl_frequency' => 'daily',
+            'crawl_frequency' => 'never',
             'test_timeout' => 30,
             'retry_attempts' => 2,
             'screenshot_on_failure' => true,

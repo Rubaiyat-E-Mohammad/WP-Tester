@@ -132,7 +132,7 @@ class WP_Tester_Database {
     public function save_crawl_result($url, $page_type, $title, $content_hash, $interactive_elements, $discovered_flows) {
         global $wpdb;
         
-        return $wpdb->replace(
+        $result = $wpdb->replace(
             $this->crawl_results_table,
             array(
                 'url' => $url,
@@ -146,6 +146,18 @@ class WP_Tester_Database {
             ),
             array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
         );
+        
+        // Update the global last crawl timestamp
+        update_option('wp_tester_last_crawl', current_time('mysql'));
+        
+        return $result;
+    }
+    
+    /**
+     * Update last crawl timestamp
+     */
+    public function update_last_crawl_timestamp() {
+        update_option('wp_tester_last_crawl', current_time('mysql'));
     }
     
     /**
@@ -507,10 +519,14 @@ class WP_Tester_Database {
     public function get_test_results_stats() {
         global $wpdb;
         
+        error_log("WP Tester: get_test_results_stats called");
+        error_log("WP Tester: Using test results table: {$this->test_results_table}");
+        
         $stats = array();
         
         // Total test results
         $stats['total'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table}");
+        error_log("WP Tester: Total test results: " . ($stats['total'] ?: 0));
         
         // By status
         $stats['passed'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed'");
@@ -526,6 +542,7 @@ class WP_Tester_Database {
         $stats['oldest'] = $wpdb->get_var("SELECT MIN(started_at) FROM {$this->test_results_table}");
         $stats['newest'] = $wpdb->get_var("SELECT MAX(started_at) FROM {$this->test_results_table}");
         
+        error_log("WP Tester: Final stats: " . wp_json_encode($stats));
         return $stats;
     }
     
@@ -719,9 +736,20 @@ class WP_Tester_Database {
         // Critical issues (failed tests from last 24 hours)
         $stats['critical_issues'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed' AND started_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)") ?: 0;
         
-        // Last crawl
-        $last_crawl = $wpdb->get_var("SELECT MAX(last_crawled) FROM {$this->crawl_results_table}");
-        $stats['last_crawl'] = $last_crawl ?: 'Never';
+        // Last crawl - check both crawl results and a dedicated last crawl timestamp
+        $last_crawl_from_results = $wpdb->get_var("SELECT MAX(last_crawled) FROM {$this->crawl_results_table}");
+        $last_crawl_timestamp = get_option('wp_tester_last_crawl', null);
+        
+        // Use the most recent of the two
+        if ($last_crawl_timestamp && $last_crawl_from_results) {
+            $stats['last_crawl'] = max($last_crawl_timestamp, $last_crawl_from_results);
+        } elseif ($last_crawl_timestamp) {
+            $stats['last_crawl'] = $last_crawl_timestamp;
+        } elseif ($last_crawl_from_results) {
+            $stats['last_crawl'] = $last_crawl_from_results;
+        } else {
+            $stats['last_crawl'] = 'Never';
+        }
         
         // Additional stats for comprehensive dashboard
         $stats['total_errors'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed'") ?: 0;

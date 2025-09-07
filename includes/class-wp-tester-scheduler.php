@@ -166,9 +166,10 @@ class WP_Tester_Scheduler {
         wp_clear_scheduled_hook('wp_tester_daily_crawl');
         
         // Reschedule based on new frequency
-        $frequency = isset($new_value['crawl_frequency']) ? $new_value['crawl_frequency'] : 'daily';
+        $frequency = isset($new_value['crawl_frequency']) ? $new_value['crawl_frequency'] : 'never';
         
-        if (!wp_next_scheduled('wp_tester_daily_crawl')) {
+        // Only schedule if frequency is not 'never'
+        if ($frequency !== 'never' && !wp_next_scheduled('wp_tester_daily_crawl')) {
             wp_schedule_event(time(), $frequency, 'wp_tester_daily_crawl');
         }
     }

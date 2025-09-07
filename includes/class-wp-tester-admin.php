@@ -471,9 +471,10 @@ class WP_Tester_Admin {
     
     public function crawl_frequency_callback() {
         $settings = get_option('wp_tester_settings', array());
-        $value = isset($settings['crawl_frequency']) ? $settings['crawl_frequency'] : 'daily';
+        $value = isset($settings['crawl_frequency']) ? $settings['crawl_frequency'] : 'never';
         
         echo '<select name="wp_tester_settings[crawl_frequency]">';
+        echo '<option value="never"' . selected($value, 'never', false) . '>' . __('Never (Manual Only)', 'wp-tester') . '</option>';
         echo '<option value="hourly"' . selected($value, 'hourly', false) . '>' . __('Hourly', 'wp-tester') . '</option>';
         echo '<option value="twicedaily"' . selected($value, 'twicedaily', false) . '>' . __('Twice Daily', 'wp-tester') . '</option>';
         echo '<option value="daily"' . selected($value, 'daily', false) . '>' . __('Daily', 'wp-tester') . '</option>';
@@ -520,10 +521,10 @@ class WP_Tester_Admin {
         $sanitized = array();
         
         if (isset($input['crawl_frequency'])) {
-            $allowed_frequencies = array('hourly', 'twicedaily', 'daily', 'weekly');
+            $allowed_frequencies = array('never', 'hourly', 'twicedaily', 'daily', 'weekly');
             $sanitized['crawl_frequency'] = in_array($input['crawl_frequency'], $allowed_frequencies) 
                 ? $input['crawl_frequency'] 
-                : 'daily';
+                : 'never';
         }
         
         if (isset($input['test_timeout'])) {

@@ -39,6 +39,10 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_bulk_crawl_action', array($this, 'bulk_crawl_action'));
         add_action('wp_ajax_wp_tester_debug_bulk_action', array($this, 'debug_bulk_action'));
         add_action('wp_ajax_wp_tester_cleanup_crawl_duplicates', array($this, 'cleanup_crawl_duplicates'));
+        add_action('wp_ajax_wp_tester_clear_cache', array($this, 'clear_cache'));
+        add_action('wp_ajax_wp_tester_reset_flows', array($this, 'reset_flows'));
+        add_action('wp_ajax_wp_tester_export_data', array($this, 'export_data'));
+        add_action('wp_ajax_wp_tester_system_check', array($this, 'system_check'));
     }
     
     /**
@@ -729,9 +733,12 @@ class WP_Tester_Ajax {
      * Get test results statistics
      */
     public function get_test_results_stats() {
+        error_log("WP Tester: get_test_results_stats called");
+        
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
+            error_log("WP Tester: get_test_results_stats failed - insufficient permissions");
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
@@ -740,11 +747,14 @@ class WP_Tester_Ajax {
             $database = new WP_Tester_Database();
             $stats = $database->get_test_results_stats();
             
+            error_log("WP Tester: get_test_results_stats success - stats: " . wp_json_encode($stats));
+            
             wp_send_json_success(array(
                 'stats' => $stats
             ));
             
         } catch (Exception $e) {
+            error_log("WP Tester: get_test_results_stats error: " . $e->getMessage());
             wp_send_json_error(array(
                 'message' => __('Failed to get test results statistics: ', 'wp-tester') . $e->getMessage()
             ));
@@ -960,29 +970,39 @@ class WP_Tester_Ajax {
             global $wpdb;
             $crawl_results_table = $wpdb->prefix . 'wp_tester_crawl_results';
             
+            // Debug: Log the table name and query
+            error_log("WP Tester: Cleanup crawl duplicates using table: {$crawl_results_table}");
+            
             // Find duplicate crawl results based on URL and page_type
             $duplicates = $wpdb->get_results(
-                "SELECT url, page_type, GROUP_CONCAT(id ORDER BY created_at ASC) as ids, COUNT(*) as count
+                "SELECT url, page_type, GROUP_CONCAT(id ORDER BY last_crawled ASC) as ids, COUNT(*) as count
                  FROM {$crawl_results_table} 
                  GROUP BY url, page_type 
                  HAVING COUNT(*) > 1"
             );
             
+            error_log("WP Tester: Found " . count($duplicates) . " duplicate crawl result groups");
+            
             $removed_count = 0;
             
             foreach ($duplicates as $duplicate) {
+                error_log("WP Tester: Processing duplicate group - URL: {$duplicate->url}, Type: {$duplicate->page_type}, Count: {$duplicate->count}, IDs: {$duplicate->ids}");
+                
                 $ids = explode(',', $duplicate->ids);
                 $keep_id = array_shift($ids); // Keep the first (oldest) one
                 
                 if (!empty($ids)) {
                     $placeholders = implode(',', array_fill(0, count($ids), '%d'));
-                    $deleted_count = $wpdb->query($wpdb->prepare(
-                        "DELETE FROM {$crawl_results_table} WHERE id IN ({$placeholders})",
-                        ...$ids
-                    ));
+                    $delete_query = "DELETE FROM {$crawl_results_table} WHERE id IN ({$placeholders})";
+                    error_log("WP Tester: Executing delete query: {$delete_query} with IDs: " . implode(',', $ids));
+                    
+                    $deleted_count = $wpdb->query($wpdb->prepare($delete_query, ...$ids));
+                    error_log("WP Tester: Delete query affected {$deleted_count} rows");
                     $removed_count += $deleted_count;
                 }
             }
+            
+            error_log("WP Tester: Total crawl duplicates removed: {$removed_count}");
             
             wp_send_json_success(array(
                 'message' => sprintf(__('Removed %d duplicate crawl results.', 'wp-tester'), $removed_count)
@@ -991,6 +1011,171 @@ class WP_Tester_Ajax {
         } catch (Exception $e) {
             wp_send_json_error(array(
                 'message' => __('Failed to cleanup duplicates: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Clear cache
+     */
+    public function clear_cache() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            // Clear WordPress object cache
+            wp_cache_flush();
+            
+            // Clear any plugin-specific cache
+            delete_transient('wp_tester_cache');
+            delete_transient('wp_tester_dashboard_cache');
+            
+            wp_send_json_success(array(
+                'message' => __('Cache cleared successfully', 'wp-tester')
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to clear cache: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Reset flows
+     */
+    public function reset_flows() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            global $wpdb;
+            $flows_table = $wpdb->prefix . 'wp_tester_flows';
+            
+            // Delete all flows
+            $deleted_count = $wpdb->query("DELETE FROM {$flows_table}");
+            
+            wp_send_json_success(array(
+                'message' => sprintf(__('Reset %d flows successfully', 'wp-tester'), $deleted_count)
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to reset flows: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Export data
+     */
+    public function export_data() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $database = new WP_Tester_Database();
+            
+            // Get all data
+            $data = array(
+                'flows' => $database->get_flows(),
+                'test_results' => $database->get_test_results(),
+                'crawl_results' => $database->get_crawl_results(1000, 0),
+                'export_date' => current_time('mysql'),
+                'plugin_version' => WP_TESTER_VERSION
+            );
+            
+            // Generate filename
+            $filename = 'wp-tester-export-' . date('Y-m-d-H-i-s') . '.json';
+            
+            // Set headers for download
+            $json_data = wp_json_encode($data);
+            header('Content-Type: application/json');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Content-Length: ' . strlen($json_data ?: ''));
+            
+            echo wp_json_encode($data, JSON_PRETTY_PRINT);
+            exit;
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to export data: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * System check
+     */
+    public function system_check() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $checks = array();
+            
+            // Check database tables
+            global $wpdb;
+            $tables = array(
+                'flows' => $wpdb->prefix . 'wp_tester_flows',
+                'test_results' => $wpdb->prefix . 'wp_tester_test_results',
+                'crawl_results' => $wpdb->prefix . 'wp_tester_crawl_results',
+                'screenshots' => $wpdb->prefix . 'wp_tester_screenshots'
+            );
+            
+            foreach ($tables as $name => $table) {
+                $exists = $wpdb->get_var("SHOW TABLES LIKE '{$table}'") === $table;
+                $checks['database'][$name] = array(
+                    'status' => $exists ? 'ok' : 'error',
+                    'message' => $exists ? 'Table exists' : 'Table missing'
+                );
+            }
+            
+            // Check file permissions
+            $upload_dir = wp_upload_dir();
+            $screenshots_dir = $upload_dir['basedir'] . '/wp-tester-screenshots';
+            $checks['permissions']['screenshots_dir'] = array(
+                'status' => is_writable($upload_dir['basedir']) ? 'ok' : 'warning',
+                'message' => is_writable($upload_dir['basedir']) ? 'Writable' : 'Not writable'
+            );
+            
+            // Check PHP version
+            $checks['php']['version'] = array(
+                'status' => version_compare(PHP_VERSION, '7.4', '>=') ? 'ok' : 'warning',
+                'message' => 'PHP ' . PHP_VERSION
+            );
+            
+            // Check WordPress version
+            global $wp_version;
+            $checks['wordpress']['version'] = array(
+                'status' => version_compare($wp_version, '6.0', '>=') ? 'ok' : 'warning',
+                'message' => 'WordPress ' . $wp_version
+            );
+            
+            wp_send_json_success(array(
+                'message' => __('System check completed', 'wp-tester'),
+                'checks' => $checks
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to perform system check: ', 'wp-tester') . $e->getMessage()
             ));
         }
     }

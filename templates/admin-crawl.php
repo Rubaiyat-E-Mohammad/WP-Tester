@@ -113,13 +113,15 @@ if (!defined('ABSPATH')) {
                 </div>
                 <div class="stat-value" style="font-size: 1.25rem;">
                     <?php
-                    $last_crawl = 'Never';
-                    if (!empty($crawl_results)) {
-                        $latest = array_slice($crawl_results, 0, 1);
-                        if (!empty($latest[0]->crawled_at)) {
-                            $last_crawl = date('M j', strtotime($latest[0]->crawled_at));
-                        }
+                    // Get last crawl from database stats
+                    $database = new WP_Tester_Database();
+                    $stats = $database->get_dashboard_stats();
+                    $last_crawl = $stats['last_crawl'] ?? 'Never';
+                    
+                    if ($last_crawl !== 'Never') {
+                        $last_crawl = date('M j, Y', strtotime($last_crawl));
                     }
+                    
                     echo esc_html($last_crawl);
                     ?>
                 </div>
@@ -280,7 +282,8 @@ if (!defined('ABSPATH')) {
                     <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
                         <?php 
                         $settings = get_option('wp_tester_settings', array());
-                        echo esc_html(ucfirst($settings['crawl_frequency'] ?? 'Daily'));
+                        $frequency = $settings['crawl_frequency'] ?? 'never';
+                        echo esc_html($frequency === 'never' ? 'Never (Manual Only)' : ucfirst($frequency));
                         ?>
                     </p>
                 </div>

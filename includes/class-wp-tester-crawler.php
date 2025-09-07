@@ -66,6 +66,9 @@ class WP_Tester_Crawler {
             
             $execution_time = microtime(true) - $start_time;
             
+            // Update last crawl timestamp
+            $this->database->update_last_crawl_timestamp();
+            
             // Log crawl completion
             error_log(sprintf(
                 'WP Tester: Full crawl completed. Crawled %d URLs, saved %d flows in %.2f seconds.',

@@ -53,10 +53,11 @@ if (!defined('ABSPATH')) {
                             Crawl Frequency
                         </label>
                         <select name="wp_tester_settings[crawl_frequency]" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                            <option value="hourly" <?php selected(($settings['crawl_frequency'] ?? 'daily'), 'hourly'); ?>>Hourly</option>
-                            <option value="twicedaily" <?php selected(($settings['crawl_frequency'] ?? 'daily'), 'twicedaily'); ?>>Twice Daily</option>
-                            <option value="daily" <?php selected(($settings['crawl_frequency'] ?? 'daily'), 'daily'); ?>>Daily</option>
-                            <option value="weekly" <?php selected(($settings['crawl_frequency'] ?? 'daily'), 'weekly'); ?>>Weekly</option>
+                            <option value="never" <?php selected(($settings['crawl_frequency'] ?? 'never'), 'never'); ?>>Never (Manual Only)</option>
+                            <option value="hourly" <?php selected(($settings['crawl_frequency'] ?? 'never'), 'hourly'); ?>>Hourly</option>
+                            <option value="twicedaily" <?php selected(($settings['crawl_frequency'] ?? 'never'), 'twicedaily'); ?>>Twice Daily</option>
+                            <option value="daily" <?php selected(($settings['crawl_frequency'] ?? 'never'), 'daily'); ?>>Daily</option>
+                            <option value="weekly" <?php selected(($settings['crawl_frequency'] ?? 'never'), 'weekly'); ?>>Weekly</option>
                         </select>
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
                             How often to automatically crawl your site for new flows
@@ -235,31 +236,152 @@ if (!defined('ABSPATH')) {
 
 <script>
 jQuery(document).ready(function($) {
+    // Ensure ajaxurl is available
+    if (typeof ajaxurl === 'undefined') {
+        ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
+    }
+    
     // Maintenance actions
     $('#clear-cache').on('click', function(e) {
         e.preventDefault();
         if (confirm('Are you sure you want to clear the cache?')) {
-            // Add AJAX call here
-            alert('Cache cleared successfully!');
+            const button = $(this);
+            const originalText = button.html();
+            button.html('<span class="dashicons dashicons-update-alt"></span> Clearing...').prop('disabled', true);
+            
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_clear_cache',
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Cache cleared successfully!');
+                    } else {
+                        alert('Failed to clear cache: ' + (response.data.message || 'Unknown error'));
+                    }
+                },
+                error: function() {
+                    alert('Error connecting to server. Please try again.');
+                },
+                complete: function() {
+                    button.html(originalText).prop('disabled', false);
+                }
+            });
         }
     });
 
     $('#reset-flows').on('click', function(e) {
         e.preventDefault();
         if (confirm('This will reset all flows. Are you sure?')) {
-            // Add AJAX call here
-            alert('Flows reset successfully!');
+            const button = $(this);
+            const originalText = button.html();
+            button.html('<span class="dashicons dashicons-update-alt"></span> Resetting...').prop('disabled', true);
+            
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_reset_flows',
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Flows reset successfully!');
+                    } else {
+                        alert('Failed to reset flows: ' + (response.data.message || 'Unknown error'));
+                    }
+                },
+                error: function() {
+                    alert('Error connecting to server. Please try again.');
+                },
+                complete: function() {
+                    button.html(originalText).prop('disabled', false);
+                }
+            });
         }
     });
 
     $('#export-data').on('click', function(e) {
         e.preventDefault();
-        alert('Data export feature coming soon!');
+        const button = $(this);
+        const originalText = button.html();
+        button.html('<span class="dashicons dashicons-update-alt"></span> Exporting...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_export_data',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Create download link
+                    const blob = new Blob([response.data], {type: 'application/json'});
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'wp-tester-export-' + new Date().toISOString().slice(0,19).replace(/:/g, '-') + '.json';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    alert('Data exported successfully!');
+                } else {
+                    alert('Failed to export data: ' + (response.data.message || 'Unknown error'));
+                }
+            },
+            error: function() {
+                alert('Error connecting to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
     });
 
     $('#system-check').on('click', function(e) {
         e.preventDefault();
-        alert('System check completed. All systems operational!');
+        const button = $(this);
+        const originalText = button.html();
+        button.html('<span class="dashicons dashicons-update-alt"></span> Checking...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_system_check',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    let message = 'System check completed!\n\n';
+                    if (response.data.checks) {
+                        Object.keys(response.data.checks).forEach(category => {
+                            message += category.toUpperCase() + ':\n';
+                            Object.keys(response.data.checks[category]).forEach(check => {
+                                const status = response.data.checks[category][check].status;
+                                const statusIcon = status === 'ok' ? '✓' : (status === 'warning' ? '⚠' : '✗');
+                                message += `  ${statusIcon} ${check}: ${response.data.checks[category][check].message}\n`;
+                            });
+                            message += '\n';
+                        });
+                    }
+                    alert(message);
+                } else {
+                    alert('System check failed: ' + (response.data.message || 'Unknown error'));
+                }
+            },
+            error: function() {
+                alert('Error connecting to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
     });
 });
 </script>

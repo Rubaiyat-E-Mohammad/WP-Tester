@@ -292,6 +292,8 @@ jQuery(document).ready(function($) {
     // Cleanup test results functionality
     $('#cleanup-test-results').on('click', function(e) {
         e.preventDefault();
+        console.log('WP Tester: Cleanup results button clicked');
+        alert('Cleanup button clicked! Check console for details.');
         showCleanupModal();
     });
 
@@ -472,6 +474,9 @@ jQuery(document).ready(function($) {
 
     // Cleanup modal functions
     function showCleanupModal() {
+        console.log('WP Tester: showCleanupModal called');
+        console.log('WP Tester: ajaxurl available:', typeof ajaxurl !== 'undefined');
+        
         // First get current stats
         $.ajax({
             url: ajaxurl,
@@ -481,20 +486,25 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
+                console.log('WP Tester: get_test_results_stats response:', response);
                 if (response.success) {
                     const stats = response.data.stats;
+                    console.log('WP Tester: stats received:', stats);
                     showCleanupModalWithStats(stats);
                 } else {
+                    console.log('WP Tester: get_test_results_stats failed:', response.data);
                     showErrorModal('Error', 'Failed to load test results statistics');
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error('WP Tester: get_test_results_stats AJAX error:', {xhr, status, error});
                 showErrorModal('Error', 'Failed to connect to server');
             }
         });
     }
 
     function showCleanupModalWithStats(stats) {
+        console.log('WP Tester: showCleanupModalWithStats called with stats:', stats);
         const modal = $(`
             <div id="cleanup-test-results-modal" class="wp-tester-modal-overlay">
                 <div class="wp-tester-modal wp-tester-cleanup-modal">
