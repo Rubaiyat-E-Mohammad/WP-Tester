@@ -37,7 +37,7 @@ $available_plugins = $ai_generator->get_available_plugins();
         <div style="position: relative; z-index: 2;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; flex-shrink: 0;">
-                    <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . '../assets/WP Tester Logo.png'); ?>" 
+                    <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/WP Tester Logo.png'); ?>" 
                          alt="WP Tester" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" 
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                     <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.2rem; font-weight: bold;">WP</div>
@@ -261,24 +261,24 @@ $available_plugins = $ai_generator->get_available_plugins();
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; max-height: 400px; overflow-y: auto; padding: 0.5rem;">
+            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
                 <?php foreach ($available_plugins as $plugin): ?>
-                <div class="plugin-card" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; background: #f9fafb; transition: all 0.2s ease; min-height: 120px; display: flex; flex-direction: column;">
-                    <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; width: 100%; flex: 1;">
+                <div class="plugin-list-item" style="border-bottom: 1px solid #f3f4f6; padding: 0.75rem 1rem; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='white'">
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; width: 100%;">
                         <input type="checkbox" class="plugin-checkbox" value="<?php echo esc_attr($plugin['slug']); ?>" 
-                               style="width: 1.25rem; height: 1.25rem; accent-color: #1FC09A; margin-top: 0.125rem; flex-shrink: 0;">
+                               style="width: 1.125rem; height: 1.125rem; accent-color: #1FC09A; flex-shrink: 0;">
                         <div style="flex: 1; min-width: 0;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
-                                <div style="font-weight: 600; color: #374151; font-size: 0.875rem; word-break: break-word;"><?php echo esc_html($plugin['name']); ?></div>
-                                <span class="plugin-type-badge" style="padding: 0.125rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; background: #e0f2fe; color: #0369a1; white-space: nowrap;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
+                                <div style="font-weight: 600; color: #374151; font-size: 0.875rem;"><?php echo esc_html($plugin['name']); ?></div>
+                                <span class="plugin-type-badge" style="padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; background: #e0f2fe; color: #0369a1; white-space: nowrap;">
                                     <?php echo esc_html($plugin['type']); ?>
                                 </span>
                             </div>
-                            <div style="font-size: 0.8125rem; color: #64748b; line-height: 1.4; margin-bottom: 0.5rem; word-break: break-word;">
-                                <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 15)); ?>
+                            <div style="font-size: 0.8125rem; color: #64748b; line-height: 1.3; margin-bottom: 0.25rem;">
+                                <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 12)); ?>
                             </div>
-                            <div style="font-size: 0.75rem; color: #9ca3af; word-break: break-word;">
-                                Version <?php echo esc_html($plugin['version']); ?> • <?php echo esc_html($plugin['author']); ?>
+                            <div style="font-size: 0.75rem; color: #9ca3af;">
+                                v<?php echo esc_html($plugin['version']); ?> • <?php echo esc_html($plugin['author']); ?>
                             </div>
                         </div>
                     </label>
@@ -342,7 +342,7 @@ $available_plugins = $ai_generator->get_available_plugins();
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
             <div style="width: 32px; height: 32px; border-radius: 6px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #1FC09A; flex-shrink: 0;">
-                <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . '../assets/WP Tester Logo.png'); ?>" 
+                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/WP Tester Logo.png'); ?>" 
                      alt="WP Tester" style="width: 100%; height: 100%; border-radius: 6px; object-fit: contain;" 
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold;">WP</div>
@@ -625,3 +625,14 @@ jQuery(document).ready(function($) {
     });
 });
 </script>
+
+<style>
+/* Plugin list styling */
+.plugin-list-item:last-child {
+    border-bottom: none !important;
+}
+
+.plugin-list-item:hover {
+    background-color: #f8fafc !important;
+}
+</style>
