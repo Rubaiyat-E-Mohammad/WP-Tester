@@ -315,6 +315,108 @@ class WP_Tester_Database {
     }
     
     /**
+     * Cleanup test results
+     */
+    public function cleanup_test_results($options = array()) {
+        global $wpdb;
+        
+        $defaults = array(
+            'older_than_days' => 30,
+            'keep_successful' => true,
+            'keep_failed' => false,
+            'keep_partial' => false,
+            'max_results_per_flow' => 10
+        );
+        
+        $options = wp_parse_args($options, $defaults);
+        $removed_count = 0;
+        
+        // Remove old test results
+        if ($options['older_than_days'] > 0) {
+            $cutoff_date = date('Y-m-d H:i:s', strtotime("-{$options['older_than_days']} days"));
+            
+            $where_conditions = array("started_at < %s");
+            $where_values = array($cutoff_date);
+            
+            // Add status filters
+            $status_conditions = array();
+            if (!$options['keep_successful']) {
+                $status_conditions[] = "status = 'passed'";
+            }
+            if (!$options['keep_failed']) {
+                $status_conditions[] = "status = 'failed'";
+            }
+            if (!$options['keep_partial']) {
+                $status_conditions[] = "status = 'partial'";
+            }
+            
+            if (!empty($status_conditions)) {
+                $where_conditions[] = "(" . implode(' OR ', $status_conditions) . ")";
+            }
+            
+            $sql = "DELETE FROM {$this->test_results_table} WHERE " . implode(' AND ', $where_conditions);
+            $removed_count += $wpdb->query($wpdb->prepare($sql, $where_values));
+        }
+        
+        // Keep only the most recent results per flow
+        if ($options['max_results_per_flow'] > 0) {
+            $flows = $wpdb->get_results("SELECT DISTINCT flow_id FROM {$this->test_results_table}");
+            
+            foreach ($flows as $flow) {
+                $recent_results = $wpdb->get_results($wpdb->prepare(
+                    "SELECT id FROM {$this->test_results_table} 
+                     WHERE flow_id = %d 
+                     ORDER BY started_at DESC 
+                     LIMIT %d",
+                    $flow->flow_id,
+                    $options['max_results_per_flow']
+                ));
+                
+                if (!empty($recent_results)) {
+                    $keep_ids = array_map(function($result) { return $result->id; }, $recent_results);
+                    $placeholders = implode(',', array_fill(0, count($keep_ids), '%d'));
+                    
+                    $removed_count += $wpdb->query($wpdb->prepare(
+                        "DELETE FROM {$this->test_results_table} 
+                         WHERE flow_id = %d AND id NOT IN ($placeholders)",
+                        array_merge(array($flow->flow_id), $keep_ids)
+                    ));
+                }
+            }
+        }
+        
+        return $removed_count;
+    }
+    
+    /**
+     * Get test results statistics for cleanup
+     */
+    public function get_test_results_stats() {
+        global $wpdb;
+        
+        $stats = array();
+        
+        // Total test results
+        $stats['total'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table}");
+        
+        // By status
+        $stats['passed'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed'");
+        $stats['failed'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed'");
+        $stats['partial'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'partial'");
+        
+        // By age
+        $stats['last_7_days'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
+        $stats['last_30_days'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+        $stats['older_than_30_days'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at < DATE_SUB(NOW(), INTERVAL 30 DAY)");
+        
+        // Oldest and newest
+        $stats['oldest'] = $wpdb->get_var("SELECT MIN(started_at) FROM {$this->test_results_table}");
+        $stats['newest'] = $wpdb->get_var("SELECT MAX(started_at) FROM {$this->test_results_table}");
+        
+        return $stats;
+    }
+    
+    /**
      * Get flows
      */
     public function get_flows($active_only = true, $flow_type = '') {

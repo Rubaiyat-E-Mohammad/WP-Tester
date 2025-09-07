@@ -261,6 +261,19 @@ $visual_evidence = $report['visual_evidence'] ?? [];
                     <h2 class="card-title">Screenshots</h2>
                     <div class="status-badge info"><?php echo count($visual_evidence); ?> images</div>
                 </div>
+                
+                <!-- Debug Information -->
+                <div style="background: #f0f0f0; padding: 1rem; margin: 1rem; border-radius: 4px; font-family: monospace; font-size: 12px;">
+                    <strong>Debug Info:</strong><br>
+                    Visual Evidence Count: <?php echo count($visual_evidence); ?><br>
+                    <?php foreach ($visual_evidence as $i => $screenshot): ?>
+                        Screenshot <?php echo $i + 1; ?>: 
+                        Path: <?php echo esc_html($screenshot['path']); ?><br>
+                        URL: <?php echo esc_html($screenshot['url']); ?><br>
+                        Exists: <?php echo $screenshot['file_exists'] ? 'Yes' : 'No'; ?><br>
+                        Type: <?php echo esc_html($screenshot['type']); ?><br><br>
+                    <?php endforeach; ?>
+                </div>
 
                 <div class="screenshots-grid">
                     <?php foreach ($visual_evidence as $screenshot): ?>
@@ -292,6 +305,22 @@ $visual_evidence = $report['visual_evidence'] ?? [];
                             <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
+                </div>
+            </div>
+            <?php else: ?>
+            <!-- No Screenshots Message -->
+            <div class="modern-card">
+                <div class="card-header">
+                    <h2 class="card-title">Screenshots</h2>
+                    <div class="status-badge warning">No screenshots available</div>
+                </div>
+                <div class="card-body">
+                    <p>No screenshots were captured for this test result. This could be because:</p>
+                    <ul>
+                        <li>Screenshot on failure is disabled in settings</li>
+                        <li>No steps failed during this test</li>
+                        <li>Screenshots were not saved properly</li>
+                    </ul>
                 </div>
             </div>
             <?php endif; ?>

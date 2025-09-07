@@ -452,6 +452,13 @@ class WP_Tester_Admin {
             wp_die(__('Test result not found.', 'wp-tester'));
         }
         
+        // Debug: Log screenshot information
+        $screenshots = $this->database->get_screenshots($result_id);
+        error_log("WP Tester: Found " . count($screenshots) . " screenshots for result ID: {$result_id}");
+        foreach ($screenshots as $screenshot) {
+            error_log("WP Tester: Screenshot - ID: {$screenshot->id}, Path: {$screenshot->screenshot_path}, Type: {$screenshot->screenshot_type}");
+        }
+        
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-result-view.php';
     }
     

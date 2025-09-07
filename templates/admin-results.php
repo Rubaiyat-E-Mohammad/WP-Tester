@@ -25,6 +25,10 @@ if (!defined('ABSPATH')) {
                     <span class="dashicons dashicons-arrow-left-alt2"></span>
                     Dashboard
                 </a>
+                <button class="modern-btn modern-btn-warning modern-btn-small" id="cleanup-test-results">
+                    <span class="dashicons dashicons-trash"></span>
+                    Cleanup Results
+                </button>
                 <button class="modern-btn modern-btn-primary modern-btn-small" id="refresh-results">
                     <span class="dashicons dashicons-update"></span>
                     Refresh
@@ -144,9 +148,41 @@ if (!defined('ABSPATH')) {
             </div>
 
             <?php if (!empty($results)) : ?>
+                <!-- Bulk Actions Header -->
+                <div class="bulk-actions-header" style="display: none;">
+                    <div class="bulk-actions-info">
+                        <span class="selected-count">0 results selected</span>
+                    </div>
+                    <div class="bulk-actions-buttons">
+                        <select id="bulk-action-selector" class="modern-select">
+                            <option value="">Bulk Actions</option>
+                            <option value="delete">Delete Selected</option>
+                            <option value="export">Export Selected</option>
+                        </select>
+                        <button id="apply-bulk-action" class="modern-btn modern-btn-primary modern-btn-small" disabled>
+                            Apply
+                        </button>
+                        <button id="clear-selection" class="modern-btn modern-btn-secondary modern-btn-small">
+                            Clear Selection
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Select All Header -->
+                <div class="select-all-header">
+                    <div class="select-all-checkbox">
+                        <input type="checkbox" id="select-all-results" class="select-all-checkbox-input">
+                        <label for="select-all-results">Select All Results</label>
+                    </div>
+                </div>
+                
                 <div class="modern-list" id="results-list">
                     <?php foreach ($results as $result) : ?>
                         <div class="modern-list-item" data-status="<?php echo esc_attr($result->status ?? ''); ?>">
+                            <div class="item-checkbox">
+                                <input type="checkbox" class="result-checkbox" value="<?php echo esc_attr($result->id ?? ''); ?>" id="result-<?php echo esc_attr($result->id ?? ''); ?>">
+                                <label for="result-<?php echo esc_attr($result->id ?? ''); ?>"></label>
+                            </div>
                             <div class="item-info">
                                 <div class="item-icon">
                                     <span class="dashicons dashicons-<?php 
@@ -250,6 +286,12 @@ jQuery(document).ready(function($) {
         location.reload();
     });
 
+    // Cleanup test results functionality
+    $('#cleanup-test-results').on('click', function(e) {
+        e.preventDefault();
+        showCleanupModal();
+    });
+
     // Retry test functionality
     $('.retry-test').on('click', function(e) {
         e.preventDefault();
@@ -258,7 +300,14 @@ jQuery(document).ready(function($) {
         const flowId = button.data('flow-id');
         const originalText = button.html();
         
-        button.html('<div class="spinner"></div>').prop('disabled', true);
+        if (!flowId || flowId === 0) {
+            showErrorModal('Invalid Flow', 'Invalid flow ID for retry operation');
+            return;
+        }
+        
+        // Show progress modal
+        showProgressModal('Retrying Test', 'Re-executing the failed test...');
+        button.html('<span class="dashicons dashicons-update-alt"></span> Retrying...').prop('disabled', true);
         
         $.ajax({
             url: ajaxurl,
@@ -269,15 +318,19 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
+                hideProgressModal();
                 if (response.success) {
-                    alert('Test restarted successfully!');
-                    location.reload();
+                    showSuccessModal('Test Retry Complete!', 
+                        'Test executed successfully. ' + (response.data.message || ''));
+                    setTimeout(() => location.reload(), 2000);
                 } else {
-                    alert('Error restarting test: ' + (response.data || 'Unknown error'));
+                    showErrorModal('Retry Failed', response.data.message || 'Unknown error occurred');
                 }
             },
-            error: function() {
-                alert('Error connecting to server');
+            error: function(xhr, status, error) {
+                hideProgressModal();
+                console.error('Retry Test AJAX Error:', {xhr, status, error});
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
@@ -302,5 +355,602 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         window.location.href = '<?php echo admin_url('admin.php?page=wp-tester-flows'); ?>';
     });
+
+    // Modal functions
+    function showProgressModal(title, message) {
+        const modal = $(`
+            <div id="wp-tester-progress-modal" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
+                    <div class="wp-tester-modal-header">
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill"></div>
+                            </div>
+                            <p style="text-align: center; margin-top: 1rem; color: #6b7280;">${message}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+        $('body').append(modal);
+        modal.fadeIn(300);
+    }
+
+    function hideProgressModal() {
+        $('#wp-tester-progress-modal').fadeOut(300, function() {
+            $(this).remove();
+        });
+    }
+
+    function showSuccessModal(title, message) {
+        $('[id^="wp-tester-success-modal"]').remove(); // Remove existing
+        const modalId = 'wp-tester-success-modal-' + Date.now();
+        const modal = $(`
+            <div id="${modalId}" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
+                    <div class="wp-tester-modal-header">
+                        <div class="wp-tester-modal-icon" style="background: #d1fae5; color: #065f46;">
+                            <span class="dashicons dashicons-yes-alt"></span>
+                        </div>
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="wp-tester-modal-footer">
+                        <button class="modern-btn modern-btn-primary wp-tester-modal-close" data-modal-id="${modalId}">OK</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        $('body').append(modal);
+        modal.fadeIn(300);
+        
+        // Handle close button
+        modal.find('.wp-tester-modal-close').on('click', function() {
+            modal.fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Handle clicking outside modal
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+    }
+
+    function showErrorModal(title, message) {
+        $('[id^="wp-tester-error-modal"]').remove(); // Remove existing
+        const modalId = 'wp-tester-error-modal-' + Date.now();
+        const modal = $(`
+            <div id="${modalId}" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
+                    <div class="wp-tester-modal-header">
+                        <div class="wp-tester-modal-icon" style="background: #fecaca; color: #991b1b;">
+                            <span class="dashicons dashicons-dismiss"></span>
+                        </div>
+                        <h3>${title}</h3>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="wp-tester-modal-footer">
+                        <button class="modern-btn modern-btn-secondary wp-tester-modal-close" data-modal-id="${modalId}">Close</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        $('body').append(modal);
+        modal.fadeIn(300);
+        
+        // Handle close button
+        modal.find('.wp-tester-modal-close').on('click', function() {
+            modal.fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Handle clicking outside modal
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+    }
+
+    // Cleanup modal functions
+    function showCleanupModal() {
+        // First get current stats
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_get_test_results_stats',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    const stats = response.data.stats;
+                    showCleanupModalWithStats(stats);
+                } else {
+                    showErrorModal('Error', 'Failed to load test results statistics');
+                }
+            },
+            error: function() {
+                showErrorModal('Error', 'Failed to connect to server');
+            }
+        });
+    }
+
+    function showCleanupModalWithStats(stats) {
+        const modal = $(`
+            <div id="cleanup-test-results-modal" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal wp-tester-cleanup-modal">
+                    <div class="wp-tester-modal-header">
+                        <h3>Cleanup Test Results</h3>
+                        <button class="wp-tester-modal-close">&times;</button>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <div class="cleanup-stats">
+                            <h4>Current Statistics:</h4>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="stat-label">Total Results:</span>
+                                    <span class="stat-value">${stats.total || 0}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Passed:</span>
+                                    <span class="stat-value">${stats.passed || 0}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Failed:</span>
+                                    <span class="stat-value">${stats.failed || 0}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Older than 30 days:</span>
+                                    <span class="stat-value">${stats.older_than_30_days || 0}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form id="cleanup-form">
+                            <div class="form-group">
+                                <label for="older_than_days">Remove results older than (days):</label>
+                                <input type="number" id="older_than_days" name="older_than_days" value="30" min="1" max="365">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Keep results by status:</label>
+                                <div class="checkbox-group">
+                                    <label>
+                                        <input type="checkbox" name="keep_successful" checked> Keep successful tests
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" name="keep_failed"> Keep failed tests
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" name="keep_partial"> Keep partial tests
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="max_results_per_flow">Keep maximum results per flow:</label>
+                                <input type="number" id="max_results_per_flow" name="max_results_per_flow" value="10" min="1" max="100">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="wp-tester-modal-footer">
+                        <button type="button" class="modern-btn modern-btn-secondary" id="cancel-cleanup">Cancel</button>
+                        <button type="button" class="modern-btn modern-btn-danger" id="confirm-cleanup">Cleanup Results</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(modal);
+        modal.fadeIn(300);
+        
+        // Handle modal close
+        modal.find('#cancel-cleanup, .wp-tester-modal-close').on('click', function() {
+            modal.fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Handle cleanup confirmation
+        modal.find('#confirm-cleanup').on('click', function() {
+            const formData = {
+                older_than_days: $('#older_than_days').val(),
+                keep_successful: $('#cleanup-form input[name="keep_successful"]').is(':checked'),
+                keep_failed: $('#cleanup-form input[name="keep_failed"]').is(':checked'),
+                keep_partial: $('#cleanup-form input[name="keep_partial"]').is(':checked'),
+                max_results_per_flow: $('#max_results_per_flow').val()
+            };
+            
+            if (!confirm('Are you sure you want to cleanup test results? This action cannot be undone.')) {
+                return;
+            }
+            
+            const button = $(this);
+            const originalText = button.html();
+            
+            button.html('<span class="dashicons dashicons-update-alt"></span> Cleaning...').prop('disabled', true);
+            
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_cleanup_test_results',
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>',
+                    ...formData
+                },
+                success: function(response) {
+                    modal.fadeOut(300, function() {
+                        $(this).remove();
+                    });
+                    
+                    if (response.success) {
+                        showSuccessModal('Cleanup Complete!', 
+                            'Removed ' + (response.data.removed_count || 0) + ' test results. Refreshing page...');
+                        setTimeout(() => location.reload(), 2000);
+                    } else {
+                        showErrorModal('Cleanup Failed', response.data.message || 'Unknown error occurred');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Cleanup AJAX Error:', {xhr, status, error});
+                    showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
+                    button.html(originalText).prop('disabled', false);
+                }
+            });
+        });
+        
+        // Handle clicking outside modal to close
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+    }
+    
+    // Bulk selection functionality for results
+    // Select All functionality
+    $('#select-all-results').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.result-checkbox').prop('checked', isChecked);
+        updateBulkActions();
+    });
+    
+    // Individual checkbox change
+    $(document).on('change', '.result-checkbox', function() {
+        updateBulkActions();
+        
+        // Update select all checkbox state
+        const totalCheckboxes = $('.result-checkbox').length;
+        const checkedCheckboxes = $('.result-checkbox:checked').length;
+        
+        if (checkedCheckboxes === 0) {
+            $('#select-all-results').prop('indeterminate', false).prop('checked', false);
+        } else if (checkedCheckboxes === totalCheckboxes) {
+            $('#select-all-results').prop('indeterminate', false).prop('checked', true);
+        } else {
+            $('#select-all-results').prop('indeterminate', true);
+        }
+    });
+    
+    // Update bulk actions visibility and state
+    function updateBulkActions() {
+        const checkedBoxes = $('.result-checkbox:checked');
+        const count = checkedBoxes.length;
+        
+        if (count > 0) {
+            $('.bulk-actions-header').show();
+            $('.selected-count').text(count + ' result' + (count === 1 ? '' : 's') + ' selected');
+            $('#apply-bulk-action').prop('disabled', false);
+        } else {
+            $('.bulk-actions-header').hide();
+            $('#apply-bulk-action').prop('disabled', true);
+        }
+    }
+    
+    // Clear selection
+    $('#clear-selection').on('click', function() {
+        $('.result-checkbox').prop('checked', false);
+        $('#select-all-results').prop('checked', false).prop('indeterminate', false);
+        updateBulkActions();
+    });
+    
+    // Apply bulk action for results
+    $('#apply-bulk-action').on('click', function() {
+        const action = $('#bulk-action-selector').val();
+        const selectedIds = $('.result-checkbox:checked').map(function() {
+            return $(this).val();
+        }).get();
+        
+        if (!action || selectedIds.length === 0) {
+            showErrorModal('Invalid Action', 'Please select an action and at least one result.');
+            return;
+        }
+        
+        if (action === 'delete') {
+            if (!confirm(`Are you sure you want to delete ${selectedIds.length} result(s)? This action cannot be undone.`)) {
+                return;
+            }
+        }
+        
+        const button = $(this);
+        const originalText = button.html();
+        button.html('<span class="dashicons dashicons-update-alt"></span> Processing...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_bulk_test_results_action',
+                bulk_action: action,
+                result_ids: selectedIds,
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessModal('Bulk Action Complete!', 
+                        response.data.message || 'Action completed successfully. Refreshing page...');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showErrorModal('Bulk Action Failed', response.data.message || 'Unknown error occurred');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Bulk Action AJAX Error:', {xhr, status, error});
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
+    });
 });
 </script>
+
+<style>
+/* Bulk Selection Styles */
+.bulk-actions-header {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bulk-actions-info {
+    font-weight: 500;
+    color: #374151;
+}
+
+.bulk-actions-buttons {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.select-all-header {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.select-all-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.select-all-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.select-all-checkbox label {
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    margin: 0;
+}
+
+.item-checkbox {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+}
+
+.item-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.item-checkbox label {
+    display: none; /* We don't need visible labels for individual checkboxes */
+}
+
+.modern-list-item {
+    display: flex;
+    align-items: center;
+}
+
+/* Cleanup Modal Styles */
+.wp-tester-cleanup-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    min-width: 500px;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.cleanup-stats {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.cleanup-stats h4 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e5e7eb;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.stat-value {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.form-group input[type="number"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal;
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.wp-tester-modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    background: #f9fafb;
+}
+
+/* Progress Bar Styles */
+.progress-container {
+    padding: 1rem 0;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1FC09A, #10b981);
+    border-radius: 4px;
+    animation: progress-animation 2s ease-in-out infinite;
+}
+
+@keyframes progress-animation {
+    0% { width: 0%; }
+    50% { width: 70%; }
+    100% { width: 100%; }
+}
+
+/* Modal Icon Styles */
+.wp-tester-modal-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.wp-tester-modal-icon .dashicons {
+    font-size: 20px;
+}
+
+/* Modal Header with Icon */
+.wp-tester-modal-header {
+    display: flex;
+    align-items: center;
+    padding: 1.5rem 2rem 1rem 2rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.wp-tester-modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+</style>

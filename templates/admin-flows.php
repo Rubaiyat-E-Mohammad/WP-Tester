@@ -32,7 +32,7 @@ if (!defined('ABSPATH')) {
                 <button id="wp-tester-discover-flows" class="modern-btn modern-btn-primary modern-btn-small">
                     <span class="dashicons dashicons-search"></span>
                     Discover Flows
-                </button>
+        </button>
             </div>
         </div>
     </div>
@@ -155,9 +155,42 @@ if (!defined('ABSPATH')) {
             </div>
 
             <?php if (!empty($flows)) : ?>
+                <!-- Bulk Actions Header -->
+                <div class="bulk-actions-header" style="display: none;">
+                    <div class="bulk-actions-info">
+                        <span class="selected-count">0 flows selected</span>
+                    </div>
+                    <div class="bulk-actions-buttons">
+                        <select id="bulk-action-selector" class="modern-select">
+                            <option value="">Bulk Actions</option>
+                            <option value="delete">Delete Selected</option>
+                            <option value="activate">Activate Selected</option>
+                            <option value="deactivate">Deactivate Selected</option>
+                        </select>
+                        <button id="apply-bulk-action" class="modern-btn modern-btn-primary modern-btn-small" disabled>
+                            Apply
+                        </button>
+                        <button id="clear-selection" class="modern-btn modern-btn-secondary modern-btn-small">
+                            Clear Selection
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Select All Header -->
+                <div class="select-all-header">
+                    <div class="select-all-checkbox">
+                        <input type="checkbox" id="select-all-flows" class="select-all-checkbox-input">
+                        <label for="select-all-flows">Select All Flows</label>
+                    </div>
+                </div>
+                
                 <div class="modern-list">
                     <?php foreach ($flows as $flow) : ?>
                         <div class="modern-list-item" data-flow-id="<?php echo esc_attr($flow->id ?? ''); ?>">
+                            <div class="item-checkbox">
+                                <input type="checkbox" class="flow-checkbox" value="<?php echo esc_attr($flow->id ?? ''); ?>" id="flow-<?php echo esc_attr($flow->id ?? ''); ?>">
+                                <label for="flow-<?php echo esc_attr($flow->id ?? ''); ?>"></label>
+                            </div>
                             <div class="item-info">
                                 <div class="item-icon">
                                     <span class="dashicons dashicons-<?php 
@@ -305,11 +338,11 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-                if (response.success) {
+            if (response.success) {
                     showSuccessModal('Cleanup Complete!', 
                         'Removed ' + (response.data.removed_count || 0) + ' duplicate flows. Refreshing page...');
                     setTimeout(() => location.reload(), 2000);
-                } else {
+            } else {
                     showErrorModal('Cleanup Failed', response.data.message || 'Unknown error occurred');
                 }
             },
@@ -591,10 +624,180 @@ jQuery(document).ready(function($) {
             }
         });
     });
+    
+    // Bulk selection functionality
+    let selectedFlows = [];
+    
+    // Select All functionality
+    $('#select-all-flows').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.flow-checkbox').prop('checked', isChecked);
+        updateBulkActions();
+    });
+    
+    // Individual checkbox change
+    $(document).on('change', '.flow-checkbox', function() {
+        updateBulkActions();
+        
+        // Update select all checkbox state
+        const totalCheckboxes = $('.flow-checkbox').length;
+        const checkedCheckboxes = $('.flow-checkbox:checked').length;
+        
+        if (checkedCheckboxes === 0) {
+            $('#select-all-flows').prop('indeterminate', false).prop('checked', false);
+        } else if (checkedCheckboxes === totalCheckboxes) {
+            $('#select-all-flows').prop('indeterminate', false).prop('checked', true);
+        } else {
+            $('#select-all-flows').prop('indeterminate', true);
+        }
+    });
+    
+    // Update bulk actions visibility and state
+    function updateBulkActions() {
+        const checkedBoxes = $('.flow-checkbox:checked');
+        const count = checkedBoxes.length;
+        
+        if (count > 0) {
+            $('.bulk-actions-header').show();
+            $('.selected-count').text(count + ' flow' + (count === 1 ? '' : 's') + ' selected');
+            $('#apply-bulk-action').prop('disabled', false);
+        } else {
+            $('.bulk-actions-header').hide();
+            $('#apply-bulk-action').prop('disabled', true);
+        }
+    }
+    
+    // Clear selection
+    $('#clear-selection').on('click', function() {
+        $('.flow-checkbox').prop('checked', false);
+        $('#select-all-flows').prop('checked', false).prop('indeterminate', false);
+        updateBulkActions();
+    });
+    
+    // Apply bulk action
+    $('#apply-bulk-action').on('click', function() {
+        const action = $('#bulk-action-selector').val();
+        const selectedIds = $('.flow-checkbox:checked').map(function() {
+            return $(this).val();
+        }).get();
+        
+        if (!action || selectedIds.length === 0) {
+            showErrorModal('Invalid Action', 'Please select an action and at least one flow.');
+            return;
+        }
+        
+        if (action === 'delete') {
+            if (!confirm(`Are you sure you want to delete ${selectedIds.length} flow(s)? This action cannot be undone.`)) {
+                return;
+            }
+        }
+        
+        const button = $(this);
+        const originalText = button.html();
+        button.html('<span class="dashicons dashicons-update-alt"></span> Processing...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_bulk_action',
+                bulk_action: action,
+                flow_ids: selectedIds,
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessModal('Bulk Action Complete!', 
+                        response.data.message || 'Action completed successfully. Refreshing page...');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showErrorModal('Bulk Action Failed', response.data.message || 'Unknown error occurred');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Bulk Action AJAX Error:', {xhr, status, error});
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
+    });
 });
 </script>
 
 <style>
+/* Bulk Selection Styles */
+.bulk-actions-header {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bulk-actions-info {
+    font-weight: 500;
+    color: #374151;
+}
+
+.bulk-actions-buttons {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.select-all-header {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.select-all-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.select-all-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.select-all-checkbox label {
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    margin: 0;
+}
+
+.item-checkbox {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+}
+
+.item-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.item-checkbox label {
+    display: none; /* We don't need visible labels for individual checkboxes */
+}
+
+.modern-list-item {
+    display: flex;
+    align-items: center;
+}
+
 /* Progress Modal Styles */
 .wp-tester-modal-overlay {
     position: fixed;
