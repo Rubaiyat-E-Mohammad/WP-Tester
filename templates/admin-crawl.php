@@ -246,12 +246,23 @@ $settings = get_option('wp_tester_settings', array());
                     <?php endforeach; ?>
                 </div>
 
-                <!-- Pagination placeholder -->
+                <!-- Pagination -->
+                <?php if ($has_more_crawls) : ?>
                 <div style="margin-top: 1.5rem; text-align: center; padding: 1rem; border-top: 1px solid #f1f5f9;">
                     <button class="modern-btn modern-btn-secondary" id="load-more-crawl">
                         Load More Pages
                     </button>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                        Showing 20 of <?php echo esc_html($total_crawl_count); ?> pages
+                    </p>
                 </div>
+                <?php else : ?>
+                <div style="margin-top: 1.5rem; text-align: center; padding: 1rem; border-top: 1px solid #f1f5f9;">
+                    <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
+                        All <?php echo esc_html($total_crawl_count); ?> pages loaded
+                    </p>
+                </div>
+                <?php endif; ?>
 
             <?php else : ?>
                 <div class="empty-state">
@@ -429,10 +440,107 @@ jQuery(document).ready(function($) {
     });
 
     // Load more functionality
+    let currentPage = 1;
+    const perPage = 20;
+    let isLoading = false;
+    
     $('#load-more-crawl').on('click', function(e) {
         e.preventDefault();
-        showErrorModal('Feature Coming Soon', 'Pagination feature will be available in a future update.');
+        
+        if (isLoading) {
+            return;
+        }
+        
+        isLoading = true;
+        const button = $(this);
+        const originalText = button.html();
+        button.html('<span class="dashicons dashicons-update-alt"></span> Loading...').prop('disabled', true);
+        
+        currentPage++;
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_load_more_crawl_results',
+                page: currentPage,
+                per_page: perPage,
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Append new results to the list
+                    if (response.data.html) {
+                        $('#crawl-list').append(response.data.html);
+                        
+                        // Re-bind event handlers for new elements
+                        bindCrawlItemEvents();
+                        
+                        // Update button state based on whether there are more results
+                        if (response.data.has_more) {
+                            button.html(originalText).prop('disabled', false);
+                        } else {
+                            button.html('<span class="dashicons dashicons-yes-alt"></span> All Pages Loaded').prop('disabled', true);
+                        }
+                        
+                        // Show success message
+                        showSuccessModal('Pages Loaded', `Loaded ${response.data.loaded_count} more pages. Total: ${response.data.total_count} pages.`);
+                    } else {
+                        button.html('<span class="dashicons dashicons-yes-alt"></span> No More Pages').prop('disabled', true);
+                    }
+                } else {
+                    showErrorModal('Load Failed', 'Failed to load more pages: ' + (response.data.message || 'Unknown error'));
+                    button.html(originalText).prop('disabled', false);
+                    currentPage--; // Revert page increment on error
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Load More AJAX Error:', {xhr, status, error});
+                showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
+                button.html(originalText).prop('disabled', false);
+                currentPage--; // Revert page increment on error
+            },
+            complete: function() {
+                isLoading = false;
+            }
+        });
     });
+    
+    // Function to bind event handlers for crawl items
+    function bindCrawlItemEvents() {
+        // View details functionality
+        $('.view-details').off('click').on('click', function(e) {
+            e.preventDefault();
+            const url = $(this).data('url');
+            if (url) {
+                window.open(url, '_blank');
+            }
+        });
+
+        // Create flow functionality
+        $('.create-flow').off('click').on('click', function(e) {
+            e.preventDefault();
+            const url = $(this).data('url');
+            showErrorModal('Feature Coming Soon', 'Flow creation for ' + url + ' will be available in a future update.');
+        });
+        
+        // Individual checkbox change for new items
+        $('.crawl-checkbox').off('change').on('change', function() {
+            updateBulkActions();
+            
+            // Update select all checkbox state
+            const totalCheckboxes = $('.crawl-checkbox').length;
+            const checkedCheckboxes = $('.crawl-checkbox:checked').length;
+            
+            if (checkedCheckboxes === 0) {
+                $('#select-all-crawls').prop('indeterminate', false).prop('checked', false);
+            } else if (checkedCheckboxes === totalCheckboxes) {
+                $('#select-all-crawls').prop('indeterminate', false).prop('checked', true);
+            } else {
+                $('#select-all-crawls').prop('indeterminate', true);
+            }
+        });
+    }
     
     // Modal functions
     function showProgressModal(title, message) {

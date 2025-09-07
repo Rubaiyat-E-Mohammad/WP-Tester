@@ -20,6 +20,9 @@ $total_flows = $stats['total_flows'] ?? 0;
 $total_tests = $stats['tests_executed_30d'] ?? 0;
 $success_rate = $stats['success_rate'] ?? 0; // Changed from 100 to 0 - should show actual calculated rate
 $avg_response_time = $stats['avg_response_time'] ?? 0;
+$failed_tests = $stats['failed_tests'] ?? 0;
+$last_crawl = $stats['last_crawl'] ?? 'Never';
+$active_flows = $stats['active_flows'] ?? 0;
 ?>
 
 <div class="wp-tester-modern">
@@ -140,9 +143,9 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                 <div class="stat-change <?php echo $failed_tests == 0 ? 'positive' : ($failed_tests <= 5 ? 'neutral' : 'negative'); ?>">
                     <span class="dashicons dashicons-<?php echo $failed_tests == 0 ? 'arrow-up-alt' : ($failed_tests <= 5 ? 'minus' : 'arrow-down-alt'); ?>"></span>
                     <?php echo $failed_tests == 0 ? 'Perfect' : ($failed_tests <= 5 ? 'Acceptable' : 'Critical'); ?>
-                </div>
             </div>
-
+        </div>
+        
             <div class="stat-card">
                 <div class="stat-header">
                     <h3 class="stat-label">Last Crawl</h3>

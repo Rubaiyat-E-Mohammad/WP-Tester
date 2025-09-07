@@ -41,7 +41,7 @@ if (!defined('ABSPATH')) {
     <div class="wp-tester-content">
         
         <!-- Results Overview -->
-        <div class="modern-grid grid-6">
+        <div class="modern-grid grid-4">
             <div class="stat-card">
                 <div class="stat-header">
                     <h3 class="stat-label">Total Tests</h3>

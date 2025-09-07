@@ -294,7 +294,9 @@ class WP_Tester_Admin {
      * Crawl results page
      */
     public function crawl_page() {
-        $crawl_results = $this->database->get_crawl_results(50, 0);
+        $crawl_results = $this->database->get_crawl_results(20, 0); // Load first 20 results
+        $total_crawl_count = $this->database->get_crawl_results_count();
+        $has_more_crawls = $total_crawl_count > 20;
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-crawl.php';
     }
@@ -585,6 +587,28 @@ class WP_Tester_Admin {
         
         if (isset($input['prevent_duplicate_flows'])) {
             $sanitized['prevent_duplicate_flows'] = (bool)$input['prevent_duplicate_flows'];
+        }
+        
+        if (isset($input['crawl_schedule_time'])) {
+            // Validate time format (HH:MM)
+            if (preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $input['crawl_schedule_time'])) {
+                $sanitized['crawl_schedule_time'] = sanitize_text_field($input['crawl_schedule_time']);
+            } else {
+                $sanitized['crawl_schedule_time'] = '02:00'; // Default to 2 AM
+            }
+        }
+        
+        if (isset($input['crawl_schedule_days']) && is_array($input['crawl_schedule_days'])) {
+            $allowed_days = array('monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday');
+            $sanitized['crawl_schedule_days'] = array_intersect($input['crawl_schedule_days'], $allowed_days);
+            
+            // Ensure at least one day is selected
+            if (empty($sanitized['crawl_schedule_days'])) {
+                $sanitized['crawl_schedule_days'] = array('monday', 'tuesday', 'wednesday', 'thursday', 'friday');
+            }
+        } else {
+            // Default to weekdays if no days selected
+            $sanitized['crawl_schedule_days'] = array('monday', 'tuesday', 'wednesday', 'thursday', 'friday');
         }
         
         return $sanitized;

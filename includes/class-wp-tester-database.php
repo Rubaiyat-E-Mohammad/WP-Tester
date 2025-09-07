@@ -195,6 +195,38 @@ class WP_Tester_Database {
     }
     
     /**
+     * Get crawl results count
+     */
+    public function get_crawl_results_count($filters = array()) {
+        global $wpdb;
+        
+        $where_conditions = array('status = "active"');
+        $where_values = array();
+        
+        if (!empty($filters['page_type'])) {
+            $where_conditions[] = 'page_type = %s';
+            $where_values[] = $filters['page_type'];
+        }
+        
+        if (!empty($filters['search'])) {
+            $where_conditions[] = '(url LIKE %s OR title LIKE %s)';
+            $search_term = '%' . $wpdb->esc_like($filters['search']) . '%';
+            $where_values[] = $search_term;
+            $where_values[] = $search_term;
+        }
+        
+        $where_clause = implode(' AND ', $where_conditions);
+        
+        $sql = "SELECT COUNT(*) FROM {$this->crawl_results_table} WHERE {$where_clause}";
+        
+        if (!empty($where_values)) {
+            return $wpdb->get_var($wpdb->prepare($sql, $where_values));
+        } else {
+            return $wpdb->get_var($sql);
+        }
+    }
+    
+    /**
      * Save flow
      */
     public function save_flow($flow_name, $flow_type, $start_url, $steps, $expected_outcome = '', $priority = 5) {
@@ -766,6 +798,7 @@ class WP_Tester_Database {
         
         // Additional stats for comprehensive dashboard
         $stats['total_errors'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed'") ?: 0;
+        $stats['failed_tests'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status IN ('failed', 'partial')") ?: 0;
         
         // Performance metrics
         $stats['avg_load_time'] = $avg_execution_time ?: 0;

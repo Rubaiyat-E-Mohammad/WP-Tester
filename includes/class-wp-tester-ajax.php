@@ -48,6 +48,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_set_ai_api_key', array($this, 'set_ai_api_key'));
         add_action('wp_ajax_wp_tester_get_available_plugins', array($this, 'get_available_plugins'));
         add_action('wp_ajax_wp_tester_get_available_ai_models', array($this, 'get_available_ai_models'));
+        add_action('wp_ajax_wp_tester_load_more_crawl_results', array($this, 'load_more_crawl_results'));
     }
     
     /**
@@ -1301,8 +1302,9 @@ class WP_Tester_Ajax {
         try {
             $api_key = sanitize_text_field($_POST['api_key'] ?? '');
             $api_provider = sanitize_text_field($_POST['api_provider'] ?? 'openai');
+            $model = sanitize_text_field($_POST['model'] ?? '');
             
-            // Validate API key format (basic validation)
+            // Validate API key format (basic validation) - only for paid models
             if (!empty($api_key) && strlen($api_key) < 10) {
                 wp_send_json_error(array(
                     'message' => __('API key appears to be too short. Please check and try again.', 'wp-tester')
@@ -1310,9 +1312,10 @@ class WP_Tester_Ajax {
                 return;
             }
             
-            // Save API key
+            // Save API key and model configuration
             update_option('wp_tester_ai_api_key', $api_key);
             update_option('wp_tester_ai_api_provider', $api_provider);
+            update_option('wp_tester_ai_model', $model);
             
             // Test API key if provided
             if (!empty($api_key)) {
@@ -1460,5 +1463,103 @@ class WP_Tester_Ajax {
             'get_data' => $_GET,
             'request_data' => $_REQUEST
         ));
+    }
+    
+    /**
+     * Load more crawl results for pagination
+     */
+    public function load_more_crawl_results() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $page = intval($_POST['page'] ?? 1);
+            $per_page = intval($_POST['per_page'] ?? 20);
+            $offset = ($page - 1) * $per_page;
+            
+            // Get crawl results from database
+            $database = new WP_Tester_Database();
+            $crawl_results = $database->get_crawl_results($per_page, $offset);
+            
+            // Get total count for pagination info
+            $total_count = $database->get_crawl_results_count();
+            $has_more = ($offset + $per_page) < $total_count;
+            
+            // Generate HTML for the new results
+            $html = '';
+            if (!empty($crawl_results)) {
+                foreach ($crawl_results as $result) {
+                    $page_type = $result->page_type ?? 'page';
+                    $icons = [
+                        'page' => 'admin-page',
+                        'post' => 'admin-post',
+                        'product' => 'cart',
+                        'category' => 'category',
+                        'archive' => 'archive'
+                    ];
+                    $icon = $icons[$page_type] ?? 'admin-page';
+                    
+                    $html .= '<div class="modern-list-item" data-page-type="' . esc_attr($page_type) . '">';
+                    $html .= '<div class="item-checkbox">';
+                    $html .= '<input type="checkbox" class="crawl-checkbox" value="' . esc_attr($result->id ?? '') . '" id="crawl-' . esc_attr($result->id ?? '') . '">';
+                    $html .= '<label for="crawl-' . esc_attr($result->id ?? '') . '"></label>';
+                    $html .= '</div>';
+                    $html .= '<div class="item-info">';
+                    $html .= '<div class="item-icon">';
+                    $html .= '<span class="dashicons dashicons-' . $icon . '"></span>';
+                    $html .= '</div>';
+                    $html .= '<div class="item-details">';
+                    $html .= '<h4>';
+                    $html .= '<a href="' . esc_url($result->url ?? '#') . '" target="_blank" style="color: inherit; text-decoration: none;">';
+                    $html .= esc_html($result->title ?? $result->url ?? 'Unknown Page');
+                    $html .= '<span class="dashicons dashicons-external" style="font-size: 12px; margin-left: 0.25rem;"></span>';
+                    $html .= '</a>';
+                    $html .= '</h4>';
+                    $html .= '<p>';
+                    $html .= esc_html(ucfirst($page_type)) . ' • ';
+                    $html .= esc_html(($result->forms_found ?? 0) . ' forms') . ' • ';
+                    $html .= esc_html(($result->links_found ?? 0) . ' links');
+                    $html .= '</p>';
+                    $html .= '</div>';
+                    $html .= '</div>';
+                    $html .= '<div class="item-meta">';
+                    $html .= '<div style="text-align: right; font-size: 0.8125rem; color: #64748b;">';
+                    $html .= '<div>Status: ';
+                    $html .= '<span class="status-badge ' . esc_attr($result->status ?? 'success') . '">';
+                    $html .= esc_html(ucfirst($result->status ?? 'Success'));
+                    $html .= '</span>';
+                    $html .= '</div>';
+                    $html .= '<div style="margin-top: 0.25rem;">';
+                    $html .= 'Crawled: ' . esc_html($result->crawled_at ?? 'Unknown');
+                    $html .= '</div>';
+                    $html .= '</div>';
+                    $html .= '<div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">';
+                    $html .= '<button class="modern-btn modern-btn-secondary modern-btn-small view-details" data-url="' . esc_attr($result->url ?? '') . '">View</button>';
+                    if (($result->forms_found ?? 0) > 0) {
+                        $html .= '<button class="modern-btn modern-btn-primary modern-btn-small create-flow" data-url="' . esc_attr($result->url ?? '') . '">Create Flow</button>';
+                    }
+                    $html .= '</div>';
+                    $html .= '</div>';
+                    $html .= '</div>';
+                }
+            }
+            
+            wp_send_json_success(array(
+                'html' => $html,
+                'has_more' => $has_more,
+                'current_page' => $page,
+                'total_count' => $total_count,
+                'loaded_count' => count($crawl_results)
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Error loading crawl results: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
     }
 }

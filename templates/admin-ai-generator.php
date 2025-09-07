@@ -36,11 +36,11 @@ $available_plugins = $ai_generator->get_available_plugins();
     <div class="modern-header" style="background: linear-gradient(135deg, #1FC09A 0%, #0F9D7A 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; position: relative; overflow: hidden;">
         <div style="position: relative; z-index: 2;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; flex-shrink: 0;">
+                <div class="logo-container" style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; flex-shrink: 0; position: relative; overflow: hidden;">
                     <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/WP Tester Logo.png'); ?>" 
-                         alt="WP Tester" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" 
+                         alt="WP Tester" class="logo-image" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain; position: absolute; top: 0; left: 0;" 
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.2rem; font-weight: bold;">WP</div>
+                    <div class="logo-fallback" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.2rem; font-weight: bold; position: absolute; top: 0; left: 0;">WP</div>
                 </div>
                 <div>
                     <h1 style="margin: 0; font-size: 2rem; font-weight: 700;">AI Flow Generator</h1>
@@ -61,74 +61,45 @@ $available_plugins = $ai_generator->get_available_plugins();
             </div>
         </div>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-            <!-- API Key Configuration -->
-            <div>
-                <h3 style="margin: 0 0 1rem 0; color: #374151; font-size: 1.125rem; font-weight: 600;">API Configuration</h3>
-                
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                        AI Provider
-                    </label>
-                    <select id="ai-provider" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                        <option value="openai" <?php selected($ai_api_provider, 'openai'); ?>>OpenAI (GPT-3.5-turbo)</option>
-                        <option value="anthropic" <?php selected($ai_api_provider, 'anthropic'); ?>>Anthropic (Claude) - Coming Soon</option>
-                        <option value="local" <?php selected($ai_api_provider, 'local'); ?>>Local Model - Coming Soon</option>
-                    </select>
-                </div>
-                
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                        API Key
-                    </label>
-                    <input type="password" id="ai-api-key" 
-                           value="<?php echo esc_attr($ai_api_key); ?>"
-                           placeholder="Enter your API key (optional - uses fallback if empty)"
-                           style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
-                        Get your free API key from <a href="https://platform.openai.com/api-keys" target="_blank" style="color: #1FC09A;">OpenAI Platform</a>
-                    </p>
-                </div>
-                
-                <button id="save-api-key" class="modern-btn modern-btn-primary">
-                    <span class="dashicons dashicons-saved"></span>
-                    Save API Key
-                </button>
-                
-                <!-- AI Provider Selection -->
-                <div style="margin-top: 1.5rem;">
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                        AI Provider
-                    </label>
-                    <select id="ai-provider" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                        <option value="free">Free Models (No API Key Required)</option>
-                        <option value="openai">OpenAI (Paid - API Key Required)</option>
-                        <option value="anthropic">Anthropic (Paid - API Key Required)</option>
-                        <option value="google">Google (Paid - API Key Required)</option>
-                        <option value="xai">X.AI (Paid - API Key Required)</option>
-                        <option value="deepseek">DeepSeek (Paid - API Key Required)</option>
-                        <option value="mistral">Mistral AI (Paid - API Key Required)</option>
-                        <option value="cohere">Cohere (Paid - API Key Required)</option>
-                        <option value="perplexity">Perplexity (Paid - API Key Required)</option>
-                    </select>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
-                        Choose your AI provider. Free models work without API keys, paid models require API keys.
-                    </p>
-                </div>
-                
-                <!-- AI Model Selection -->
-                <div id="ai-model-section" style="margin-top: 1.5rem;">
-                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                        AI Model
-                    </label>
-                    <select id="ai-model" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                        <!-- Free models will be loaded here -->
-                    </select>
-                    <p id="ai-model-description" style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
-                        Free models are recommended for testing and don't require API keys.
-                    </p>
-                </div>
+        <div style="max-width: 600px;">
+            <!-- AI Model Selection -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                    AI Model
+                </label>
+                <select id="ai-model-select" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                    <option value="">Select AI Model...</option>
+                    <!-- Models will be loaded here -->
+                </select>
+                <p id="ai-model-description" style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                    Choose your AI model. Free models work without API keys, paid models require API keys.
+                </p>
             </div>
+            
+            <!-- API Key Input (Hidden by default) -->
+            <div id="api-key-section" style="margin-bottom: 1.5rem; display: none;">
+                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                    API Key
+                </label>
+                <input type="password" id="ai-api-key" 
+                       value="<?php echo esc_attr($ai_api_key); ?>"
+                       placeholder="Enter your API key"
+                       style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                <p id="api-key-help" style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                    <!-- API key help text will be loaded here -->
+                </p>
+            </div>
+            
+            <!-- Save Button -->
+            <button id="save-ai-config" class="modern-btn modern-btn-primary">
+                <span class="dashicons dashicons-saved"></span>
+                Save Configuration
+            </button>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+            <!-- Site Analysis -->
+            <div>
             
             <!-- Site Analysis -->
             <div>
@@ -269,15 +240,15 @@ $available_plugins = $ai_generator->get_available_plugins();
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
             
-            <div class="plugin-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; max-height: 500px; overflow-y: auto; padding: 0.5rem;">
+            <div class="plugin-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; max-height: 500px; overflow-y: auto; padding: 0.5rem;">
                 <?php foreach ($available_plugins as $plugin): ?>
-                <div class="plugin-card" style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem; background: white; transition: all 0.3s ease; cursor: pointer; position: relative; min-height: 200px; display: flex; flex-direction: column;" 
+                <div class="plugin-card" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem; background: white; transition: all 0.3s ease; cursor: pointer; position: relative; min-height: 120px; display: flex; flex-direction: column;" 
                      data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
                      onclick="togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
                     
                     <!-- Plugin Logo -->
-                    <div style="display: flex; justify-content: center; margin-bottom: 0.75rem;">
-                        <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #1FC09A, #0ea5e9); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.25rem;">
+                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem;">
+                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #1FC09A, #0ea5e9); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.875rem;">
                             <?php 
                             $plugin_name = $plugin['name'];
                             $initials = '';
@@ -296,27 +267,27 @@ $available_plugins = $ai_generator->get_available_plugins();
                     </div>
                     
                     <!-- Plugin Name -->
-                    <div style="text-align: center; margin-bottom: 0.5rem;">
-                        <h4 style="margin: 0; font-weight: 600; color: #374151; font-size: 0.875rem; line-height: 1.2;"><?php echo esc_html($plugin['name']); ?></h4>
+                    <div style="text-align: center; margin-bottom: 0.25rem;">
+                        <h4 style="margin: 0; font-weight: 600; color: #374151; font-size: 0.75rem; line-height: 1.2;"><?php echo esc_html($plugin['name']); ?></h4>
                     </div>
                     
                     <!-- Plugin Type Badge -->
-                    <div style="text-align: center; margin-bottom: 0.75rem;">
-                        <span class="plugin-type-badge" style="padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; background: #e0f2fe; color: #0369a1;">
+                    <div style="text-align: center; margin-bottom: 0.5rem;">
+                        <span class="plugin-type-badge" style="padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.625rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; background: #e0f2fe; color: #0369a1;">
                             <?php echo esc_html($plugin['type']); ?>
                         </span>
                     </div>
                     
                     <!-- Plugin Description -->
-                    <div style="flex: 1; text-align: center; margin-bottom: 0.75rem;">
-                        <p style="margin: 0; font-size: 0.75rem; color: #64748b; line-height: 1.3;">
-                            <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 8)); ?>
+                    <div style="flex: 1; text-align: center; margin-bottom: 0.5rem;">
+                        <p style="margin: 0; font-size: 0.6875rem; color: #64748b; line-height: 1.2;">
+                            <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 6)); ?>
                         </p>
                     </div>
                     
                     <!-- Plugin Version & Author -->
-                    <div style="text-align: center; margin-bottom: 0.5rem;">
-                        <div style="font-size: 0.6875rem; color: #9ca3af;">
+                    <div style="text-align: center; margin-bottom: 0.25rem;">
+                        <div style="font-size: 0.625rem; color: #9ca3af;">
                             v<?php echo esc_html($plugin['version']); ?> • 
                             <?php if (!empty($plugin['author_uri'])): ?>
                                 <a href="<?php echo esc_url($plugin['author_uri']); ?>" target="_blank" style="color: #1FC09A; text-decoration: none;">
@@ -329,8 +300,8 @@ $available_plugins = $ai_generator->get_available_plugins();
                     </div>
                     
                     <!-- Selection Indicator -->
-                    <div class="plugin-selection-indicator" style="position: absolute; top: 0.75rem; right: 0.75rem; width: 20px; height: 20px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;">
-                        <div class="checkmark" style="width: 10px; height: 10px; background: #1FC09A; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
+                    <div class="plugin-selection-indicator" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 18px; height: 18px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
+                        <div class="checkmark" style="width: 8px; height: 8px; background: #1FC09A; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
                     </div>
                     
                     <!-- Hidden checkbox for form submission -->
@@ -394,11 +365,11 @@ $available_plugins = $ai_generator->get_available_plugins();
     <!-- Recent AI Generated Flows -->
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-            <div style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #1FC09A; flex-shrink: 0; margin-right: 0.5rem;">
+            <div class="logo-container" style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #1FC09A; flex-shrink: 0; position: relative; overflow: hidden;">
                 <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/WP Tester Logo.png'); ?>" 
-                     alt="WP Tester" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" 
+                     alt="WP Tester" class="logo-image" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain; position: absolute; top: 0; left: 0;" 
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold;">WP</div>
+                <div class="logo-fallback" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold; position: absolute; top: 0; left: 0;">WP</div>
             </div>
             <div style="flex: 1;">
                 <h2 style="margin: 0; color: #1f2937; font-size: 1.5rem; font-weight: 600; line-height: 1.2;">Recent AI Generated Flows</h2>
@@ -505,15 +476,32 @@ jQuery(document).ready(function($) {
         ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
     }
     
-    // Save API Key
-    $('#save-api-key').on('click', function(e) {
+    // Save AI Configuration
+    $('#save-ai-config').on('click', function(e) {
         e.preventDefault();
         const button = $(this);
         const originalText = button.html();
         button.html('<span class="dashicons dashicons-update-alt"></span> Saving...').prop('disabled', true);
         
+        const selectedModel = $('#ai-model-select').val();
         const apiKey = $('#ai-api-key').val();
-        const provider = $('#ai-provider').val();
+        
+        if (!selectedModel) {
+            showErrorModal('Model Selection Required', 'Please select an AI model first.');
+            button.html(originalText).prop('disabled', false);
+            return;
+        }
+        
+        const selectedOption = $('#ai-model-select option:selected');
+        const isFree = selectedOption.attr('data-free') === 'true';
+        const provider = selectedOption.attr('data-provider');
+        
+        // For paid models, check if API key is provided
+        if (!isFree && !apiKey.trim()) {
+            showErrorModal('API Key Required', 'API key is required for paid models. Please enter your API key.');
+            button.html(originalText).prop('disabled', false);
+            return;
+        }
         
         $.ajax({
             url: ajaxurl,
@@ -522,14 +510,15 @@ jQuery(document).ready(function($) {
                 action: 'wp_tester_set_ai_api_key',
                 api_key: apiKey,
                 api_provider: provider,
+                model: selectedModel,
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
                 if (response.success) {
-                    showSuccessModal('API Key Saved', 'API key saved successfully!');
+                    showSuccessModal('Configuration Saved', 'AI configuration saved successfully!');
                     location.reload(); // Reload to update status
                 } else {
-                    showErrorModal('API Key Save Failed', 'Failed to save API key: ' + (response.data.message || 'Unknown error'));
+                    showErrorModal('Save Failed', 'Failed to save configuration: ' + (response.data.message || 'Unknown error'));
                 }
             },
             error: function() {
@@ -617,7 +606,7 @@ jQuery(document).ready(function($) {
         updateSelectedPluginsCount();
     }
     
-    // AI Provider and Model Selection
+    // AI Model Selection
     let availableModels = {
         free_models: {},
         paid_models: {},
@@ -636,7 +625,7 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success) {
                     availableModels = response.data;
-                    updateModelDropdown();
+                    populateModelDropdown();
                 }
             },
             error: function() {
@@ -645,57 +634,106 @@ jQuery(document).ready(function($) {
         });
     }
     
-    // Update model dropdown based on selected provider
-    function updateModelDropdown() {
-        const provider = $('#ai-provider').val();
-        const modelSelect = $('#ai-model');
+    function populateModelDropdown() {
+        const modelSelect = $('#ai-model-select');
         const description = $('#ai-model-description');
         
-        // Clear existing options
-        modelSelect.empty();
+        // Clear existing options except the first one
+        modelSelect.find('option:not(:first)').remove();
         
-        if (provider === 'free') {
-            // Show free models
-            Object.keys(availableModels.free_models).forEach(modelId => {
-                const model = availableModels.free_models[modelId];
-                const option = $('<option></option>')
-                    .attr('value', modelId)
-                    .text(`${model.name} (${model.provider}) - Free`);
-                modelSelect.append(option);
-            });
-            description.text('Free models work without API keys and are recommended for testing.');
-        } else {
-            // Show paid models for selected provider
-            const providerModels = availableModels.models_by_provider[provider] || {};
-            Object.keys(providerModels).forEach(modelId => {
-                const model = providerModels[modelId];
-                if (!model.free_tier) { // Only show paid models
-                    const option = $('<option></option>')
-                        .attr('value', modelId)
-                        .text(`${model.name} - Paid`);
-                    modelSelect.append(option);
-                }
-            });
-            description.text('Paid models require API keys and offer enhanced capabilities.');
-        }
+        // Add free models first
+        Object.keys(availableModels.free_models).forEach(modelId => {
+            const model = availableModels.free_models[modelId];
+            const option = $('<option></option>')
+                .attr('value', modelId)
+                .attr('data-provider', model.provider)
+                .attr('data-free', 'true')
+                .text(`${model.name} (${model.provider}) - Free`);
+            modelSelect.append(option);
+        });
         
-        // Set default selection
-        if (modelSelect.find('option').length > 0) {
-            modelSelect.val(modelSelect.find('option:first').val());
+        // Add paid models
+        Object.keys(availableModels.paid_models).forEach(modelId => {
+            const model = availableModels.paid_models[modelId];
+            const option = $('<option></option>')
+                .attr('value', modelId)
+                .attr('data-provider', model.provider)
+                .attr('data-free', 'false')
+                .text(`${model.name} (${model.provider}) - Paid`);
+            modelSelect.append(option);
+        });
+        
+        // Set default to first free model
+        const firstFreeModel = modelSelect.find('option[data-free="true"]:first');
+        if (firstFreeModel.length > 0) {
+            firstFreeModel.prop('selected', true);
+            updateApiKeySection();
         }
     }
     
-    // Provider change handler
-    $('#ai-provider').on('change', function() {
-        updateModelDropdown();
+    function updateApiKeySection() {
+        const selectedOption = $('#ai-model-select option:selected');
+        const isFree = selectedOption.attr('data-free') === 'true';
+        const provider = selectedOption.attr('data-provider');
+        const apiKeySection = $('#api-key-section');
+        const apiKeyHelp = $('#api-key-help');
         
-        // Show/hide API key section based on provider
-        const provider = $(this).val();
-        if (provider === 'free') {
-            $('#api-key-section').hide();
+        if (isFree) {
+            apiKeySection.hide();
+            $('#ai-model-description').text('Free models work without API keys and are recommended for testing.');
         } else {
-            $('#api-key-section').show();
+            apiKeySection.show();
+            $('#ai-model-description').text('Paid models require API keys and offer enhanced capabilities.');
+            
+            // Update API key help text based on provider
+            let helpText = '';
+            let apiUrl = '';
+            
+            switch(provider) {
+                case 'openai':
+                    helpText = 'Get your API key from OpenAI Platform';
+                    apiUrl = 'https://platform.openai.com/api-keys';
+                    break;
+                case 'anthropic':
+                    helpText = 'Get your API key from Anthropic Console';
+                    apiUrl = 'https://console.anthropic.com/';
+                    break;
+                case 'google':
+                    helpText = 'Get your API key from Google AI Studio';
+                    apiUrl = 'https://aistudio.google.com/';
+                    break;
+                case 'xai':
+                    helpText = 'Get your API key from X.AI Console';
+                    apiUrl = 'https://console.x.ai/';
+                    break;
+                case 'deepseek':
+                    helpText = 'Get your API key from DeepSeek Platform';
+                    apiUrl = 'https://platform.deepseek.com/';
+                    break;
+                case 'mistral':
+                    helpText = 'Get your API key from Mistral AI Console';
+                    apiUrl = 'https://console.mistral.ai/';
+                    break;
+                case 'cohere':
+                    helpText = 'Get your API key from Cohere Dashboard';
+                    apiUrl = 'https://dashboard.cohere.ai/';
+                    break;
+                case 'perplexity':
+                    helpText = 'Get your API key from Perplexity API';
+                    apiUrl = 'https://www.perplexity.ai/settings/api';
+                    break;
+                default:
+                    helpText = 'Get your API key from the provider\'s website';
+                    apiUrl = '#';
+            }
+            
+            apiKeyHelp.html(`<a href="${apiUrl}" target="_blank" style="color: #1FC09A; text-decoration: none;">${helpText}</a>`);
         }
+    }
+    
+    // Model selection change handler
+    $('#ai-model-select').on('change', function() {
+        updateApiKeySection();
     });
     
     // Load models on page load
@@ -826,11 +864,66 @@ jQuery(document).ready(function($) {
     box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15) !important;
 }
 
+/* Logo container fixes */
+.logo-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.logo-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.logo-fallback {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+/* Plugin card styling */
+.plugin-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: white;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+}
+
+.plugin-card:hover {
+    border-color: #1FC09A;
+    box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15);
+    transform: translateY(-2px);
+}
+
+.plugin-card.selected {
+    border-color: #1FC09A;
+    background-color: #f0fdf4;
+    box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15);
+}
+
 /* Responsive plugin grid */
 .plugin-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    gap: 0.5rem;
 }
 
 @media (max-width: 1200px) {

@@ -169,9 +169,91 @@ class WP_Tester_Scheduler {
         $frequency = isset($new_value['crawl_frequency']) ? $new_value['crawl_frequency'] : 'never';
         
         // Only schedule if frequency is not 'never'
-        if ($frequency !== 'never' && !wp_next_scheduled('wp_tester_daily_crawl')) {
-            wp_schedule_event(time(), $frequency, 'wp_tester_daily_crawl');
+        if ($frequency !== 'never') {
+            if ($frequency === 'daily' && isset($new_value['crawl_schedule_time']) && isset($new_value['crawl_schedule_days'])) {
+                // Use custom daily scheduling with specific time and days
+                $this->schedule_custom_daily_crawl($new_value['crawl_schedule_time'], $new_value['crawl_schedule_days']);
+            } else {
+                // Use WordPress default frequency scheduling
+                if (!wp_next_scheduled('wp_tester_daily_crawl')) {
+                    wp_schedule_event(time(), $frequency, 'wp_tester_daily_crawl');
+                }
+            }
         }
+    }
+    
+    /**
+     * Schedule custom daily crawl with specific time and days
+     */
+    private function schedule_custom_daily_crawl($time, $days) {
+        if (empty($time) || empty($days)) {
+            return;
+        }
+        
+        // Parse time (HH:MM format)
+        list($hour, $minute) = explode(':', $time);
+        $hour = intval($hour);
+        $minute = intval($minute);
+        
+        // Convert day names to WordPress day numbers (1 = Monday, 7 = Sunday)
+        $day_numbers = array();
+        $day_map = array(
+            'monday' => 1,
+            'tuesday' => 2,
+            'wednesday' => 3,
+            'thursday' => 4,
+            'friday' => 5,
+            'saturday' => 6,
+            'sunday' => 7
+        );
+        
+        foreach ($days as $day) {
+            if (isset($day_map[$day])) {
+                $day_numbers[] = $day_map[$day];
+            }
+        }
+        
+        if (empty($day_numbers)) {
+            return;
+        }
+        
+        // Schedule for each selected day
+        foreach ($day_numbers as $day_number) {
+            $next_run = $this->get_next_weekday_time($day_number, $hour, $minute);
+            if ($next_run) {
+                wp_schedule_single_event($next_run, 'wp_tester_daily_crawl');
+            }
+        }
+    }
+    
+    /**
+     * Get next occurrence of a specific weekday and time
+     */
+    private function get_next_weekday_time($day_number, $hour, $minute) {
+        $current_time = current_time('timestamp');
+        $current_day = date('N', $current_time); // 1 = Monday, 7 = Sunday
+        $current_hour = date('H', $current_time);
+        $current_minute = date('i', $current_time);
+        
+        // Calculate days until next occurrence
+        $days_until = ($day_number - $current_day + 7) % 7;
+        
+        // If it's the same day, check if time has passed
+        if ($days_until === 0) {
+            $current_time_minutes = $current_hour * 60 + $current_minute;
+            $target_time_minutes = $hour * 60 + $minute;
+            
+            if ($current_time_minutes >= $target_time_minutes) {
+                // Time has passed today, schedule for next week
+                $days_until = 7;
+            }
+        }
+        
+        // Calculate the exact timestamp
+        $target_date = date('Y-m-d', $current_time + ($days_until * 24 * 60 * 60));
+        $target_timestamp = strtotime($target_date . ' ' . sprintf('%02d:%02d:00', $hour, $minute));
+        
+        return $target_timestamp;
     }
     
     /**

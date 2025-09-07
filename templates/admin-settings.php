@@ -75,6 +75,39 @@ if (!defined('ABSPATH')) {
                         </p>
                     </div>
 
+                    <!-- Crawl Schedule Time -->
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                            Crawl Schedule Time
+                        </label>
+                        <input type="time" name="wp_tester_settings[crawl_schedule_time]" value="<?php echo esc_attr($settings['crawl_schedule_time'] ?? '02:00'); ?>" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                            Time of day to run scheduled crawls (24-hour format)
+                        </p>
+                    </div>
+
+                    <!-- Crawl Schedule Days -->
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                            Crawl Schedule Days
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <?php 
+                            $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                            $selected_days = $settings['crawl_schedule_days'] ?? ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+                            foreach ($days as $day) : 
+                            ?>
+                                <label style="display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: <?php echo in_array($day, $selected_days) ? '#f0fdf4' : 'white'; ?>;">
+                                    <input type="checkbox" name="wp_tester_settings[crawl_schedule_days][]" value="<?php echo $day; ?>" <?php checked(in_array($day, $selected_days)); ?> style="margin-bottom: 0.25rem; accent-color: #1FC09A;">
+                                    <span style="font-size: 0.75rem; font-weight: 500; color: #374151; text-transform: capitalize;"><?php echo substr($day, 0, 3); ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                            Select which days of the week to run scheduled crawls
+                        </p>
+                    </div>
+
                     <!-- Include Admin Panel in Crawl -->
                     <div>
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
@@ -125,19 +158,6 @@ if (!defined('ABSPATH')) {
                         </p>
                     </div>
 
-                    <!-- Max Pages per Crawl -->
-                    <div>
-                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                            Max Pages per Crawl
-                        </label>
-                        <input type="number" name="wp_tester_settings[max_pages_per_crawl]" 
-                               value="<?php echo esc_attr($settings['max_pages_per_crawl'] ?? 100); ?>" 
-                               min="10" max="1000"
-                               style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
-                            Maximum number of pages to crawl per post type during each crawl session
-                        </p>
-            </div>
             
                     <!-- Screenshot on Failure -->
                     <div>
