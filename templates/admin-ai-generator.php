@@ -245,7 +245,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
             
-            <div class="modern-grid grid-4" style="max-height: 500px; overflow-y: auto; gap: 1.5rem;">
+            <div class="modern-grid grid-4" style="max-height: 500px; overflow-y: auto; gap: 0.75rem;">
                 <?php foreach ($available_plugins as $plugin): ?>
                 <div class="plugin-card" 
                      data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
@@ -980,7 +980,7 @@ jQuery(document).ready(function($) {
 .modern-grid.grid-4 {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
 /* Ensure cards are clickable */
