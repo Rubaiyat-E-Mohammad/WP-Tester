@@ -165,6 +165,9 @@ if (!defined('ABSPATH')) {
                         <button id="clear-selection" class="modern-btn modern-btn-secondary modern-btn-small">
                             Clear Selection
                         </button>
+                        <button id="debug-bulk-action" class="modern-btn modern-btn-secondary modern-btn-small">
+                            Debug Test
+                        </button>
                     </div>
                 </div>
                 
@@ -672,6 +675,29 @@ jQuery(document).ready(function($) {
         updateBulkActions();
     });
     
+    // Debug bulk action
+    $('#debug-bulk-action').on('click', function() {
+        console.log('WP Tester: Debug button clicked');
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_debug_bulk_action',
+                test_data: 'debug test',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                console.log('WP Tester: Debug response:', response);
+                alert('Debug test successful! Check console for details.');
+            },
+            error: function(xhr, status, error) {
+                console.error('WP Tester: Debug error:', {xhr, status, error});
+                alert('Debug test failed! Check console for details.');
+            }
+        });
+    });
+    
     // Apply bulk action for results
     $('#apply-bulk-action').on('click', function() {
         const action = $('#bulk-action-selector').val();
@@ -679,7 +705,14 @@ jQuery(document).ready(function($) {
             return $(this).val();
         }).get();
         
+        // Debug: Log the action and selected IDs
+        console.log('WP Tester: Bulk action clicked');
+        console.log('WP Tester: Action:', action);
+        console.log('WP Tester: Selected IDs:', selectedIds);
+        console.log('WP Tester: Checked checkboxes:', $('.result-checkbox:checked').length);
+        
         if (!action || selectedIds.length === 0) {
+            console.log('WP Tester: No action or no IDs selected');
             showErrorModal('Invalid Action', 'Please select an action and at least one result.');
             return;
         }
@@ -694,26 +727,34 @@ jQuery(document).ready(function($) {
         const originalText = button.html();
         button.html('<span class="dashicons dashicons-update-alt"></span> Processing...').prop('disabled', true);
         
+        const ajaxData = {
+            action: 'wp_tester_bulk_test_results_action',
+            bulk_action: action,
+            result_ids: selectedIds,
+            nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+        };
+        
+        console.log('WP Tester: Sending AJAX data:', ajaxData);
+        
         $.ajax({
             url: ajaxurl,
             type: 'POST',
-            data: {
-                action: 'wp_tester_bulk_test_results_action',
-                bulk_action: action,
-                result_ids: selectedIds,
-                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
-            },
+            data: ajaxData,
             success: function(response) {
+                console.log('WP Tester: AJAX Success Response:', response);
                 if (response.success) {
+                    console.log('WP Tester: Bulk action successful:', response.data.message);
                     showSuccessModal('Bulk Action Complete!', 
                         response.data.message || 'Action completed successfully. Refreshing page...');
                     setTimeout(() => location.reload(), 2000);
                 } else {
+                    console.log('WP Tester: Bulk action failed:', response.data.message);
                     showErrorModal('Bulk Action Failed', response.data.message || 'Unknown error occurred');
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Bulk Action AJAX Error:', {xhr, status, error});
+                console.error('WP Tester: Bulk Action AJAX Error:', {xhr, status, error});
+                console.error('WP Tester: Response Text:', xhr.responseText);
                 showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
             },
             complete: function() {

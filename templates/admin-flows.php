@@ -25,10 +25,14 @@ if (!defined('ABSPATH')) {
                     <span class="dashicons dashicons-arrow-left-alt2"></span>
                     Dashboard
                 </a>
-                <button id="cleanup-duplicates" class="modern-btn modern-btn-warning modern-btn-small">
-                    <span class="dashicons dashicons-trash"></span>
-                    Cleanup Duplicates
-                </button>
+                    <button id="check-duplicates" class="modern-btn modern-btn-secondary modern-btn-small">
+                        <span class="dashicons dashicons-search"></span>
+                        Check Duplicates
+                    </button>
+                    <button id="cleanup-duplicates" class="modern-btn modern-btn-warning modern-btn-small">
+                        <span class="dashicons dashicons-trash"></span>
+                        Cleanup Duplicates
+                    </button>
                 <button id="wp-tester-discover-flows" class="modern-btn modern-btn-primary modern-btn-small">
                     <span class="dashicons dashicons-search"></span>
                     Discover Flows
@@ -310,6 +314,51 @@ jQuery(document).ready(function($) {
             error: function() {
                 hideProgressModal();
                 showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
+    });
+    
+    // Check duplicates functionality
+    $('#check-duplicates').on('click', function(e) {
+        e.preventDefault();
+        
+        const button = $(this);
+        const originalText = button.html();
+        
+        button.html('<span class="dashicons dashicons-update-alt"></span> Checking...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_get_duplicate_flows_info',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    const data = response.data;
+                    let message = `Total Flows: ${data.total_flows}\nDuplicate Groups: ${data.duplicate_groups_count}\n\n`;
+                    
+                    if (data.duplicate_groups_count > 0) {
+                        message += 'Duplicate Groups Found:\n';
+                        data.duplicate_groups.forEach((group, index) => {
+                            message += `${index + 1}. Type: ${group.flow_type}, URL: ${group.start_url}, Count: ${group.count}, IDs: ${group.ids}\n`;
+                        });
+                    } else {
+                        message += 'No duplicate groups found.';
+                    }
+                    
+                    alert(message);
+                } else {
+                    alert('Error checking duplicates: ' + (response.data.message || 'Unknown error'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Check Duplicates AJAX Error:', {xhr, status, error});
+                alert('Error connecting to server');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
@@ -601,8 +650,8 @@ jQuery(document).ready(function($) {
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'wp_tester_delete_flow',
-                flow_id: flowId,
+            action: 'wp_tester_delete_flow',
+            flow_id: flowId,
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
@@ -647,7 +696,7 @@ jQuery(document).ready(function($) {
             $('#select-all-flows').prop('indeterminate', false).prop('checked', false);
         } else if (checkedCheckboxes === totalCheckboxes) {
             $('#select-all-flows').prop('indeterminate', false).prop('checked', true);
-        } else {
+            } else {
             $('#select-all-flows').prop('indeterminate', true);
         }
     });
@@ -688,7 +737,7 @@ jQuery(document).ready(function($) {
         
         if (action === 'delete') {
             if (!confirm(`Are you sure you want to delete ${selectedIds.length} flow(s)? This action cannot be undone.`)) {
-                return;
+            return;
             }
         }
         
@@ -700,17 +749,17 @@ jQuery(document).ready(function($) {
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'wp_tester_bulk_action',
-                bulk_action: action,
+            action: 'wp_tester_bulk_action',
+            bulk_action: action,
                 flow_ids: selectedIds,
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-                if (response.success) {
+            if (response.success) {
                     showSuccessModal('Bulk Action Complete!', 
                         response.data.message || 'Action completed successfully. Refreshing page...');
                     setTimeout(() => location.reload(), 2000);
-                } else {
+            } else {
                     showErrorModal('Bulk Action Failed', response.data.message || 'Unknown error occurred');
                 }
             },

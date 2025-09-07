@@ -32,9 +32,13 @@ class WP_Tester_Ajax {
         // Modern UI AJAX actions
         add_action('wp_ajax_wp_tester_get_dashboard_stats', array($this, 'get_dashboard_stats'));
         add_action('wp_ajax_wp_tester_cleanup_duplicates', array($this, 'cleanup_duplicates'));
+        add_action('wp_ajax_wp_tester_get_duplicate_flows_info', array($this, 'get_duplicate_flows_info'));
         add_action('wp_ajax_wp_tester_cleanup_test_results', array($this, 'cleanup_test_results'));
         add_action('wp_ajax_wp_tester_get_test_results_stats', array($this, 'get_test_results_stats'));
         add_action('wp_ajax_wp_tester_bulk_test_results_action', array($this, 'bulk_test_results_action'));
+        add_action('wp_ajax_wp_tester_bulk_crawl_action', array($this, 'bulk_crawl_action'));
+        add_action('wp_ajax_wp_tester_debug_bulk_action', array($this, 'debug_bulk_action'));
+        add_action('wp_ajax_wp_tester_cleanup_crawl_duplicates', array($this, 'cleanup_crawl_duplicates'));
     }
     
     /**
@@ -695,6 +699,33 @@ class WP_Tester_Ajax {
     }
     
     /**
+     * Get duplicate flows information for debugging
+     */
+    public function get_duplicate_flows_info() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $database = new WP_Tester_Database();
+            $duplicate_info = $database->get_duplicate_flows_info();
+            
+            wp_send_json_success(array(
+                'message' => 'Duplicate flows information retrieved',
+                'data' => $duplicate_info
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to get duplicate flows info: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
      * Get test results statistics
      */
     public function get_test_results_stats() {
@@ -764,7 +795,12 @@ class WP_Tester_Ajax {
     public function bulk_test_results_action() {
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
+        // Debug: Log the incoming request
+        error_log("WP Tester: Bulk test results action called");
+        error_log("WP Tester: POST data: " . wp_json_encode($_POST));
+        
         if (!current_user_can('manage_options')) {
+            error_log("WP Tester: Bulk action failed - insufficient permissions");
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
@@ -772,7 +808,11 @@ class WP_Tester_Ajax {
         $action = sanitize_text_field($_POST['bulk_action'] ?? '');
         $result_ids = array_filter(array_map('intval', $_POST['result_ids'] ?? []));
         
+        error_log("WP Tester: Action: {$action}");
+        error_log("WP Tester: Result IDs: " . wp_json_encode($result_ids));
+        
         if (empty($action) || empty($result_ids)) {
+            error_log("WP Tester: Bulk action failed - empty action or result IDs");
             wp_send_json_error(array(
                 'message' => __('Invalid action or no results selected.', 'wp-tester')
             ));
@@ -794,11 +834,24 @@ class WP_Tester_Ajax {
             
             switch ($action) {
                 case 'delete':
+                    error_log("WP Tester: Starting bulk delete operation");
+                    error_log("WP Tester: Using table: {$test_results_table}");
+                    error_log("WP Tester: Deleting result IDs: " . wp_json_encode($result_ids));
+                    
                     $placeholders = implode(',', array_fill(0, count($result_ids), '%d'));
-                    $deleted_count = $wpdb->query($wpdb->prepare(
-                        "DELETE FROM {$test_results_table} WHERE id IN ({$placeholders})",
-                        ...$result_ids
-                    ));
+                    $delete_sql = "DELETE FROM {$test_results_table} WHERE id IN ({$placeholders})";
+                    error_log("WP Tester: Delete SQL: {$delete_sql}");
+                    
+                    $deleted_count = $wpdb->query($wpdb->prepare($delete_sql, ...$result_ids));
+                    error_log("WP Tester: Deleted {$deleted_count} test results");
+                    
+                    if ($deleted_count === false) {
+                        error_log("WP Tester: Delete query failed: " . $wpdb->last_error);
+                        wp_send_json_error(array(
+                            'message' => __('Delete operation failed: ', 'wp-tester') . $wpdb->last_error
+                        ));
+                        return;
+                    }
                     
                     wp_send_json_success(array(
                         'message' => sprintf(__('Deleted %d test results.', 'wp-tester'), $deleted_count)
@@ -823,5 +876,139 @@ class WP_Tester_Ajax {
                 'message' => __('Failed to perform bulk action: ', 'wp-tester') . $e->getMessage()
             ));
         }
+    }
+    
+    /**
+     * Bulk actions for crawl results
+     */
+    public function bulk_crawl_action() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        $action = sanitize_text_field($_POST['bulk_action'] ?? '');
+        $crawl_ids = array_filter(array_map('intval', $_POST['crawl_ids'] ?? []));
+        
+        if (empty($action) || empty($crawl_ids)) {
+            wp_send_json_error(array(
+                'message' => __('Invalid action or no crawl results selected.', 'wp-tester')
+            ));
+            return;
+        }
+        
+        // Validate action
+        $allowed_actions = array('delete', 'export');
+        if (!in_array($action, $allowed_actions, true)) {
+            wp_send_json_error(array(
+                'message' => __('Invalid bulk action.', 'wp-tester')
+            ));
+            return;
+        }
+        
+        try {
+            global $wpdb;
+            $crawl_results_table = $wpdb->prefix . 'wp_tester_crawl_results';
+            
+            switch ($action) {
+                case 'delete':
+                    $placeholders = implode(',', array_fill(0, count($crawl_ids), '%d'));
+                    $deleted_count = $wpdb->query($wpdb->prepare(
+                        "DELETE FROM {$crawl_results_table} WHERE id IN ({$placeholders})",
+                        ...$crawl_ids
+                    ));
+                    
+                    wp_send_json_success(array(
+                        'message' => sprintf(__('Deleted %d crawl results.', 'wp-tester'), $deleted_count)
+                    ));
+                    break;
+                    
+                case 'export':
+                    // For now, just return success - export functionality can be implemented later
+                    wp_send_json_success(array(
+                        'message' => sprintf(__('Export functionality for %d crawl results will be implemented soon.', 'wp-tester'), count($crawl_ids))
+                    ));
+                    break;
+                    
+                default:
+                    wp_send_json_error(array(
+                        'message' => __('Invalid bulk action.', 'wp-tester')
+                    ));
+            }
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to perform bulk action: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Cleanup duplicate crawl results
+     */
+    public function cleanup_crawl_duplicates() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            global $wpdb;
+            $crawl_results_table = $wpdb->prefix . 'wp_tester_crawl_results';
+            
+            // Find duplicate crawl results based on URL and page_type
+            $duplicates = $wpdb->get_results(
+                "SELECT url, page_type, GROUP_CONCAT(id ORDER BY created_at ASC) as ids, COUNT(*) as count
+                 FROM {$crawl_results_table} 
+                 GROUP BY url, page_type 
+                 HAVING COUNT(*) > 1"
+            );
+            
+            $removed_count = 0;
+            
+            foreach ($duplicates as $duplicate) {
+                $ids = explode(',', $duplicate->ids);
+                $keep_id = array_shift($ids); // Keep the first (oldest) one
+                
+                if (!empty($ids)) {
+                    $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+                    $deleted_count = $wpdb->query($wpdb->prepare(
+                        "DELETE FROM {$crawl_results_table} WHERE id IN ({$placeholders})",
+                        ...$ids
+                    ));
+                    $removed_count += $deleted_count;
+                }
+            }
+            
+            wp_send_json_success(array(
+                'message' => sprintf(__('Removed %d duplicate crawl results.', 'wp-tester'), $removed_count)
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to cleanup duplicates: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Debug bulk action - simple test endpoint
+     */
+    public function debug_bulk_action() {
+        error_log("WP Tester: Debug bulk action called");
+        error_log("WP Tester: POST data: " . wp_json_encode($_POST));
+        error_log("WP Tester: GET data: " . wp_json_encode($_GET));
+        error_log("WP Tester: REQUEST data: " . wp_json_encode($_REQUEST));
+        
+        wp_send_json_success(array(
+            'message' => 'Debug endpoint working',
+            'post_data' => $_POST,
+            'get_data' => $_GET,
+            'request_data' => $_REQUEST
+        ));
     }
 }

@@ -29,6 +29,10 @@ if (!defined('ABSPATH')) {
                     <span class="dashicons dashicons-search"></span>
                     Start Crawl
                 </button>
+                <button class="modern-btn modern-btn-secondary modern-btn-small" id="cleanup-duplicates">
+                    <span class="dashicons dashicons-trash"></span>
+                    Cleanup Duplicates
+                </button>
             </div>
         </div>
     </div>
@@ -146,9 +150,41 @@ if (!defined('ABSPATH')) {
             </div>
 
             <?php if (!empty($crawl_results)) : ?>
+                <!-- Bulk Actions Header -->
+                <div class="bulk-actions-header" style="display: none;">
+                    <div class="bulk-actions-info">
+                        <span class="selected-count">0 crawls selected</span>
+                    </div>
+                    <div class="bulk-actions-buttons">
+                        <select id="bulk-action-selector" class="modern-select">
+                            <option value="">Bulk Actions</option>
+                            <option value="delete">Delete Selected</option>
+                            <option value="export">Export Selected</option>
+                        </select>
+                        <button id="apply-bulk-action" class="modern-btn modern-btn-primary modern-btn-small" disabled>
+                            Apply
+                        </button>
+                        <button id="clear-selection" class="modern-btn modern-btn-secondary modern-btn-small">
+                            Clear Selection
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Select All Header -->
+                <div class="select-all-header">
+                    <div class="select-all-checkbox">
+                        <input type="checkbox" id="select-all-crawls" class="select-all-checkbox-input">
+                        <label for="select-all-crawls">Select All Crawls</label>
+                    </div>
+                </div>
+                
                 <div class="modern-list" id="crawl-list">
                     <?php foreach ($crawl_results as $result) : ?>
                         <div class="modern-list-item" data-page-type="<?php echo esc_attr($result->page_type ?? ''); ?>">
+                            <div class="item-checkbox">
+                                <input type="checkbox" class="crawl-checkbox" value="<?php echo esc_attr($result->id ?? ''); ?>" id="crawl-<?php echo esc_attr($result->id ?? ''); ?>">
+                                <label for="crawl-<?php echo esc_attr($result->id ?? ''); ?>"></label>
+                            </div>
                             <div class="item-info">
                                 <div class="item-icon">
                                     <span class="dashicons dashicons-<?php 
@@ -481,10 +517,212 @@ jQuery(document).ready(function($) {
         $('body').append(modal);
         modal.fadeIn(300);
     }
+    
+    // Bulk selection functionality for crawls
+    // Select All functionality
+    $('#select-all-crawls').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.crawl-checkbox').prop('checked', isChecked);
+        updateBulkActions();
+    });
+    
+    // Individual checkbox change
+    $(document).on('change', '.crawl-checkbox', function() {
+        updateBulkActions();
+        
+        // Update select all checkbox state
+        const totalCheckboxes = $('.crawl-checkbox').length;
+        const checkedCheckboxes = $('.crawl-checkbox:checked').length;
+        
+        if (checkedCheckboxes === 0) {
+            $('#select-all-crawls').prop('indeterminate', false).prop('checked', false);
+        } else if (checkedCheckboxes === totalCheckboxes) {
+            $('#select-all-crawls').prop('indeterminate', false).prop('checked', true);
+        } else {
+            $('#select-all-crawls').prop('indeterminate', true);
+        }
+    });
+    
+    // Update bulk actions visibility and state
+    function updateBulkActions() {
+        const checkedBoxes = $('.crawl-checkbox:checked');
+        const count = checkedBoxes.length;
+        
+        if (count > 0) {
+            $('.bulk-actions-header').show();
+            $('.selected-count').text(count + ' crawl' + (count === 1 ? '' : 's') + ' selected');
+            $('#apply-bulk-action').prop('disabled', false);
+        } else {
+            $('.bulk-actions-header').hide();
+            $('#apply-bulk-action').prop('disabled', true);
+        }
+    }
+    
+    // Clear selection
+    $('#clear-selection').on('click', function() {
+        $('.crawl-checkbox').prop('checked', false);
+        $('#select-all-crawls').prop('checked', false).prop('indeterminate', false);
+        updateBulkActions();
+    });
+    
+    // Apply bulk action for crawls
+    $('#apply-bulk-action').on('click', function() {
+        const action = $('#bulk-action-selector').val();
+        const selectedIds = $('.crawl-checkbox:checked').map(function() {
+            return $(this).val();
+        }).get();
+        
+        if (!action || selectedIds.length === 0) {
+            alert('Please select an action and at least one crawl result.');
+            return;
+        }
+        
+        if (action === 'delete') {
+            if (!confirm(`Are you sure you want to delete ${selectedIds.length} crawl result(s)? This action cannot be undone.`)) {
+                return;
+            }
+        }
+        
+        const button = $(this);
+        const originalText = button.html();
+        button.html('<span class="dashicons dashicons-update-alt"></span> Processing...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_bulk_crawl_action',
+                bulk_action: action,
+                crawl_ids: selectedIds,
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Bulk action completed successfully! ' + (response.data.message || ''));
+                    location.reload();
+                } else {
+                    alert('Bulk action failed: ' + (response.data.message || 'Unknown error occurred'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Bulk Action AJAX Error:', {xhr, status, error});
+                alert('Error connecting to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
+    });
+    
+    // Cleanup duplicates functionality
+    $('#cleanup-duplicates').on('click', function() {
+        if (!confirm('Are you sure you want to cleanup duplicate crawl results? This action cannot be undone.')) {
+            return;
+        }
+        
+        const button = $(this);
+        const originalText = button.html();
+        button.html('<span class="dashicons dashicons-update-alt"></span> Cleaning...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_cleanup_crawl_duplicates',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Cleanup completed successfully! ' + (response.data.message || '') + ' Refreshing page...');
+                    location.reload();
+                } else {
+                    alert('Cleanup failed: ' + (response.data.message || 'Unknown error occurred'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Cleanup AJAX Error:', {xhr, status, error});
+                alert('Error connecting to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
+    });
 });
 </script>
 
 <style>
+/* Bulk Selection Styles */
+.bulk-actions-header {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bulk-actions-info {
+    font-weight: 500;
+    color: #374151;
+}
+
+.bulk-actions-buttons {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.select-all-header {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.select-all-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.select-all-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.select-all-checkbox label {
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    margin: 0;
+}
+
+.item-checkbox {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+}
+
+.item-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.item-checkbox label {
+    display: none; /* We don't need visible labels for individual checkboxes */
+}
+
+.modern-list-item {
+    display: flex;
+    align-items: center;
+}
+
 /* Progress Modal Styles */
 .wp-tester-modal-overlay {
     position: fixed;

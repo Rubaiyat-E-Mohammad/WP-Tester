@@ -204,10 +204,7 @@ class WP_Tester {
         $this->database = new WP_Tester_Database();
         $this->database->create_tables();
         
-        // Schedule initial crawl
-        if (!wp_next_scheduled('wp_tester_daily_crawl')) {
-            wp_schedule_event(time(), 'daily', 'wp_tester_daily_crawl');
-        }
+        // Note: No automatic crawling scheduled - user must manually trigger crawls
         
         // Set default options
         add_option('wp_tester_settings', array(

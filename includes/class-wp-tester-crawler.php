@@ -28,10 +28,9 @@ class WP_Tester_Crawler {
         $this->database = new WP_Tester_Database();
         $this->settings = get_option('wp_tester_settings', array());
         
-        // Hook into WordPress actions
+        // Hook into WordPress actions (manual only - no automatic crawling)
         add_action('wp_tester_daily_crawl', array($this, 'run_full_crawl'));
-        add_action('post_updated', array($this, 'crawl_single_post'), 10, 3);
-        add_action('wp_insert_post', array($this, 'crawl_single_post'), 10, 3);
+        // Note: Removed automatic post crawling hooks - user must manually trigger crawls
     }
     
     /**
