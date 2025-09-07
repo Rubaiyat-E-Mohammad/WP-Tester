@@ -33,6 +33,8 @@ $available_plugins = $ai_generator->get_available_plugins();
 
 // Get AI generated flows
 $database = new WP_Tester_Database();
+// Ensure database schema is up to date
+$database->update_flows_table_schema();
 $ai_generated_flows = $database->get_ai_generated_flows(5);
 ?>
 
@@ -243,32 +245,38 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
             
-            <div class="modern-grid grid-4" style="max-height: 500px; overflow-y: auto; padding: 0.5rem;">
+            <div class="modern-list" style="max-height: 500px; overflow-y: auto;">
                 <?php foreach ($available_plugins as $plugin): ?>
-                <div class="stat-card plugin-card" 
+                <div class="modern-list-item plugin-card" 
                      data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
                      onclick="togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')"
-                     style="cursor: pointer; position: relative;">
+                     style="cursor: pointer; position: relative; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 0.75rem; background: white; transition: all 0.2s ease;">
                     
-                    <div class="stat-header">
-                        <h3 class="stat-label"><?php echo esc_html($plugin['name']); ?></h3>
-                        <div class="stat-icon">
-                            <span class="dashicons dashicons-admin-plugins"></span>
+                    <div class="item-info" style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+                        <div style="width: 40px; height: 40px; border-radius: 8px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <span class="dashicons dashicons-admin-plugins" style="color: #00265e; font-size: 20px;"></span>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0; font-size: 1rem; font-weight: 600; color: #00265e;"><?php echo esc_html($plugin['name']); ?></h4>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #64748b;">
+                                <span style="display: inline-block; padding: 0.125rem 0.5rem; background: #e0f2fe; color: #0369a1; border-radius: 4px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; margin-right: 0.5rem;">
+                                    <?php echo esc_html($plugin['type']); ?>
+                                </span>
+                                <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 15)); ?>
+                            </p>
                         </div>
                     </div>
                     
-                    <div class="stat-value">
-                        <?php echo esc_html($plugin['type']); ?>
-                    </div>
-                    
-                    <div class="stat-change neutral">
-                        <span class="dashicons dashicons-info"></span>
-                        <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 8)); ?>
-                    </div>
-                    
-                    <!-- Selection Indicator -->
-                    <div class="plugin-selection-indicator" style="position: absolute; top: 1rem; right: 1rem; width: 24px; height: 24px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
-                        <div class="checkmark" style="width: 12px; height: 12px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
+                    <div class="item-meta" style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="text-align: right; font-size: 0.75rem; color: #9ca3af;">
+                            v<?php echo esc_html($plugin['version']); ?><br>
+                            <?php echo esc_html($plugin['author']); ?>
+                        </div>
+                        
+                        <!-- Selection Indicator -->
+                        <div class="plugin-selection-indicator" style="width: 24px; height: 24px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
+                            <div class="checkmark" style="width: 12px; height: 12px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
+                        </div>
                     </div>
                     
                     <!-- Hidden checkbox for form submission -->
@@ -869,39 +877,41 @@ jQuery(document).ready(function($) {
 </script>
 
 <style>
-/* Plugin card styling - using dashboard stat-card style */
+/* Plugin list styling */
 .plugin-card {
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .plugin-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px -8px rgba(31, 192, 154, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 38, 94, 0.1);
     border-color: #00265e;
 }
 
 .plugin-card:hover .plugin-selection-indicator {
     border-color: #00265e;
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .plugin-card.selected {
     border-color: #00265e !important;
     background-color: #f0fdf4 !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px -8px rgba(31, 192, 154, 0.3) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 38, 94, 0.15) !important;
 }
 
-.plugin-card.selected .stat-icon {
+.plugin-card.selected .item-info > div:first-child {
     background: #00265e !important;
+}
+
+.plugin-card.selected .item-info > div:first-child .dashicons {
     color: white !important;
 }
 
-.plugin-card.selected .stat-label {
-    color: #00265e !important;
-}
-
-.plugin-card.selected .stat-value {
+.plugin-card.selected h4 {
     color: #00265e !important;
 }
 

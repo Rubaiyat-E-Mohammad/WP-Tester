@@ -120,13 +120,20 @@ class WP_Tester_Database {
         
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
         
-        dbDelta($sql_crawl);
-        dbDelta($sql_flows);
-        dbDelta($sql_results);
-        dbDelta($sql_screenshots);
+        $result1 = dbDelta($sql_crawl);
+        $result2 = dbDelta($sql_flows);
+        $result3 = dbDelta($sql_results);
+        $result4 = dbDelta($sql_screenshots);
         
         // Update database version
         update_option('wp_tester_db_version', self::DB_VERSION);
+        
+        // Log any database errors
+        if (!empty($wpdb->last_error)) {
+            error_log('WP Tester: Database table creation error: ' . $wpdb->last_error);
+        } else {
+            error_log('WP Tester: Database tables created successfully');
+        }
     }
     
     /**
@@ -235,6 +242,9 @@ class WP_Tester_Database {
     public function save_flow($flow_name, $flow_type, $start_url, $steps, $expected_outcome = '', $priority = 5, $ai_generated = false, $ai_provider = null) {
         global $wpdb;
         
+        // Ensure schema is up to date
+        $this->update_flows_table_schema();
+        
         // Check if flow already exists to prevent duplicates
         // First try exact match
         $existing_flow = $wpdb->get_var($wpdb->prepare(
@@ -337,9 +347,6 @@ class WP_Tester_Database {
         
         $removed_count = 0;
         
-        // Debug: Log the table name being used
-        // Cleanup duplicates
-        
         // Get all flows grouped by type and URL
         $flow_groups = $wpdb->get_results(
             "SELECT flow_type, start_url, GROUP_CONCAT(id ORDER BY created_at ASC) as ids, COUNT(*) as count
@@ -348,31 +355,19 @@ class WP_Tester_Database {
              HAVING COUNT(*) > 1"
         );
         
-        // Debug: Log how many duplicate groups were found
-        // Found duplicate groups
-        
         foreach ($flow_groups as $group) {
-            // Processing duplicate group
-            
             $ids = explode(',', $group->ids);
             $keep_id = array_shift($ids); // Keep the first (oldest) one
-            
-            // Keeping one ID, deleting others
             
             if (!empty($ids)) {
                 // Delete all duplicates except the first one
                 $ids_placeholder = implode(',', array_fill(0, count($ids), '%d'));
                 $delete_query = "DELETE FROM {$this->flows_table} WHERE id IN ($ids_placeholder)";
-                // Executing delete query
                 
                 $deleted_rows = $wpdb->query($wpdb->prepare($delete_query, $ids));
-                // Delete query executed
-                
                 $removed_count += count($ids);
             }
         }
-        
-        // Total removed count
         return $removed_count;
     }
     
@@ -475,14 +470,9 @@ class WP_Tester_Database {
         $options = wp_parse_args($options, $defaults);
         $removed_count = 0;
         
-        // Debug: Log cleanup options
-        // Cleanup test results
-        
         // Remove old test results
         if ($options['older_than_days'] > 0) {
             $cutoff_date = date('Y-m-d H:i:s', strtotime("-{$options['older_than_days']} days"));
-            // Cutoff date for cleanup
-            
             $where_conditions = array("started_at < %s");
             $where_values = array($cutoff_date);
             
@@ -503,17 +493,13 @@ class WP_Tester_Database {
             }
             
             $sql = "DELETE FROM {$this->test_results_table} WHERE " . implode(' AND ', $where_conditions);
-            // Executing cleanup SQL
-            
             $deleted_rows = $wpdb->query($wpdb->prepare($sql, $where_values));
-            // Deleted old test results
             $removed_count += $deleted_rows;
         }
         
         // Keep only the most recent results per flow
         if ($options['max_results_per_flow'] > 0) {
             $flows = $wpdb->get_results("SELECT DISTINCT flow_id FROM {$this->test_results_table}");
-            // Found flows with test results
             
             foreach ($flows as $flow) {
                 $recent_results = $wpdb->get_results($wpdb->prepare(
@@ -534,17 +520,11 @@ class WP_Tester_Database {
                          WHERE flow_id = %d AND id NOT IN ($placeholders)",
                         array_merge(array($flow->flow_id), $keep_ids)
                     ));
-                    
-                    if ($deleted_from_flow > 0) {
-                        // Deleted old results from flow
-                    }
-                    
                     $removed_count += $deleted_from_flow;
                 }
             }
         }
         
-        // Total test results removed
         return $removed_count;
     }
     
@@ -566,13 +546,10 @@ class WP_Tester_Database {
     public function get_test_results_stats() {
         global $wpdb;
         
-        // Get test results stats
-        
         $stats = array();
         
         // Total test results
         $stats['total'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table}");
-        // Total test results
         
         // By status
         $stats['passed'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed'");
@@ -588,7 +565,6 @@ class WP_Tester_Database {
         $stats['oldest'] = $wpdb->get_var("SELECT MIN(started_at) FROM {$this->test_results_table}");
         $stats['newest'] = $wpdb->get_var("SELECT MAX(started_at) FROM {$this->test_results_table}");
         
-        // Final stats
         return $stats;
     }
     
@@ -622,10 +598,45 @@ class WP_Tester_Database {
     }
 
     /**
+     * Update flows table schema to add AI generation fields
+     */
+    public function update_flows_table_schema() {
+        global $wpdb;
+        
+        // Check if ai_generated column exists
+        $column_exists = $wpdb->get_results($wpdb->prepare(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+             WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'ai_generated'",
+            $wpdb->dbname,
+            $this->flows_table
+        ));
+        
+        if (empty($column_exists)) {
+            // Add ai_generated column
+            $result1 = $wpdb->query("ALTER TABLE {$this->flows_table} ADD COLUMN ai_generated tinyint(1) DEFAULT 0");
+            
+            // Add ai_provider column
+            $result2 = $wpdb->query("ALTER TABLE {$this->flows_table} ADD COLUMN ai_provider varchar(100) DEFAULT NULL");
+            
+            // Add index for ai_generated
+            $result3 = $wpdb->query("ALTER TABLE {$this->flows_table} ADD INDEX ai_generated (ai_generated)");
+            
+            if ($result1 !== false && $result2 !== false && $result3 !== false) {
+                error_log('WP Tester: Successfully added AI generation columns to flows table');
+            } else {
+                error_log('WP Tester: Error adding AI generation columns to flows table: ' . $wpdb->last_error);
+            }
+        }
+    }
+
+    /**
      * Get AI generated flows
      */
     public function get_ai_generated_flows($limit = 5) {
         global $wpdb;
+        
+        // Ensure schema is up to date
+        $this->update_flows_table_schema();
         
         $sql = $wpdb->prepare(
             "SELECT * FROM {$this->flows_table} 
