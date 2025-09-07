@@ -238,15 +238,16 @@ $available_plugins = $ai_generator->get_available_plugins();
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
             
-            <div class="plugin-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; max-height: 500px; overflow-y: auto; padding: 0.5rem;">
+            <div class="modern-grid grid-4" style="max-height: 500px; overflow-y: auto; padding: 0.5rem;">
                 <?php foreach ($available_plugins as $plugin): ?>
-                <div class="plugin-card" style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.75rem; background: white; transition: all 0.3s ease; cursor: pointer; position: relative; min-height: 120px; display: flex; flex-direction: column;" 
+                <div class="stat-card plugin-card" 
                      data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
-                     onclick="togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
+                     onclick="togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')"
+                     style="cursor: pointer; position: relative;">
                     
-                    <!-- Plugin Logo -->
-                    <div style="display: flex; justify-content: center; margin-bottom: 0.5rem;">
-                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #00265e, #0ea5e9); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.875rem;">
+                    <div class="stat-header">
+                        <h3 class="stat-label"><?php echo esc_html($plugin['name']); ?></h3>
+                        <div class="stat-icon">
                             <?php 
                             $plugin_name = $plugin['name'];
                             $initials = '';
@@ -264,42 +265,28 @@ $available_plugins = $ai_generator->get_available_plugins();
                         </div>
                     </div>
                     
-                    <!-- Plugin Name -->
-                    <div style="text-align: center; margin-bottom: 0.25rem;">
-                        <h4 style="margin: 0; font-weight: 600; color: #00265e; font-size: 0.75rem; line-height: 1.2;"><?php echo esc_html($plugin['name']); ?></h4>
+                    <div class="stat-value" style="font-size: 1.25rem; margin: 0.5rem 0;">
+                        <?php echo esc_html($plugin['type']); ?>
                     </div>
                     
-                    <!-- Plugin Type Badge -->
-                    <div style="text-align: center; margin-bottom: 0.5rem;">
-                        <span class="plugin-type-badge" style="padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.625rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; background: #e0f2fe; color: #0369a1;">
-                            <?php echo esc_html($plugin['type']); ?>
-                        </span>
+                    <div class="stat-change neutral" style="font-size: 0.75rem; line-height: 1.3;">
+                        <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 12)); ?>
                     </div>
                     
-                    <!-- Plugin Description -->
-                    <div style="flex: 1; text-align: center; margin-bottom: 0.5rem;">
-                        <p style="margin: 0; font-size: 0.6875rem; color: #64748b; line-height: 1.2;">
-                            <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 6)); ?>
-                        </p>
-                    </div>
-                    
-                    <!-- Plugin Version & Author -->
-                    <div style="text-align: center; margin-bottom: 0.25rem;">
-                        <div style="font-size: 0.625rem; color: #9ca3af;">
-                            v<?php echo esc_html($plugin['version']); ?> • 
-                            <?php if (!empty($plugin['author_uri'])): ?>
-                                <a href="<?php echo esc_url($plugin['author_uri']); ?>" target="_blank" style="color: #00265e; text-decoration: none;">
-                                    <?php echo esc_html($plugin['author']); ?>
-                                </a>
-                            <?php else: ?>
+                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #f1f5f9; font-size: 0.75rem; color: #9ca3af;">
+                        v<?php echo esc_html($plugin['version']); ?> • 
+                        <?php if (!empty($plugin['author_uri'])): ?>
+                            <a href="<?php echo esc_url($plugin['author_uri']); ?>" target="_blank" style="color: #00265e; text-decoration: none;">
                                 <?php echo esc_html($plugin['author']); ?>
-                            <?php endif; ?>
-                        </div>
+                            </a>
+                        <?php else: ?>
+                            <?php echo esc_html($plugin['author']); ?>
+                        <?php endif; ?>
                     </div>
                     
                     <!-- Selection Indicator -->
-                    <div class="plugin-selection-indicator" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 18px; height: 18px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
-                        <div class="checkmark" style="width: 8px; height: 8px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
+                    <div class="plugin-selection-indicator" style="position: absolute; top: 1rem; right: 1rem; width: 20px; height: 20px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
+                        <div class="checkmark" style="width: 10px; height: 10px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
                     </div>
                     
                     <!-- Hidden checkbox for form submission -->
@@ -374,9 +361,13 @@ $available_plugins = $ai_generator->get_available_plugins();
         
         <div id="ai-flows-list">
             <div style="text-align: center; padding: 2rem; color: #64748b;">
-                <div class="dashicons dashicons-admin-generic" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></div>
-                <p style="margin: 0; font-size: 1.125rem;">No AI flows generated yet</p>
-                <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Click "Generate AI Flows" to create intelligent test flows</p>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                    <div class="dashicons dashicons-admin-generic" style="font-size: 3rem; color: #d1d5db;"></div>
+                    <div>
+                        <p style="margin: 0; font-size: 1.125rem;">No AI flows generated yet</p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Click "Generate AI Flows" to create intelligent test flows</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -581,25 +572,11 @@ jQuery(document).ready(function($) {
         // Toggle checkbox
         checkbox.prop('checked', !checkbox.prop('checked'));
         
-        // Update visual state
+        // Update visual state using CSS classes
         if (checkbox.prop('checked')) {
-            card.css({
-                'border-color': '#00265e',
-                'background-color': '#f0fdf4',
-                'transform': 'translateY(-2px)',
-                'box-shadow': '0 4px 12px rgba(31, 192, 154, 0.15)'
-            });
-            indicator.css('border-color', '#00265e');
-            checkmark.css('opacity', '1');
+            card.addClass('selected');
         } else {
-            card.css({
-                'border-color': '#e5e7eb',
-                'background-color': 'white',
-                'transform': 'translateY(0)',
-                'box-shadow': 'none'
-            });
-            indicator.css('border-color', '#e5e7eb');
-            checkmark.css('opacity', '0');
+            card.removeClass('selected');
         }
         
         updateSelectedPluginsCount();
@@ -857,70 +834,48 @@ jQuery(document).ready(function($) {
 </script>
 
 <style>
-/* Plugin card styling */
+/* Plugin card styling - using dashboard stat-card style */
+.plugin-card {
+    transition: all 0.2s ease;
+}
+
 .plugin-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
-    border-color: #00265e !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -8px rgba(31, 192, 154, 0.3);
 }
 
 .plugin-card.selected {
     border-color: #00265e !important;
     background-color: #f0fdf4 !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15) !important;
+    box-shadow: 0 8px 25px -8px rgba(31, 192, 154, 0.3) !important;
 }
 
-/* Logo fixes - simplified approach */
-
-/* Plugin card styling */
-.plugin-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 0.75rem;
-    background: white;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    position: relative;
-    min-height: 120px;
-    display: flex;
-    flex-direction: column;
+.plugin-card.selected .stat-icon {
+    background: #00265e !important;
+    color: white !important;
 }
 
-.plugin-card:hover {
-    border-color: #00265e;
-    box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15);
-    transform: translateY(-2px);
+.plugin-card.selected .stat-label {
+    color: #00265e !important;
 }
 
-.plugin-card.selected {
-    border-color: #00265e;
-    background-color: #f0fdf4;
-    box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15);
+.plugin-card.selected .stat-value {
+    color: #00265e !important;
 }
 
-/* Responsive plugin grid */
-.plugin-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
+/* Selection indicator styling */
+.plugin-selection-indicator {
+    transition: all 0.2s ease;
 }
 
-@media (max-width: 1200px) {
-    .plugin-grid {
-        grid-template-columns: repeat(3, 1fr) !important;
-    }
+.plugin-card.selected .plugin-selection-indicator {
+    border-color: #00265e !important;
+    background: #00265e !important;
 }
 
-@media (max-width: 900px) {
-    .plugin-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-    }
-}
-
-@media (max-width: 600px) {
-    .plugin-grid {
-        grid-template-columns: 1fr !important;
-    }
+.plugin-card.selected .checkmark {
+    opacity: 1 !important;
+    background: white !important;
 }
 </style>
