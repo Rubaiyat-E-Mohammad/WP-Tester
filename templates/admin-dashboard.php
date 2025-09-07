@@ -51,7 +51,7 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
     <div class="wp-tester-content">
         
         <!-- Key Metrics -->
-        <div class="modern-grid grid-5">
+        <div class="modern-grid grid-8">
             <div class="stat-card">
                 <div class="stat-header">
                     <h3 class="stat-label">Total Flows</h3>
@@ -126,6 +126,54 @@ $avg_response_time = $stats['avg_response_time'] ?? 0;
                 <div class="stat-change <?php echo $avg_response_time <= 2 ? 'positive' : ($avg_response_time <= 5 ? 'neutral' : 'negative'); ?>">
                     <span class="dashicons dashicons-<?php echo $avg_response_time <= 2 ? 'arrow-up-alt' : ($avg_response_time <= 5 ? 'minus' : 'arrow-down-alt'); ?>"></span>
                     <?php echo $avg_response_time <= 2 ? 'Fast' : ($avg_response_time <= 5 ? 'Normal' : 'Slow'); ?>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Failed Tests</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-dismiss"></span>
+                    </div>
+                </div>
+                <div class="stat-value"><?php echo esc_html($failed_tests); ?></div>
+                <div class="stat-change <?php echo $failed_tests == 0 ? 'positive' : ($failed_tests <= 5 ? 'neutral' : 'negative'); ?>">
+                    <span class="dashicons dashicons-<?php echo $failed_tests == 0 ? 'arrow-up-alt' : ($failed_tests <= 5 ? 'minus' : 'arrow-down-alt'); ?>"></span>
+                    <?php echo $failed_tests == 0 ? 'Perfect' : ($failed_tests <= 5 ? 'Acceptable' : 'Critical'); ?>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Last Crawl</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-search"></span>
+                    </div>
+                </div>
+                <div class="stat-value"><?php 
+                    if ($last_crawl && $last_crawl !== 'Never') {
+                        echo esc_html(human_time_diff(strtotime($last_crawl), current_time('timestamp'))) . ' ago';
+                    } else {
+                        echo 'Never';
+                    }
+                ?></div>
+                <div class="stat-change <?php echo $last_crawl && $last_crawl !== 'Never' ? 'positive' : 'neutral'; ?>">
+                    <span class="dashicons dashicons-<?php echo $last_crawl && $last_crawl !== 'Never' ? 'arrow-up-alt' : 'minus'; ?>"></span>
+                    <?php echo $last_crawl && $last_crawl !== 'Never' ? 'Recent' : 'Not started'; ?>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <h3 class="stat-label">Active Flows</h3>
+                    <div class="stat-icon">
+                        <span class="dashicons dashicons-controls-play"></span>
+                    </div>
+                </div>
+                <div class="stat-value"><?php echo esc_html($active_flows); ?></div>
+                <div class="stat-change <?php echo $active_flows > 0 ? 'positive' : 'neutral'; ?>">
+                    <span class="dashicons dashicons-<?php echo $active_flows > 0 ? 'arrow-up-alt' : 'minus'; ?>"></span>
+                    <?php echo $active_flows > 0 ? 'Monitoring' : 'Inactive'; ?>
                 </div>
             </div>
         </div>

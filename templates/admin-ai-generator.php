@@ -95,29 +95,37 @@ $available_plugins = $ai_generator->get_available_plugins();
                     Save API Key
                 </button>
                 
-                <!-- AI Model Selection -->
+                <!-- AI Provider Selection -->
                 <div style="margin-top: 1.5rem;">
+                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                        AI Provider
+                    </label>
+                    <select id="ai-provider" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                        <option value="free">Free Models (No API Key Required)</option>
+                        <option value="openai">OpenAI (Paid - API Key Required)</option>
+                        <option value="anthropic">Anthropic (Paid - API Key Required)</option>
+                        <option value="google">Google (Paid - API Key Required)</option>
+                        <option value="xai">X.AI (Paid - API Key Required)</option>
+                        <option value="deepseek">DeepSeek (Paid - API Key Required)</option>
+                        <option value="mistral">Mistral AI (Paid - API Key Required)</option>
+                        <option value="cohere">Cohere (Paid - API Key Required)</option>
+                        <option value="perplexity">Perplexity (Paid - API Key Required)</option>
+                    </select>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                        Choose your AI provider. Free models work without API keys, paid models require API keys.
+                    </p>
+                </div>
+                
+                <!-- AI Model Selection -->
+                <div id="ai-model-section" style="margin-top: 1.5rem;">
                     <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         AI Model
                     </label>
                     <select id="ai-model" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo (OpenAI) - Free Tier</option>
-                        <option value="gemini-pro">Gemini Pro (Google) - Free Tier</option>
-                        <option value="grok-beta">Grok Beta (X.AI) - Free Tier</option>
-                        <option value="deepseek-chat">DeepSeek Chat - Free Tier</option>
-                        <option value="deepseek-coder">DeepSeek Coder - Free Tier</option>
-                        <option value="starcoder">StarCoder (Hugging Face) - Free</option>
-                        <option value="starcoder2">StarCoder2 (Hugging Face) - Free</option>
-                        <option value="santacoder">SantaCoder (Hugging Face) - Free</option>
-                        <option value="codellama">Code LLaMA (Meta) - Free</option>
-                        <option value="claude-3-haiku">Claude 3 Haiku (Anthropic) - Free Tier</option>
-                        <option value="mistral-7b">Mistral 7B - Free Tier</option>
-                        <option value="codemistral">CodeMistral - Free Tier</option>
-                        <option value="gpt-4">GPT-4 (OpenAI) - Paid</option>
-                        <option value="claude-3-sonnet">Claude 3 Sonnet (Anthropic) - Paid</option>
+                        <!-- Free models will be loaded here -->
                     </select>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
-                        Choose the AI model for flow generation. Free models are recommended for testing.
+                    <p id="ai-model-description" style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                        Free models are recommended for testing and don't require API keys.
                     </p>
                 </div>
             </div>
@@ -261,27 +269,72 @@ $available_plugins = $ai_generator->get_available_plugins();
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
             
-            <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; background: white;">
+            <div class="plugin-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; max-height: 500px; overflow-y: auto; padding: 0.5rem;">
                 <?php foreach ($available_plugins as $plugin): ?>
-                <div class="plugin-list-item" style="border-bottom: 1px solid #f3f4f6; padding: 0.75rem 1rem; transition: background-color 0.2s ease;" onmouseover="this.style.backgroundColor='#f8fafc'" onmouseout="this.style.backgroundColor='white'">
-                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; width: 100%;">
-                        <input type="checkbox" class="plugin-checkbox" value="<?php echo esc_attr($plugin['slug']); ?>" 
-                               style="width: 1.125rem; height: 1.125rem; accent-color: #1FC09A; flex-shrink: 0;">
-                        <div style="flex: 1; min-width: 0;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
-                                <div style="font-weight: 600; color: #374151; font-size: 0.875rem;"><?php echo esc_html($plugin['name']); ?></div>
-                                <span class="plugin-type-badge" style="padding: 0.125rem 0.375rem; border-radius: 4px; font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; background: #e0f2fe; color: #0369a1; white-space: nowrap;">
-                                    <?php echo esc_html($plugin['type']); ?>
-                                </span>
-                            </div>
-                            <div style="font-size: 0.8125rem; color: #64748b; line-height: 1.3; margin-bottom: 0.25rem;">
-                                <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 12)); ?>
-                            </div>
-                            <div style="font-size: 0.75rem; color: #9ca3af;">
-                                v<?php echo esc_html($plugin['version']); ?> • <?php echo esc_html($plugin['author']); ?>
-                            </div>
+                <div class="plugin-card" style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem; background: white; transition: all 0.3s ease; cursor: pointer; position: relative; min-height: 200px; display: flex; flex-direction: column;" 
+                     data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
+                     onclick="togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
+                    
+                    <!-- Plugin Logo -->
+                    <div style="display: flex; justify-content: center; margin-bottom: 0.75rem;">
+                        <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #1FC09A, #0ea5e9); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.25rem;">
+                            <?php 
+                            $plugin_name = $plugin['name'];
+                            $initials = '';
+                            $words = explode(' ', $plugin_name);
+                            foreach ($words as $word) {
+                                if (strpos($word, 'WP') === 0) {
+                                    $initials .= 'W';
+                                } else {
+                                    $initials .= strtoupper(substr($word, 0, 1));
+                                }
+                                if (strlen($initials) >= 2) break;
+                            }
+                            echo esc_html($initials);
+                            ?>
                         </div>
-                    </label>
+                    </div>
+                    
+                    <!-- Plugin Name -->
+                    <div style="text-align: center; margin-bottom: 0.5rem;">
+                        <h4 style="margin: 0; font-weight: 600; color: #374151; font-size: 0.875rem; line-height: 1.2;"><?php echo esc_html($plugin['name']); ?></h4>
+                    </div>
+                    
+                    <!-- Plugin Type Badge -->
+                    <div style="text-align: center; margin-bottom: 0.75rem;">
+                        <span class="plugin-type-badge" style="padding: 0.25rem 0.5rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; background: #e0f2fe; color: #0369a1;">
+                            <?php echo esc_html($plugin['type']); ?>
+                        </span>
+                    </div>
+                    
+                    <!-- Plugin Description -->
+                    <div style="flex: 1; text-align: center; margin-bottom: 0.75rem;">
+                        <p style="margin: 0; font-size: 0.75rem; color: #64748b; line-height: 1.3;">
+                            <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 8)); ?>
+                        </p>
+                    </div>
+                    
+                    <!-- Plugin Version & Author -->
+                    <div style="text-align: center; margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.6875rem; color: #9ca3af;">
+                            v<?php echo esc_html($plugin['version']); ?> • 
+                            <?php if (!empty($plugin['author_uri'])): ?>
+                                <a href="<?php echo esc_url($plugin['author_uri']); ?>" target="_blank" style="color: #1FC09A; text-decoration: none;">
+                                    <?php echo esc_html($plugin['author']); ?>
+                                </a>
+                            <?php else: ?>
+                                <?php echo esc_html($plugin['author']); ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    
+                    <!-- Selection Indicator -->
+                    <div class="plugin-selection-indicator" style="position: absolute; top: 0.75rem; right: 0.75rem; width: 20px; height: 20px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;">
+                        <div class="checkmark" style="width: 10px; height: 10px; background: #1FC09A; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
+                    </div>
+                    
+                    <!-- Hidden checkbox for form submission -->
+                    <input type="checkbox" class="plugin-checkbox" value="<?php echo esc_attr($plugin['slug']); ?>" style="display: none;">
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -341,13 +394,15 @@ $available_plugins = $ai_generator->get_available_plugins();
     <!-- Recent AI Generated Flows -->
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-            <div style="width: 32px; height: 32px; border-radius: 6px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #1FC09A; flex-shrink: 0;">
+            <div style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #1FC09A; flex-shrink: 0; margin-right: 0.5rem;">
                 <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/WP Tester Logo.png'); ?>" 
-                     alt="WP Tester" style="width: 100%; height: 100%; border-radius: 6px; object-fit: contain;" 
+                     alt="WP Tester" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" 
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold;">WP</div>
             </div>
-            <h2 style="margin: 0; color: #1f2937; font-size: 1.5rem; font-weight: 600;">Recent AI Generated Flows</h2>
+            <div style="flex: 1;">
+                <h2 style="margin: 0; color: #1f2937; font-size: 1.5rem; font-weight: 600; line-height: 1.2;">Recent AI Generated Flows</h2>
+            </div>
         </div>
         
         <div id="ai-flows-list">
@@ -504,19 +559,147 @@ jQuery(document).ready(function($) {
     });
     
     $('#select-all-plugins').on('click', function() {
-        $('.plugin-checkbox').prop('checked', true);
-        updateSelectedPluginsCount();
+        $('.plugin-card').each(function() {
+            const pluginSlug = $(this).data('plugin-slug');
+            const checkbox = $(this).find('.plugin-checkbox');
+            if (!checkbox.prop('checked')) {
+                togglePluginSelection(pluginSlug);
+            }
+        });
     });
     
     $('#deselect-all-plugins').on('click', function() {
-        $('.plugin-checkbox').prop('checked', false);
-        updateSelectedPluginsCount();
+        $('.plugin-card').each(function() {
+            const pluginSlug = $(this).data('plugin-slug');
+            const checkbox = $(this).find('.plugin-checkbox');
+            if (checkbox.prop('checked')) {
+                togglePluginSelection(pluginSlug);
+            }
+        });
     });
     
     function updateSelectedPluginsCount() {
         const selectedCount = $('.plugin-checkbox:checked').length;
         $('#selected-plugins-count').text(selectedCount + ' plugin' + (selectedCount !== 1 ? 's' : '') + ' selected');
     }
+    
+    // Toggle plugin selection
+    function togglePluginSelection(pluginSlug) {
+        const card = $(`.plugin-card[data-plugin-slug="${pluginSlug}"]`);
+        const checkbox = card.find('.plugin-checkbox');
+        const indicator = card.find('.plugin-selection-indicator');
+        const checkmark = indicator.find('.checkmark');
+        
+        // Toggle checkbox
+        checkbox.prop('checked', !checkbox.prop('checked'));
+        
+        // Update visual state
+        if (checkbox.prop('checked')) {
+            card.css({
+                'border-color': '#1FC09A',
+                'background-color': '#f0fdf4',
+                'transform': 'translateY(-2px)',
+                'box-shadow': '0 4px 12px rgba(31, 192, 154, 0.15)'
+            });
+            indicator.css('border-color', '#1FC09A');
+            checkmark.css('opacity', '1');
+        } else {
+            card.css({
+                'border-color': '#e5e7eb',
+                'background-color': 'white',
+                'transform': 'translateY(0)',
+                'box-shadow': 'none'
+            });
+            indicator.css('border-color', '#e5e7eb');
+            checkmark.css('opacity', '0');
+        }
+        
+        updateSelectedPluginsCount();
+    }
+    
+    // AI Provider and Model Selection
+    let availableModels = {
+        free_models: {},
+        paid_models: {},
+        models_by_provider: {}
+    };
+    
+    // Load available models on page load
+    function loadAvailableModels() {
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_get_available_ai_models',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    availableModels = response.data;
+                    updateModelDropdown();
+                }
+            },
+            error: function() {
+                console.error('Failed to load AI models');
+            }
+        });
+    }
+    
+    // Update model dropdown based on selected provider
+    function updateModelDropdown() {
+        const provider = $('#ai-provider').val();
+        const modelSelect = $('#ai-model');
+        const description = $('#ai-model-description');
+        
+        // Clear existing options
+        modelSelect.empty();
+        
+        if (provider === 'free') {
+            // Show free models
+            Object.keys(availableModels.free_models).forEach(modelId => {
+                const model = availableModels.free_models[modelId];
+                const option = $('<option></option>')
+                    .attr('value', modelId)
+                    .text(`${model.name} (${model.provider}) - Free`);
+                modelSelect.append(option);
+            });
+            description.text('Free models work without API keys and are recommended for testing.');
+        } else {
+            // Show paid models for selected provider
+            const providerModels = availableModels.models_by_provider[provider] || {};
+            Object.keys(providerModels).forEach(modelId => {
+                const model = providerModels[modelId];
+                if (!model.free_tier) { // Only show paid models
+                    const option = $('<option></option>')
+                        .attr('value', modelId)
+                        .text(`${model.name} - Paid`);
+                    modelSelect.append(option);
+                }
+            });
+            description.text('Paid models require API keys and offer enhanced capabilities.');
+        }
+        
+        // Set default selection
+        if (modelSelect.find('option').length > 0) {
+            modelSelect.val(modelSelect.find('option:first').val());
+        }
+    }
+    
+    // Provider change handler
+    $('#ai-provider').on('change', function() {
+        updateModelDropdown();
+        
+        // Show/hide API key section based on provider
+        const provider = $(this).val();
+        if (provider === 'free') {
+            $('#api-key-section').hide();
+        } else {
+            $('#api-key-section').show();
+        }
+    });
+    
+    // Load models on page load
+    loadAvailableModels();
     
     // Generate AI Flows
     $('#generate-ai-flows').on('click', function(e) {
@@ -530,6 +713,7 @@ jQuery(document).ready(function($) {
         const includePlugins = $('#include-plugins').is(':checked');
         const maxFlows = $('#max-flows').val();
         const maxFlowsPerPlugin = $('#max-flows-per-plugin').val() || 5;
+        const aiProvider = $('#ai-provider').val() || 'free';
         const aiModel = $('#ai-model').val() || 'gpt-3.5-turbo';
         const focusAreas = [];
         const selectedPlugins = [];
@@ -588,6 +772,7 @@ jQuery(document).ready(function($) {
                 max_flows_per_area: maxFlows,
                 max_flows_per_plugin: maxFlowsPerPlugin,
                 focus_areas: focusAreas.join(','),
+                ai_provider: aiProvider,
                 ai_model: aiModel,
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
@@ -627,12 +812,42 @@ jQuery(document).ready(function($) {
 </script>
 
 <style>
-/* Plugin list styling */
-.plugin-list-item:last-child {
-    border-bottom: none !important;
+/* Plugin card styling */
+.plugin-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+    border-color: #1FC09A !important;
 }
 
-.plugin-list-item:hover {
-    background-color: #f8fafc !important;
+.plugin-card.selected {
+    border-color: #1FC09A !important;
+    background-color: #f0fdf4 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15) !important;
+}
+
+/* Responsive plugin grid */
+.plugin-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 1200px) {
+    .plugin-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .plugin-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .plugin-grid {
+        grid-template-columns: 1fr !important;
+    }
 }
 </style>

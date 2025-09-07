@@ -1248,6 +1248,7 @@ class WP_Tester_Ajax {
                 'max_flows_per_area' => intval($_POST['max_flows_per_area'] ?? 10),
                 'max_flows_per_plugin' => intval($_POST['max_flows_per_plugin'] ?? 5),
                 'focus_areas' => array_filter(explode(',', $_POST['focus_areas'] ?? 'ecommerce,content,user_management,settings')),
+                'ai_provider' => isset($_POST['ai_provider']) ? sanitize_text_field($_POST['ai_provider']) : 'free',
                 'ai_model' => isset($_POST['ai_model']) ? sanitize_text_field($_POST['ai_model']) : 'gpt-3.5-turbo'
             );
             
@@ -1255,6 +1256,15 @@ class WP_Tester_Ajax {
             if (!$ai_generator->set_ai_model($options['ai_model'])) {
                 wp_send_json_error(array('message' => __('Invalid AI model selected', 'wp-tester')));
                 return;
+            }
+            
+            // For paid models, check if API key is provided
+            if ($options['ai_provider'] !== 'free') {
+                $api_key = get_option('wp_tester_ai_api_key', '');
+                if (empty($api_key)) {
+                    wp_send_json_error(array('message' => __('API key is required for paid models. Please configure your API key first.', 'wp-tester')));
+                    return;
+                }
             }
             
             $result = $ai_generator->generate_ai_flows($options);
@@ -1368,11 +1378,17 @@ class WP_Tester_Ajax {
         
         try {
             $ai_generator = new WP_Tester_AI_Flow_Generator();
-            $models = $ai_generator->get_available_models_for_ui();
+            $free_models = $ai_generator->get_free_models();
+            $paid_models = $ai_generator->get_paid_models();
+            $models_by_provider = $ai_generator->get_models_by_provider();
             
             wp_send_json_success(array(
-                'models' => $models,
-                'count' => count($models)
+                'free_models' => $free_models,
+                'paid_models' => $paid_models,
+                'models_by_provider' => $models_by_provider,
+                'free_count' => count($free_models),
+                'paid_count' => count($paid_models),
+                'total_count' => count($free_models) + count($paid_models)
             ));
             
         } catch (Exception $e) {

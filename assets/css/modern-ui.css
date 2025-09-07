@@ -107,6 +107,10 @@
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
+.modern-grid.grid-8 {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
 /* Modern Cards */
 .modern-card {
     background: white;
@@ -480,6 +484,7 @@
         align-items: flex-start;
     }
     
+    .modern-grid.grid-8,
     .modern-grid.grid-6,
     .modern-grid.grid-5,
     .modern-grid.grid-4,

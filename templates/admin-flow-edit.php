@@ -199,7 +199,7 @@ if (isset($flow->steps) && !empty($flow->steps)) {
                 </div>
                 
                 <div style="margin-top: 1.5rem; text-align: center;">
-                    <button type="button" class="modern-btn modern-btn-primary" id="add-step">
+                    <button type="button" class="modern-btn modern-btn-primary" id="add-step" onclick="console.log('Button clicked via onclick'); showStepEditor(); return false;">
                         <span class="dashicons dashicons-plus-alt"></span>
                         Add Step
                     </button>
@@ -237,7 +237,16 @@ jQuery(document).ready(function($) {
     });
     
     // Add step functionality
-    $('#add-step').on('click', function() {
+    $(document).on('click', '#add-step', function(e) {
+        e.preventDefault();
+        console.log('Add Step button clicked');
+        showStepEditor();
+    });
+    
+    // Also try direct binding as fallback
+    $('#add-step').on('click', function(e) {
+        e.preventDefault();
+        console.log('Add Step button clicked (direct binding)');
         showStepEditor();
     });
 
@@ -254,7 +263,8 @@ jQuery(document).ready(function($) {
     });
     
     // Step editor functions
-    function showStepEditor(stepIndex = null) {
+    window.showStepEditor = function(stepIndex = null) {
+        console.log('showStepEditor called with stepIndex:', stepIndex);
         const isEdit = stepIndex !== null;
         const existingStep = isEdit ? getStepData(stepIndex) : {};
         
@@ -317,6 +327,7 @@ jQuery(document).ready(function($) {
         
         $('body').append(modal);
         modal.fadeIn(300);
+        console.log('Modal appended and faded in');
         
         // Show/hide data field based on action type
         $('#step-action').on('change', function() {
@@ -348,13 +359,13 @@ jQuery(document).ready(function($) {
         });
     }
     
-    function closeStepEditor() {
+    window.closeStepEditor = function() {
         $('#wp-tester-step-editor-modal').fadeOut(300, function() {
             $(this).remove();
         });
     }
     
-    function saveStep(stepIndex = null) {
+    window.saveStep = function(stepIndex = null) {
         const formData = {
             action: $('#step-action').val(),
             target: $('#step-target').val(),
@@ -544,6 +555,13 @@ jQuery(document).ready(function($) {
             $('input[name="save_flow"]').removeClass('highlight-save-btn');
         }, 2000);
     }
+    
+    // Debug: Check if add-step button exists
+    console.log('Add step button exists:', $('#add-step').length > 0);
+    console.log('Add step button element:', $('#add-step')[0]);
+    
+    // Initialize steps display
+    updateStepsDisplay(JSON.parse($('#flow_steps').val() || '[]'));
 });
 </script>
 

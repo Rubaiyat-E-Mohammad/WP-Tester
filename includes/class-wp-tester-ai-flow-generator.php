@@ -33,7 +33,7 @@ class WP_Tester_AI_Flow_Generator {
      */
     private function get_available_models() {
         return array(
-            // OpenAI Models
+            // FREE MODELS (No API Key Required)
             'gpt-3.5-turbo' => array(
                 'name' => 'GPT-3.5 Turbo',
                 'provider' => 'OpenAI',
@@ -44,18 +44,6 @@ class WP_Tester_AI_Flow_Generator {
                 'temperature' => 0.7,
                 'description' => 'Fast and efficient for most tasks'
             ),
-            'gpt-4' => array(
-                'name' => 'GPT-4',
-                'provider' => 'OpenAI',
-                'type' => 'chat',
-                'free_tier' => false,
-                'api_url' => 'https://api.openai.com/v1/chat/completions',
-                'max_tokens' => 2000,
-                'temperature' => 0.7,
-                'description' => 'Most capable model for complex tasks'
-            ),
-            
-            // Google Gemini Models
             'gemini-pro' => array(
                 'name' => 'Gemini Pro',
                 'provider' => 'Google',
@@ -76,8 +64,6 @@ class WP_Tester_AI_Flow_Generator {
                 'temperature' => 0.7,
                 'description' => 'Multimodal model for text and image understanding'
             ),
-            
-            // Grok Models (X.AI)
             'grok-beta' => array(
                 'name' => 'Grok Beta',
                 'provider' => 'X.AI',
@@ -88,8 +74,6 @@ class WP_Tester_AI_Flow_Generator {
                 'temperature' => 0.7,
                 'description' => 'X.AI\'s conversational AI with real-time knowledge'
             ),
-            
-            // DeepSeek Models
             'deepseek-chat' => array(
                 'name' => 'DeepSeek Chat',
                 'provider' => 'DeepSeek',
@@ -110,8 +94,6 @@ class WP_Tester_AI_Flow_Generator {
                 'temperature' => 0.3,
                 'description' => 'Specialized for code generation and analysis'
             ),
-            
-            // Hugging Face Models
             'starcoder' => array(
                 'name' => 'StarCoder',
                 'provider' => 'Hugging Face',
@@ -142,8 +124,6 @@ class WP_Tester_AI_Flow_Generator {
                 'temperature' => 0.3,
                 'description' => 'Lightweight code generation model'
             ),
-            
-            // Meta Models
             'codellama' => array(
                 'name' => 'Code LLaMA',
                 'provider' => 'Meta',
@@ -154,8 +134,6 @@ class WP_Tester_AI_Flow_Generator {
                 'temperature' => 0.3,
                 'description' => 'Meta\'s code generation model based on LLaMA'
             ),
-            
-            // Anthropic Models
             'claude-3-haiku' => array(
                 'name' => 'Claude 3 Haiku',
                 'provider' => 'Anthropic',
@@ -166,18 +144,6 @@ class WP_Tester_AI_Flow_Generator {
                 'temperature' => 0.7,
                 'description' => 'Fast and efficient Claude model'
             ),
-            'claude-3-sonnet' => array(
-                'name' => 'Claude 3 Sonnet',
-                'provider' => 'Anthropic',
-                'type' => 'chat',
-                'free_tier' => false,
-                'api_url' => 'https://api.anthropic.com/v1/messages',
-                'max_tokens' => 2000,
-                'temperature' => 0.7,
-                'description' => 'Balanced performance and capability'
-            ),
-            
-            // Mistral Models
             'mistral-7b' => array(
                 'name' => 'Mistral 7B',
                 'provider' => 'Mistral AI',
@@ -197,6 +163,253 @@ class WP_Tester_AI_Flow_Generator {
                 'max_tokens' => 1000,
                 'temperature' => 0.3,
                 'description' => 'Specialized for code generation'
+            ),
+            
+            // PAID MODELS (API Key Required)
+            // OpenAI Paid Models
+            'gpt-4' => array(
+                'name' => 'GPT-4',
+                'provider' => 'OpenAI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.openai.com/v1/chat/completions',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Most capable model for complex reasoning'
+            ),
+            'gpt-4-turbo' => array(
+                'name' => 'GPT-4 Turbo',
+                'provider' => 'OpenAI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.openai.com/v1/chat/completions',
+                'max_tokens' => 4000,
+                'temperature' => 0.7,
+                'description' => 'Faster and more efficient GPT-4 variant'
+            ),
+            'gpt-4o' => array(
+                'name' => 'GPT-4o',
+                'provider' => 'OpenAI',
+                'type' => 'multimodal',
+                'free_tier' => false,
+                'api_url' => 'https://api.openai.com/v1/chat/completions',
+                'max_tokens' => 4000,
+                'temperature' => 0.7,
+                'description' => 'Multimodal GPT-4 with vision capabilities'
+            ),
+            'gpt-4o-mini' => array(
+                'name' => 'GPT-4o Mini',
+                'provider' => 'OpenAI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.openai.com/v1/chat/completions',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Cost-effective GPT-4 variant'
+            ),
+            'gpt-5' => array(
+                'name' => 'GPT-5',
+                'provider' => 'OpenAI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.openai.com/v1/chat/completions',
+                'max_tokens' => 8000,
+                'temperature' => 0.7,
+                'description' => 'Next-generation OpenAI model (when available)'
+            ),
+            
+            // Anthropic Paid Models
+            'claude-3-sonnet' => array(
+                'name' => 'Claude 3 Sonnet',
+                'provider' => 'Anthropic',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.anthropic.com/v1/messages',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Balanced performance and capability'
+            ),
+            'claude-3-opus' => array(
+                'name' => 'Claude 3 Opus',
+                'provider' => 'Anthropic',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.anthropic.com/v1/messages',
+                'max_tokens' => 4000,
+                'temperature' => 0.7,
+                'description' => 'Most powerful Claude model for complex tasks'
+            ),
+            'claude-3.5-sonnet' => array(
+                'name' => 'Claude 3.5 Sonnet',
+                'provider' => 'Anthropic',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.anthropic.com/v1/messages',
+                'max_tokens' => 4000,
+                'temperature' => 0.7,
+                'description' => 'Enhanced Claude 3.5 with improved reasoning'
+            ),
+            'claude-3.5-opus' => array(
+                'name' => 'Claude 3.5 Opus',
+                'provider' => 'Anthropic',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.anthropic.com/v1/messages',
+                'max_tokens' => 8000,
+                'temperature' => 0.7,
+                'description' => 'Most advanced Claude model available'
+            ),
+            'claude-4-sonnet' => array(
+                'name' => 'Claude 4 Sonnet',
+                'provider' => 'Anthropic',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.anthropic.com/v1/messages',
+                'max_tokens' => 8000,
+                'temperature' => 0.7,
+                'description' => 'Next-generation Claude Sonnet (when available)'
+            ),
+            'claude-4-opus' => array(
+                'name' => 'Claude 4 Opus',
+                'provider' => 'Anthropic',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.anthropic.com/v1/messages',
+                'max_tokens' => 16000,
+                'temperature' => 0.7,
+                'description' => 'Most powerful Claude model (when available)'
+            ),
+            
+            // Google Paid Models
+            'gemini-ultra' => array(
+                'name' => 'Gemini Ultra',
+                'provider' => 'Google',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://generativelanguage.googleapis.com/v1beta/models/gemini-ultra:generateContent',
+                'max_tokens' => 4000,
+                'temperature' => 0.7,
+                'description' => 'Google\'s most capable model'
+            ),
+            'gemini-pro-max' => array(
+                'name' => 'Gemini Pro Max',
+                'provider' => 'Google',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-max:generateContent',
+                'max_tokens' => 4000,
+                'temperature' => 0.7,
+                'description' => 'Enhanced Gemini Pro with extended capabilities'
+            ),
+            
+            // X.AI Paid Models
+            'grok-pro' => array(
+                'name' => 'Grok Pro',
+                'provider' => 'X.AI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.x.ai/v1/chat/completions',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Advanced Grok model with enhanced capabilities'
+            ),
+            'grok-ultra' => array(
+                'name' => 'Grok Ultra',
+                'provider' => 'X.AI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.x.ai/v1/chat/completions',
+                'max_tokens' => 4000,
+                'temperature' => 0.7,
+                'description' => 'Most powerful Grok model available'
+            ),
+            
+            // DeepSeek Paid Models
+            'deepseek-pro' => array(
+                'name' => 'DeepSeek Pro',
+                'provider' => 'DeepSeek',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.deepseek.com/v1/chat/completions',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Enhanced DeepSeek model for complex reasoning'
+            ),
+            'deepseek-ultra' => array(
+                'name' => 'DeepSeek Ultra',
+                'provider' => 'DeepSeek',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.deepseek.com/v1/chat/completions',
+                'max_tokens' => 4000,
+                'temperature' => 0.7,
+                'description' => 'Most capable DeepSeek model'
+            ),
+            
+            // Mistral AI Paid Models
+            'mistral-large' => array(
+                'name' => 'Mistral Large',
+                'provider' => 'Mistral AI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.mistral.ai/v1/chat/completions',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Mistral\'s most capable model'
+            ),
+            'mistral-nemo' => array(
+                'name' => 'Mistral Nemo',
+                'provider' => 'Mistral AI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.mistral.ai/v1/chat/completions',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Specialized Mistral model for specific tasks'
+            ),
+            
+            // Cohere Models
+            'command-plus' => array(
+                'name' => 'Command Plus',
+                'provider' => 'Cohere',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.cohere.ai/v1/chat',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Cohere\'s advanced conversational model'
+            ),
+            'command-nightly' => array(
+                'name' => 'Command Nightly',
+                'provider' => 'Cohere',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.cohere.ai/v1/chat',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Latest experimental Cohere model'
+            ),
+            
+            // Perplexity Models
+            'llama-3.1-sonar' => array(
+                'name' => 'Llama 3.1 Sonar',
+                'provider' => 'Perplexity',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.perplexity.ai/chat/completions',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Perplexity\'s search-enhanced model'
+            ),
+            'llama-3.1-sonar-large' => array(
+                'name' => 'Llama 3.1 Sonar Large',
+                'provider' => 'Perplexity',
+                'type' => 'chat',
+                'free_tier' => false,
+                'api_url' => 'https://api.perplexity.ai/chat/completions',
+                'max_tokens' => 4000,
+                'temperature' => 0.7,
+                'description' => 'Enhanced Perplexity model with web search'
             )
         );
     }
@@ -206,6 +419,47 @@ class WP_Tester_AI_Flow_Generator {
      */
     public function get_available_models_for_ui() {
         return $this->available_models;
+    }
+    
+    /**
+     * Get only free models (no API key required)
+     */
+    public function get_free_models() {
+        $free_models = array();
+        foreach ($this->available_models as $model_id => $model_config) {
+            if ($model_config['free_tier'] === true) {
+                $free_models[$model_id] = $model_config;
+            }
+        }
+        return $free_models;
+    }
+    
+    /**
+     * Get only paid models (API key required)
+     */
+    public function get_paid_models() {
+        $paid_models = array();
+        foreach ($this->available_models as $model_id => $model_config) {
+            if ($model_config['free_tier'] === false) {
+                $paid_models[$model_id] = $model_config;
+            }
+        }
+        return $paid_models;
+    }
+    
+    /**
+     * Get models grouped by provider
+     */
+    public function get_models_by_provider() {
+        $grouped_models = array();
+        foreach ($this->available_models as $model_id => $model_config) {
+            $provider = $model_config['provider'];
+            if (!isset($grouped_models[$provider])) {
+                $grouped_models[$provider] = array();
+            }
+            $grouped_models[$provider][$model_id] = $model_config;
+        }
+        return $grouped_models;
     }
     
     /**
@@ -1486,11 +1740,12 @@ class WP_Tester_AI_Flow_Generator {
                 $plugins[] = array(
                     'slug' => $plugin_slug,
                     'name' => $plugin_data['Name'] ?? 'Unknown Plugin',
-                    'description' => $plugin_data['Description'] ?? '',
+                    'description' => wp_strip_all_tags($plugin_data['Description'] ?? ''),
                     'version' => $plugin_data['Version'] ?? '1.0',
-                    'author' => $plugin_data['Author'] ?? 'Unknown',
+                    'author' => wp_strip_all_tags($plugin_data['Author'] ?? 'Unknown'),
+                    'author_uri' => $plugin_data['AuthorURI'] ?? '',
                     'file' => $plugin_file,
-                    'type' => $this->detect_plugin_type($plugin_data['Name'] ?? '', $plugin_data['Description'] ?? '')
+                    'type' => $this->detect_plugin_type($plugin_data['Name'] ?? '', wp_strip_all_tags($plugin_data['Description'] ?? ''))
                 );
             }
         }
