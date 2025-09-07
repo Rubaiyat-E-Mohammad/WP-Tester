@@ -54,7 +54,7 @@ $active_flows = $stats['active_flows'] ?? 0;
     <div class="wp-tester-content">
         
         <!-- Key Metrics -->
-        <div class="modern-grid grid-8">
+        <div class="modern-grid grid-4">
             <div class="stat-card">
                 <div class="stat-header">
                     <h3 class="stat-label">Total Flows</h3>

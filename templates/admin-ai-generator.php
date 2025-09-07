@@ -38,9 +38,9 @@ $available_plugins = $ai_generator->get_available_plugins();
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div class="logo-container" style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; flex-shrink: 0; position: relative; overflow: hidden;">
                     <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/WP Tester Logo.png'); ?>" 
-                         alt="WP Tester" class="logo-image" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain; position: absolute; top: 0; left: 0;" 
+                         alt="WP Tester" class="logo-image" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" 
                          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="logo-fallback" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.2rem; font-weight: bold; position: absolute; top: 0; left: 0;">WP</div>
+                    <div class="logo-fallback" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.2rem; font-weight: bold;">WP</div>
                 </div>
                 <div>
                     <h1 style="margin: 0; font-size: 2rem; font-weight: 700;">AI Flow Generator</h1>
@@ -98,8 +98,10 @@ $available_plugins = $ai_generator->get_available_plugins();
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
-            <!-- Site Analysis -->
+            <!-- Left side - empty for now -->
             <div>
+                <!-- This space can be used for additional configuration options in the future -->
+            </div>
             
             <!-- Site Analysis -->
             <div>
@@ -367,9 +369,9 @@ $available_plugins = $ai_generator->get_available_plugins();
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
             <div class="logo-container" style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #1FC09A; flex-shrink: 0; position: relative; overflow: hidden;">
                 <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/WP Tester Logo.png'); ?>" 
-                     alt="WP Tester" class="logo-image" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain; position: absolute; top: 0; left: 0;" 
+                     alt="WP Tester" class="logo-image" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" 
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="logo-fallback" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold; position: absolute; top: 0; left: 0;">WP</div>
+                <div class="logo-fallback" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold;">WP</div>
             </div>
             <div style="flex: 1;">
                 <h2 style="margin: 0; color: #1f2937; font-size: 1.5rem; font-weight: 600; line-height: 1.2;">Recent AI Generated Flows</h2>
@@ -515,20 +517,23 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
+                    // Reset button state immediately
+                    button.html(originalText).prop('disabled', false);
                     showSuccessModal('Configuration Saved', 'AI configuration saved successfully!');
-                    location.reload(); // Reload to update status
+                    // Reload after a short delay to allow modal to show
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
                 } else {
                     showErrorModal('Save Failed', 'Failed to save configuration: ' + (response.data.message || 'Unknown error'));
+                    // Reset button state on error
+                    button.html(originalText).prop('disabled', false);
                 }
             },
             error: function() {
                 showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
-            },
-            complete: function() {
-                // Always reset button state, even on success
-                setTimeout(function() {
-                    button.html(originalText).prop('disabled', false);
-                }, 1000);
+                // Reset button state on error
+                button.html(originalText).prop('disabled', false);
             }
         });
     });
@@ -690,37 +695,45 @@ jQuery(document).ready(function($) {
             let apiUrl = '';
             
             switch(provider) {
-                case 'openai':
+                case 'OpenAI':
                     helpText = 'Get your API key from OpenAI Platform';
                     apiUrl = 'https://platform.openai.com/api-keys';
                     break;
-                case 'anthropic':
+                case 'Anthropic':
                     helpText = 'Get your API key from Anthropic Console';
                     apiUrl = 'https://console.anthropic.com/';
                     break;
-                case 'google':
+                case 'Google':
                     helpText = 'Get your API key from Google AI Studio';
                     apiUrl = 'https://aistudio.google.com/';
                     break;
-                case 'xai':
+                case 'X.AI':
                     helpText = 'Get your API key from X.AI Console';
                     apiUrl = 'https://console.x.ai/';
                     break;
-                case 'deepseek':
+                case 'DeepSeek':
                     helpText = 'Get your API key from DeepSeek Platform';
                     apiUrl = 'https://platform.deepseek.com/';
                     break;
-                case 'mistral':
+                case 'Mistral AI':
                     helpText = 'Get your API key from Mistral AI Console';
                     apiUrl = 'https://console.mistral.ai/';
                     break;
-                case 'cohere':
+                case 'Cohere':
                     helpText = 'Get your API key from Cohere Dashboard';
                     apiUrl = 'https://dashboard.cohere.ai/';
                     break;
-                case 'perplexity':
+                case 'Perplexity':
                     helpText = 'Get your API key from Perplexity API';
                     apiUrl = 'https://www.perplexity.ai/settings/api';
+                    break;
+                case 'Hugging Face':
+                    helpText = 'Get your API key from Hugging Face';
+                    apiUrl = 'https://huggingface.co/settings/tokens';
+                    break;
+                case 'Meta':
+                    helpText = 'Get your API key from Hugging Face (for Meta models)';
+                    apiUrl = 'https://huggingface.co/settings/tokens';
                     break;
                 default:
                     helpText = 'Get your API key from the provider\'s website';
@@ -871,9 +884,6 @@ jQuery(document).ready(function($) {
 }
 
 .logo-image {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
     object-fit: contain;
