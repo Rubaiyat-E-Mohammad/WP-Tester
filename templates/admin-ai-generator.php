@@ -249,7 +249,6 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                 <?php foreach ($available_plugins as $plugin): ?>
                 <div class="stat-card plugin-card" 
                      data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
-                     onclick="togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')"
                      style="cursor: pointer; position: relative; height: 140px; display: flex; flex-direction: column; justify-content: space-between;">
                     
                     <div class="stat-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
@@ -278,7 +277,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                     </div>
                     
                     <!-- Selection Indicator -->
-                    <div class="plugin-selection-indicator" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')" style="position: absolute; top: 0.75rem; right: 0.75rem; width: 20px; height: 20px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;">
+                    <div class="plugin-selection-indicator" style="position: absolute; top: 0.75rem; right: 0.75rem; width: 20px; height: 20px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;">
                         <div class="checkmark" style="width: 8px; height: 8px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
                     </div>
                     
@@ -491,6 +490,17 @@ jQuery(document).ready(function($) {
         ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
     }
     
+    // Initialize plugin selection counter
+    console.log('Document ready - initializing plugin selection counter');
+    updateSelectedPluginsCount();
+    
+    // Add click handlers for plugin cards
+    $('.plugin-card').on('click', function(e) {
+        const pluginSlug = $(this).data('plugin-slug');
+        console.log('Card clicked via jQuery handler:', pluginSlug);
+        togglePluginSelection(pluginSlug);
+    });
+    
     // Save AI Configuration
     $('#save-ai-config').on('click', function(e) {
         e.preventDefault();
@@ -591,36 +601,63 @@ jQuery(document).ready(function($) {
     
     function updateSelectedPluginsCount() {
         const selectedCount = $('.plugin-checkbox:checked').length;
-        $('#selected-plugins-count').text(selectedCount + ' plugin' + (selectedCount !== 1 ? 's' : '') + ' selected');
+        const countElement = $('#selected-plugins-count');
+        const newText = selectedCount + ' plugin' + (selectedCount !== 1 ? 's' : '') + ' selected';
+        
+        console.log('Updating selected count:', selectedCount);
+        console.log('Count element found:', countElement.length > 0);
+        console.log('New text:', newText);
+        
+        countElement.text(newText);
     }
     
     // Toggle plugin selection
     function togglePluginSelection(pluginSlug) {
-        console.log('Toggling plugin selection for:', pluginSlug);
+        console.log('=== TOGGLE PLUGIN SELECTION ===');
+        console.log('Plugin slug:', pluginSlug);
+        
         const card = $(`.plugin-card[data-plugin-slug="${pluginSlug}"]`);
         const checkbox = card.find('.plugin-checkbox');
         const indicator = card.find('.plugin-selection-indicator');
         const checkmark = indicator.find('.checkmark');
         
         console.log('Card found:', card.length > 0);
+        console.log('Card element:', card[0]);
         console.log('Checkbox found:', checkbox.length > 0);
+        console.log('Checkbox element:', checkbox[0]);
+        
+        if (card.length === 0) {
+            console.error('Card not found for slug:', pluginSlug);
+            return;
+        }
+        
+        if (checkbox.length === 0) {
+            console.error('Checkbox not found in card');
+            return;
+        }
         
         // Toggle checkbox
         const isChecked = checkbox.prop('checked');
-        checkbox.prop('checked', !isChecked);
+        console.log('Current checkbox state:', isChecked);
         
-        console.log('Checkbox state changed from', isChecked, 'to', !isChecked);
+        checkbox.prop('checked', !isChecked);
+        console.log('New checkbox state:', !isChecked);
         
         // Update visual state using CSS classes
         if (!isChecked) {
             card.addClass('selected');
-            console.log('Added selected class');
+            console.log('Added selected class to card');
         } else {
             card.removeClass('selected');
-            console.log('Removed selected class');
+            console.log('Removed selected class from card');
         }
         
-        updateSelectedPluginsCount();
+        // Force update the counter
+        setTimeout(function() {
+            updateSelectedPluginsCount();
+        }, 100);
+        
+        console.log('=== END TOGGLE ===');
     }
     
     // AI Model Selection
