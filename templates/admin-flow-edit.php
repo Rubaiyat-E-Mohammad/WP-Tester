@@ -661,7 +661,7 @@ jQuery(document).ready(function($) {
 .form-group input:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #1FC09A;
+    border-color: #00265e;
     box-shadow: 0 0 0 3px rgba(31, 192, 154, 0.1);
 }
 

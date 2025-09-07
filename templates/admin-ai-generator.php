@@ -33,7 +33,7 @@ $available_plugins = $ai_generator->get_available_plugins();
 
 <div class="wrap">
     <!-- Modern Header -->
-    <div class="modern-header" style="background: linear-gradient(135deg, #1FC09A 0%, #0F9D7A 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; position: relative; overflow: hidden;">
+    <div class="modern-header" style="background: linear-gradient(135deg, #00265e 0%, #0F9D7A 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; position: relative; overflow: hidden;">
         <div style="position: relative; z-index: 2;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div class="logo-container" style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: white; flex-shrink: 0; position: relative; overflow: hidden;">
@@ -61,46 +61,42 @@ $available_plugins = $ai_generator->get_available_plugins();
             </div>
         </div>
         
-        <div style="max-width: 600px;">
-            <!-- AI Model Selection -->
-            <div style="margin-bottom: 1.5rem;">
-                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                    AI Model
-                </label>
-                <select id="ai-model-select" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                    <option value="">Select AI Model...</option>
-                    <!-- Models will be loaded here -->
-                </select>
-                <p id="ai-model-description" style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
-                    Choose your AI model. Free models work without API keys, paid models require API keys.
-                </p>
-            </div>
-            
-            <!-- API Key Input (Hidden by default) -->
-            <div id="api-key-section" style="margin-bottom: 1.5rem; display: none;">
-                <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                    API Key
-                </label>
-                <input type="password" id="ai-api-key" 
-                       value="<?php echo esc_attr($ai_api_key); ?>"
-                       placeholder="Enter your API key"
-                       style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
-                <p id="api-key-help" style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
-                    <!-- API key help text will be loaded here -->
-                </p>
-            </div>
-            
-            <!-- Save Button -->
-            <button id="save-ai-config" class="modern-btn modern-btn-primary">
-                <span class="dashicons dashicons-saved"></span>
-                Save Configuration
-            </button>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
-            <!-- Left side - empty for now -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <!-- AI Model Configuration -->
             <div>
-                <!-- This space can be used for additional configuration options in the future -->
+                <!-- AI Model Selection -->
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                        AI Model
+                    </label>
+                    <select id="ai-model-select" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                        <option value="">Select AI Model...</option>
+                        <!-- Models will be loaded here -->
+                    </select>
+                    <p id="ai-model-description" style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                        Choose your AI model. Free models work without API keys, paid models require API keys.
+                    </p>
+                </div>
+                
+                <!-- API Key Input (Hidden by default) -->
+                <div id="api-key-section" style="margin-bottom: 1.5rem; display: none;">
+                    <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                        API Key
+                    </label>
+                    <input type="password" id="ai-api-key" 
+                           value="<?php echo esc_attr($ai_api_key); ?>"
+                           placeholder="Enter your API key"
+                           style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                    <p id="api-key-help" style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                        <!-- API key help text will be loaded here -->
+                    </p>
+                </div>
+                
+                <!-- Save Button -->
+                <button id="save-ai-config" class="modern-btn modern-btn-primary">
+                    <span class="dashicons dashicons-saved"></span>
+                    Save Configuration
+                </button>
             </div>
             
             <!-- Site Analysis -->
@@ -109,35 +105,35 @@ $available_plugins = $ai_generator->get_available_plugins();
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 1.5rem; font-weight: 700; color: #1FC09A; margin-bottom: 0.25rem;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #00265e; margin-bottom: 0.25rem;">
                             <?php echo esc_html($site_analysis['type']); ?>
                         </div>
                         <div style="font-size: 0.8125rem; color: #64748b;">Site Type</div>
                     </div>
                     
                     <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 1.5rem; font-weight: 700; color: #1FC09A; margin-bottom: 0.25rem;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #00265e; margin-bottom: 0.25rem;">
                             <?php echo esc_html($site_analysis['pages_count']); ?>
                         </div>
                         <div style="font-size: 0.8125rem; color: #64748b;">Pages</div>
                     </div>
                     
                     <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 1.5rem; font-weight: 700; color: #1FC09A; margin-bottom: 0.25rem;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #00265e; margin-bottom: 0.25rem;">
                             <?php echo esc_html($site_analysis['posts_count']); ?>
                         </div>
                         <div style="font-size: 0.8125rem; color: #64748b;">Posts</div>
                     </div>
                     
                     <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 1.5rem; font-weight: 700; color: #1FC09A; margin-bottom: 0.25rem;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #00265e; margin-bottom: 0.25rem;">
                             <?php echo esc_html($site_analysis['plugins_count']); ?>
                         </div>
                         <div style="font-size: 0.8125rem; color: #64748b;">Plugins</div>
                     </div>
                 </div>
                 
-                <div style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #1FC09A;">
+                <div style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #00265e;">
                     <div style="font-weight: 600; color: #1e40af; margin-bottom: 0.5rem;">Theme: <?php echo esc_html($site_analysis['theme']); ?></div>
                     <div style="font-size: 0.875rem; color: #1e40af;">
                         AI will analyze your site structure and generate intelligent test flows based on your content and functionality.
@@ -158,7 +154,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                 
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                     <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
-                        <input type="checkbox" id="include-frontend" checked style="width: 1.25rem; height: 1.25rem; accent-color: #1FC09A;">
+                        <input type="checkbox" id="include-frontend" checked style="width: 1.25rem; height: 1.25rem; accent-color: #00265e;">
                         <div>
                             <div style="font-weight: 600; color: #374151;">Frontend Pages</div>
                             <div style="font-size: 0.8125rem; color: #64748b;">Public pages, posts, and user-facing content</div>
@@ -166,7 +162,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                     </label>
                     
                     <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
-                        <input type="checkbox" id="include-admin" checked style="width: 1.25rem; height: 1.25rem; accent-color: #1FC09A;">
+                        <input type="checkbox" id="include-admin" checked style="width: 1.25rem; height: 1.25rem; accent-color: #00265e;">
                         <div>
                             <div style="font-weight: 600; color: #374151;">Admin Panel</div>
                             <div style="font-size: 0.8125rem; color: #64748b;">WordPress admin, settings, and management areas</div>
@@ -174,7 +170,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                     </label>
                     
                     <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
-                        <input type="checkbox" id="include-plugins" style="width: 1.25rem; height: 1.25rem; accent-color: #1FC09A;">
+                        <input type="checkbox" id="include-plugins" style="width: 1.25rem; height: 1.25rem; accent-color: #00265e;">
                         <div>
                             <div style="font-weight: 600; color: #374151;">Plugin-Specific Flows</div>
                             <div style="font-size: 0.8125rem; color: #64748b;">AI-generated flows for selected plugins</div>
@@ -215,19 +211,19 @@ $available_plugins = $ai_generator->get_available_plugins();
                     </label>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" value="ecommerce" checked style="accent-color: #1FC09A;">
+                            <input type="checkbox" value="ecommerce" checked style="accent-color: #00265e;">
                             <span style="font-size: 0.875rem;">E-commerce</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" value="content" checked style="accent-color: #1FC09A;">
+                            <input type="checkbox" value="content" checked style="accent-color: #00265e;">
                             <span style="font-size: 0.875rem;">Content</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" value="user_management" checked style="accent-color: #1FC09A;">
+                            <input type="checkbox" value="user_management" checked style="accent-color: #00265e;">
                             <span style="font-size: 0.875rem;">User Management</span>
                         </label>
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" value="settings" checked style="accent-color: #1FC09A;">
+                            <input type="checkbox" value="settings" checked style="accent-color: #00265e;">
                             <span style="font-size: 0.875rem;">Settings</span>
                         </label>
                     </div>
@@ -250,7 +246,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                     
                     <!-- Plugin Logo -->
                     <div style="display: flex; justify-content: center; margin-bottom: 0.5rem;">
-                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #1FC09A, #0ea5e9); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.875rem;">
+                        <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #00265e, #0ea5e9); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.875rem;">
                             <?php 
                             $plugin_name = $plugin['name'];
                             $initials = '';
@@ -292,7 +288,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                         <div style="font-size: 0.625rem; color: #9ca3af;">
                             v<?php echo esc_html($plugin['version']); ?> • 
                             <?php if (!empty($plugin['author_uri'])): ?>
-                                <a href="<?php echo esc_url($plugin['author_uri']); ?>" target="_blank" style="color: #1FC09A; text-decoration: none;">
+                                <a href="<?php echo esc_url($plugin['author_uri']); ?>" target="_blank" style="color: #00265e; text-decoration: none;">
                                     <?php echo esc_html($plugin['author']); ?>
                                 </a>
                             <?php else: ?>
@@ -303,7 +299,7 @@ $available_plugins = $ai_generator->get_available_plugins();
                     
                     <!-- Selection Indicator -->
                     <div class="plugin-selection-indicator" style="position: absolute; top: 0.5rem; right: 0.5rem; width: 18px; height: 18px; border: 2px solid #e5e7eb; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; z-index: 10;" onclick="event.stopPropagation(); togglePluginSelection('<?php echo esc_attr($plugin['slug']); ?>')">
-                        <div class="checkmark" style="width: 8px; height: 8px; background: #1FC09A; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
+                        <div class="checkmark" style="width: 8px; height: 8px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.2s ease;"></div>
                     </div>
                     
                     <!-- Hidden checkbox for form submission -->
@@ -352,10 +348,10 @@ $available_plugins = $ai_generator->get_available_plugins();
             <div style="background: #f3f4f6; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
                 <div style="display: flex; align-items: center; justify-content: between; margin-bottom: 0.5rem;">
                     <span style="font-weight: 600; color: #374151;">Generating Flows...</span>
-                    <span id="progress-percentage" style="font-weight: 600; color: #1FC09A;">0%</span>
+                    <span id="progress-percentage" style="font-weight: 600; color: #00265e;">0%</span>
                 </div>
                 <div style="background: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden;">
-                    <div id="progress-bar" style="background: linear-gradient(90deg, #1FC09A, #0F9D7A); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                    <div id="progress-bar" style="background: linear-gradient(90deg, #00265e, #0F9D7A); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
                 </div>
             </div>
             <div id="generation-status" style="font-size: 0.875rem; color: #64748b; text-align: center;">
@@ -367,9 +363,9 @@ $available_plugins = $ai_generator->get_available_plugins();
     <!-- Recent AI Generated Flows -->
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-            <div class="logo-container" style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #1FC09A; flex-shrink: 0; position: relative; overflow: hidden;">
+            <div class="logo-container" style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; color: #00265e; flex-shrink: 0;">
                 <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/WP Tester Logo.png'); ?>" 
-                     alt="WP Tester" class="logo-image" style="width: 100%; height: 100%; border-radius: 8px; object-fit: contain;" 
+                     alt="WP Tester" class="logo-image" style="max-width: 100%; max-height: 100%; border-radius: 8px; object-fit: contain; display: block;" 
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                 <div class="logo-fallback" style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold;">WP</div>
             </div>
@@ -404,7 +400,7 @@ $available_plugins = $ai_generator->get_available_plugins();
 }
 
 .modern-btn-primary {
-    background: linear-gradient(135deg, #1FC09A 0%, #0F9D7A 100%);
+    background: linear-gradient(135deg, #00265e 0%, #0F9D7A 100%);
     color: white;
 }
 
@@ -441,14 +437,14 @@ $available_plugins = $ai_generator->get_available_plugins();
 }
 
 .plugin-card:hover {
-    border-color: #1FC09A;
+    border-color: #00265e;
     background: #f0fdfa;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(31, 192, 154, 0.1);
 }
 
 .plugin-card input[type="checkbox"]:checked + div {
-    color: #1FC09A;
+    color: #00265e;
 }
 
 .plugin-type-badge {
@@ -590,12 +586,12 @@ jQuery(document).ready(function($) {
         // Update visual state
         if (checkbox.prop('checked')) {
             card.css({
-                'border-color': '#1FC09A',
+                'border-color': '#00265e',
                 'background-color': '#f0fdf4',
                 'transform': 'translateY(-2px)',
                 'box-shadow': '0 4px 12px rgba(31, 192, 154, 0.15)'
             });
-            indicator.css('border-color', '#1FC09A');
+            indicator.css('border-color', '#00265e');
             checkmark.css('opacity', '1');
         } else {
             card.css({
@@ -740,7 +736,7 @@ jQuery(document).ready(function($) {
                     apiUrl = '#';
             }
             
-            apiKeyHelp.html(`<a href="${apiUrl}" target="_blank" style="color: #1FC09A; text-decoration: none;">${helpText}</a>`);
+            apiKeyHelp.html(`<a href="${apiUrl}" target="_blank" style="color: #00265e; text-decoration: none;">${helpText}</a>`);
         }
     }
     
@@ -867,11 +863,11 @@ jQuery(document).ready(function($) {
 .plugin-card:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
-    border-color: #1FC09A !important;
+    border-color: #00265e !important;
 }
 
 .plugin-card.selected {
-    border-color: #1FC09A !important;
+    border-color: #00265e !important;
     background-color: #f0fdf4 !important;
     transform: translateY(-2px) !important;
     box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15) !important;
@@ -884,10 +880,12 @@ jQuery(document).ready(function($) {
 }
 
 .logo-image {
-    width: 100%;
-    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
     border-radius: 8px;
+    display: block;
+    margin: auto;
 }
 
 .logo-fallback {
@@ -918,13 +916,13 @@ jQuery(document).ready(function($) {
 }
 
 .plugin-card:hover {
-    border-color: #1FC09A;
+    border-color: #00265e;
     box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15);
     transform: translateY(-2px);
 }
 
 .plugin-card.selected {
-    border-color: #1FC09A;
+    border-color: #00265e;
     background-color: #f0fdf4;
     box-shadow: 0 4px 12px rgba(31, 192, 154, 0.15);
 }

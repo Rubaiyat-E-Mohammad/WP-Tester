@@ -124,7 +124,7 @@
 
 .modern-card:hover {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    border-color: #1FC09A;
+    border-color: #00265e;
 }
 
 .modern-card .card-header {
@@ -148,7 +148,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #1FC09A, #16a085);
+    background: linear-gradient(135deg, #00265e, #16a085);
     color: white;
     font-size: 1.25rem;
 }
@@ -191,7 +191,7 @@
     align-items: center;
     justify-content: center;
     background: #f1f5f9;
-    color: #1FC09A;
+    color: #00265e;
 }
 
 .stat-card .stat-value {
@@ -239,7 +239,7 @@
 }
 
 .modern-btn-primary {
-    background: #1FC09A;
+    background: #00265e;
     color: white;
 }
 
@@ -307,7 +307,7 @@
     align-items: center;
     justify-content: center;
     background: #f1f5f9;
-    color: #1FC09A;
+    color: #00265e;
 }
 
 .modern-list-item .item-details h4 {
@@ -441,7 +441,7 @@
 }
 
 .quick-action-card:hover {
-    border-color: #1FC09A;
+    border-color: #00265e;
     transform: translateY(-2px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     text-decoration: none;
@@ -452,7 +452,7 @@
     width: 40px;
     height: 40px;
     margin: 0 auto 0.75rem;
-    background: linear-gradient(135deg, #1FC09A, #16a085);
+    background: linear-gradient(135deg, #00265e, #16a085);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -528,7 +528,7 @@
     width: 20px;
     height: 20px;
     border: 2px solid #f3f3f3;
-    border-top: 2px solid #1FC09A;
+    border-top: 2px solid #00265e;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }

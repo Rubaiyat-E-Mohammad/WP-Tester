@@ -98,7 +98,7 @@ if (!defined('ABSPATH')) {
                             foreach ($days as $day) : 
                             ?>
                                 <label style="display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: <?php echo in_array($day, $selected_days) ? '#f0fdf4' : 'white'; ?>;">
-                                    <input type="checkbox" name="wp_tester_settings[crawl_schedule_days][]" value="<?php echo $day; ?>" <?php checked(in_array($day, $selected_days)); ?> style="margin-bottom: 0.25rem; accent-color: #1FC09A;">
+                                    <input type="checkbox" name="wp_tester_settings[crawl_schedule_days][]" value="<?php echo $day; ?>" <?php checked(in_array($day, $selected_days)); ?> style="margin-bottom: 0.25rem; accent-color: #00265e;">
                                     <span style="font-size: 0.75rem; font-weight: 500; color: #374151; text-transform: capitalize;"><?php echo substr($day, 0, 3); ?></span>
                                 </label>
                             <?php endforeach; ?>
@@ -111,7 +111,7 @@ if (!defined('ABSPATH')) {
                     <!-- Include Admin Panel in Crawl -->
                     <div>
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" name="wp_tester_settings[include_admin_in_crawl]" value="1" <?php checked(($settings['include_admin_in_crawl'] ?? true), true); ?> style="accent-color: #1FC09A;">
+                            <input type="checkbox" name="wp_tester_settings[include_admin_in_crawl]" value="1" <?php checked(($settings['include_admin_in_crawl'] ?? true), true); ?> style="accent-color: #00265e;">
                             <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">Include Admin Panel in Crawl</span>
                         </label>
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
@@ -122,7 +122,7 @@ if (!defined('ABSPATH')) {
                     <!-- Prevent Duplicate Flows -->
                     <div>
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                            <input type="checkbox" name="wp_tester_settings[prevent_duplicate_flows]" value="1" <?php checked(($settings['prevent_duplicate_flows'] ?? true), true); ?> style="accent-color: #1FC09A;">
+                            <input type="checkbox" name="wp_tester_settings[prevent_duplicate_flows]" value="1" <?php checked(($settings['prevent_duplicate_flows'] ?? true), true); ?> style="accent-color: #00265e;">
                             <span style="font-weight: 600; color: #374151; font-size: 0.875rem;">Prevent Duplicate Flows</span>
                         </label>
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
@@ -453,7 +453,7 @@ jQuery(document).ready(function($) {
                         ${message}
                     </div>
                     <div style="text-align: center;">
-                        <button class="modal-close-btn" style="background: #1FC09A; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <button class="modal-close-btn" style="background: #00265e; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             OK
                         </button>
                     </div>
@@ -533,14 +533,14 @@ jQuery(document).ready(function($) {
             <div id="${modalId}" class="modern-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
                 <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 600px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
                     <div style="text-align: center; margin-bottom: 1.5rem;">
-                        <div style="width: 60px; height: 60px; background: #1FC09A; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <div style="width: 60px; height: 60px; background: #00265e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
                             <span class="dashicons dashicons-admin-tools" style="color: white; font-size: 30px;"></span>
                         </div>
                         <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">System Check Results</h3>
                     </div>
                     ${content}
                     <div style="text-align: center; margin-top: 2rem;">
-                        <button class="modal-close-btn" style="background: #1FC09A; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <button class="modal-close-btn" style="background: #00265e; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             Close
                         </button>
                     </div>

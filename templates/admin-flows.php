@@ -894,7 +894,7 @@ jQuery(document).ready(function($) {
 }
 
 .wp-tester-modal-success .wp-tester-modal-icon {
-    background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%);
+    background: linear-gradient(135deg, #00265e 0%, #4ECAB5 100%);
     color: white;
 }
 
@@ -934,7 +934,7 @@ jQuery(document).ready(function($) {
 
 .wp-tester-progress-fill {
     height: 100%;
-    background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%);
+    background: linear-gradient(135deg, #00265e 0%, #4ECAB5 100%);
     width: 0%;
     animation: progressAnimation 2s ease-in-out infinite;
 }

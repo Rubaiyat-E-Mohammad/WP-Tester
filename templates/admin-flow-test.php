@@ -150,7 +150,7 @@ $error_message = $result['error_message'] ?? '';
                                 <div class="item-details">
                                     <h4>Start URL</h4>
                                     <p>
-                                        <a href="<?php echo esc_url($flow->start_url); ?>" target="_blank" style="color: #1FC09A;">
+                                        <a href="<?php echo esc_url($flow->start_url); ?>" target="_blank" style="color: #00265e;">
                                             <?php echo esc_html($flow->start_url); ?>
                                             <span class="dashicons dashicons-external" style="font-size: 12px;"></span>
                                         </a>
@@ -186,12 +186,12 @@ $error_message = $result['error_message'] ?? '';
                     <div style="margin: 1.5rem 0;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                             <span style="font-weight: 600; color: #374151;">Test Progress</span>
-                            <span style="font-weight: 700; color: #1FC09A; font-size: 1.125rem;">
+                            <span style="font-weight: 700; color: #00265e; font-size: 1.125rem;">
                                 <?php echo esc_html($steps_completed); ?>/<?php echo esc_html($total_steps); ?>
                             </span>
                         </div>
                         <div style="height: 12px; background: #f1f5f9; border-radius: 6px; overflow: hidden;">
-                            <div style="height: 100%; background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%); width: <?php echo esc_attr(($steps_completed / max(1, $total_steps)) * 100); ?>%; transition: width 0.5s ease;"></div>
+                            <div style="height: 100%; background: linear-gradient(135deg, #00265e 0%, #4ECAB5 100%); width: <?php echo esc_attr(($steps_completed / max(1, $total_steps)) * 100); ?>%; transition: width 0.5s ease;"></div>
                         </div>
                     </div>
 

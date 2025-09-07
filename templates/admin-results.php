@@ -928,7 +928,7 @@ jQuery(document).ready(function($) {
             <div id="${modalId}" class="modern-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
                 <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
                     <div style="text-align: center; margin-bottom: 1.5rem;">
-                        <div style="width: 60px; height: 60px; background: #1FC09A; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                        <div style="width: 60px; height: 60px; background: #00265e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
                             <span class="dashicons dashicons-download" style="color: white; font-size: 30px;"></span>
                         </div>
                         <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">Export Test Results</h3>
@@ -954,7 +954,7 @@ jQuery(document).ready(function($) {
                         </div>
                         <div>
                             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="checkbox" id="export-include-screenshots" style="accent-color: #1FC09A;">
+                                <input type="checkbox" id="export-include-screenshots" style="accent-color: #00265e;">
                                 <span style="font-size: 0.875rem; color: #374151;">Include screenshots in export</span>
                             </label>
                         </div>
@@ -963,7 +963,7 @@ jQuery(document).ready(function($) {
                         <button class="modal-close-btn" style="background: #6b7280; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             Cancel
                         </button>
-                        <button id="export-confirm" style="background: #1FC09A; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <button id="export-confirm" style="background: #00265e; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
                             Export
                         </button>
                     </div>
@@ -1219,7 +1219,7 @@ jQuery(document).ready(function($) {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #1FC09A, #10b981);
+    background: linear-gradient(90deg, #00265e, #10b981);
     border-radius: 4px;
     animation: progress-animation 2s ease-in-out infinite;
 }

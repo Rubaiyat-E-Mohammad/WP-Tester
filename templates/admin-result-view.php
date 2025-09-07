@@ -141,7 +141,7 @@ $visual_evidence = $report['visual_evidence'] ?? [];
                                 <div class="item-details">
                                     <h4>Start URL</h4>
                                     <p>
-                                        <a href="<?php echo esc_url($flow->start_url ?? '#'); ?>" target="_blank" style="color: #1FC09A;">
+                                        <a href="<?php echo esc_url($flow->start_url ?? '#'); ?>" target="_blank" style="color: #00265e;">
                                             <?php echo esc_html($flow->start_url ?? 'Not specified'); ?>
                                             <span class="dashicons dashicons-external" style="font-size: 12px;"></span>
                                         </a>
@@ -188,12 +188,12 @@ $visual_evidence = $report['visual_evidence'] ?? [];
                     <div style="margin: 1.5rem 0;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                             <span style="font-weight: 600; color: #374151;">Success Rate</span>
-                            <span style="font-weight: 700; color: #1FC09A; font-size: 1.125rem;">
+                            <span style="font-weight: 700; color: #00265e; font-size: 1.125rem;">
                                 <?php echo esc_html(number_format($execution_summary['success_rate'] ?? 0, 1)); ?>%
                             </span>
                         </div>
                         <div style="height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden;">
-                            <div style="height: 100%; background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%); width: <?php echo esc_attr($execution_summary['success_rate'] ?? 0); ?>%; transition: width 0.5s ease;"></div>
+                            <div style="height: 100%; background: linear-gradient(135deg, #00265e 0%, #4ECAB5 100%); width: <?php echo esc_attr($execution_summary['success_rate'] ?? 0); ?>%; transition: width 0.5s ease;"></div>
                         </div>
                     </div>
 
@@ -344,7 +344,7 @@ $visual_evidence = $report['visual_evidence'] ?? [];
                                     <h4><?php echo esc_html($failure['step'] ?? 'Unknown Step'); ?></h4>
                                     <p><?php echo esc_html($failure['error'] ?? 'No error message available'); ?></p>
                                     <?php if (!empty($failure['suggestion'])): ?>
-                                        <p style="color: #1FC09A; font-weight: 500; margin-top: 0.5rem;">
+                                        <p style="color: #00265e; font-weight: 500; margin-top: 0.5rem;">
                                             💡 Suggestion: <?php echo esc_html($failure['suggestion']); ?>
                                         </p>
                                     <?php endif; ?>

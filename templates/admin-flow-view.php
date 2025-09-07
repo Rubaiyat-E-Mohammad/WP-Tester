@@ -87,7 +87,7 @@ if (isset($flow->steps) && !empty($flow->steps)) {
                             <div class="item-details">
                                 <h4>Start URL</h4>
                                 <p>
-                                    <a href="<?php echo esc_url($flow->start_url ?? '#'); ?>" target="_blank" style="color: #1FC09A;">
+                                    <a href="<?php echo esc_url($flow->start_url ?? '#'); ?>" target="_blank" style="color: #00265e;">
                                         <?php echo esc_html($flow->start_url ?? 'Not specified'); ?>
                                         <span class="dashicons dashicons-external" style="font-size: 12px;"></span>
                                     </a>
@@ -464,7 +464,7 @@ jQuery(document).ready(function($) {
 }
 
 .wp-tester-modal-success .wp-tester-modal-icon {
-    background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%);
+    background: linear-gradient(135deg, #00265e 0%, #4ECAB5 100%);
     color: white;
 }
 
@@ -504,7 +504,7 @@ jQuery(document).ready(function($) {
 
 .wp-tester-progress-fill {
     height: 100%;
-    background: linear-gradient(135deg, #1FC09A 0%, #4ECAB5 100%);
+    background: linear-gradient(135deg, #00265e 0%, #4ECAB5 100%);
     width: 0%;
     animation: progressAnimation 2s ease-in-out infinite;
 }
