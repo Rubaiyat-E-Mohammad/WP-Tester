@@ -30,6 +30,7 @@ class WP_Tester_Ajax {
         
         // Modern UI AJAX actions
         add_action('wp_ajax_wp_tester_get_dashboard_stats', array($this, 'get_dashboard_stats'));
+        add_action('wp_ajax_wp_tester_cleanup_duplicates', array($this, 'cleanup_duplicates'));
     }
     
     /**
@@ -584,5 +585,32 @@ class WP_Tester_Ajax {
         }
         
         return $activity;
+    }
+    
+    /**
+     * Cleanup duplicate flows
+     */
+    public function cleanup_duplicates() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $database = new WP_Tester_Database();
+            $removed_count = $database->force_cleanup_duplicates();
+            
+            wp_send_json_success(array(
+                'message' => sprintf(__('Cleaned up %d duplicate flows.', 'wp-tester'), $removed_count),
+                'removed_count' => $removed_count
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to cleanup duplicates: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
     }
 }

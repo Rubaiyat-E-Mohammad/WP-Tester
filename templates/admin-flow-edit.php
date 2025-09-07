@@ -217,15 +217,6 @@ if (isset($flow->steps) && !empty($flow->steps)) {
 
         </form>
 
-        <!-- Step Editor Modal (placeholder for future implementation) -->
-        <div id="step-editor-modal" style="display: none;">
-            <div class="modern-card">
-                <div class="card-header">
-                    <h2 class="card-title">Edit Step</h2>
-                </div>
-                <p>Step editor interface will be implemented here.</p>
-            </div>
-        </div>
 
     </div>
 </div>
@@ -256,13 +247,10 @@ jQuery(document).ready(function($) {
         showStepEditor(stepIndex);
     });
 
-    // Remove step functionality (placeholder)
+    // Remove step functionality
     $('.remove-step').on('click', function() {
-        if (confirm('Are you sure you want to remove this step?')) {
-            const step = $(this).data('step');
-            // This would remove the step from the JSON and update the display
-            alert('Remove step functionality coming soon!');
-        }
+        const stepIndex = parseInt($(this).data('step'));
+        removeStep(stepIndex);
     });
     
     // Step editor functions
@@ -343,13 +331,20 @@ jQuery(document).ready(function($) {
         }).trigger('change');
         
         // Handle modal close
-        $(document).on('click', '#cancel-step, .wp-tester-modal-close', function() {
+        modal.find('#cancel-step, .wp-tester-modal-close').on('click', function() {
             closeStepEditor();
         });
         
         // Handle save step
-        $('#save-step').on('click', function() {
+        modal.find('#save-step').on('click', function() {
             saveStep(stepIndex);
+        });
+        
+        // Handle clicking outside modal to close
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                closeStepEditor();
+            }
         });
     }
     
@@ -413,7 +408,7 @@ jQuery(document).ready(function($) {
     }
     
     function updateStepsDisplay(steps) {
-        const container = $('.step-list');
+        const container = $('.modern-list');
         container.empty();
         
         if (steps.length === 0) {

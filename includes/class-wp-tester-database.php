@@ -189,6 +189,7 @@ class WP_Tester_Database {
         global $wpdb;
         
         // Check if flow already exists to prevent duplicates
+        // First try exact match
         $existing_flow = $wpdb->get_var($wpdb->prepare(
             "SELECT id FROM {$this->flows_table} WHERE flow_name = %s AND flow_type = %s AND start_url = %s",
             $flow_name,
@@ -199,6 +200,19 @@ class WP_Tester_Database {
         if ($existing_flow) {
             // Flow already exists, return the existing ID instead of creating duplicate
             return $existing_flow;
+        }
+        
+        // If no exact match, check for similar flows (same type and URL, similar name)
+        $similar_flow = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM {$this->flows_table} WHERE flow_type = %s AND start_url = %s AND flow_name LIKE %s",
+            $flow_type,
+            $start_url,
+            '%' . $wpdb->esc_like(substr($flow_name, 0, 50)) . '%'
+        ));
+        
+        if ($similar_flow) {
+            // Similar flow exists, return the existing ID instead of creating duplicate
+            return $similar_flow;
         }
         
         return $wpdb->insert(
@@ -222,7 +236,9 @@ class WP_Tester_Database {
     public function remove_duplicate_flows() {
         global $wpdb;
         
-        // Find and remove duplicate flows, keeping the oldest one
+        $removed_count = 0;
+        
+        // First, remove exact duplicates
         $duplicates = $wpdb->get_results(
             "SELECT flow_name, flow_type, start_url, GROUP_CONCAT(id ORDER BY created_at ASC) as ids
              FROM {$this->flows_table} 
@@ -230,12 +246,62 @@ class WP_Tester_Database {
              HAVING COUNT(*) > 1"
         );
         
-        $removed_count = 0;
         foreach ($duplicates as $duplicate) {
             $ids = explode(',', $duplicate->ids);
             $keep_id = array_shift($ids); // Keep the first (oldest) one
             
             if (!empty($ids)) {
+                $ids_placeholder = implode(',', array_fill(0, count($ids), '%d'));
+                $wpdb->query($wpdb->prepare(
+                    "DELETE FROM {$this->flows_table} WHERE id IN ($ids_placeholder)",
+                    $ids
+                ));
+                $removed_count += count($ids);
+            }
+        }
+        
+        // Second, remove similar flows (same type and URL, similar names)
+        $similar_flows = $wpdb->get_results(
+            "SELECT f1.id, f1.flow_name, f1.flow_type, f1.start_url
+             FROM {$this->flows_table} f1
+             INNER JOIN {$this->flows_table} f2 ON f1.flow_type = f2.flow_type 
+                 AND f1.start_url = f2.start_url 
+                 AND f1.id != f2.id
+                 AND f1.flow_name LIKE CONCAT('%', SUBSTRING(f2.flow_name, 1, 50), '%')
+             WHERE f1.created_at > f2.created_at
+             ORDER BY f1.created_at ASC"
+        );
+        
+        foreach ($similar_flows as $similar_flow) {
+            $wpdb->delete($this->flows_table, array('id' => $similar_flow->id), array('%d'));
+            $removed_count++;
+        }
+        
+        return $removed_count;
+    }
+    
+    /**
+     * Force cleanup of all duplicate flows (more aggressive)
+     */
+    public function force_cleanup_duplicates() {
+        global $wpdb;
+        
+        $removed_count = 0;
+        
+        // Get all flows grouped by type and URL
+        $flow_groups = $wpdb->get_results(
+            "SELECT flow_type, start_url, GROUP_CONCAT(id ORDER BY created_at ASC) as ids, COUNT(*) as count
+             FROM {$this->flows_table} 
+             GROUP BY flow_type, start_url 
+             HAVING COUNT(*) > 1"
+        );
+        
+        foreach ($flow_groups as $group) {
+            $ids = explode(',', $group->ids);
+            $keep_id = array_shift($ids); // Keep the first (oldest) one
+            
+            if (!empty($ids)) {
+                // Delete all duplicates except the first one
                 $ids_placeholder = implode(',', array_fill(0, count($ids), '%d'));
                 $wpdb->query($wpdb->prepare(
                     "DELETE FROM {$this->flows_table} WHERE id IN ($ids_placeholder)",

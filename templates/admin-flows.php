@@ -25,10 +25,14 @@ if (!defined('ABSPATH')) {
                     <span class="dashicons dashicons-arrow-left-alt2"></span>
                     Dashboard
                 </a>
+                <button id="cleanup-duplicates" class="modern-btn modern-btn-warning modern-btn-small">
+                    <span class="dashicons dashicons-trash"></span>
+                    Cleanup Duplicates
+                </button>
                 <button id="wp-tester-discover-flows" class="modern-btn modern-btn-primary modern-btn-small">
                     <span class="dashicons dashicons-search"></span>
                     Discover Flows
-        </button>
+                </button>
             </div>
         </div>
     </div>
@@ -272,6 +276,45 @@ jQuery(document).ready(function($) {
             },
             error: function() {
                 hideProgressModal();
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
+    });
+    
+    // Cleanup duplicates functionality
+    $('#cleanup-duplicates').on('click', function(e) {
+        e.preventDefault();
+        
+        if (!confirm('Are you sure you want to cleanup duplicate flows? This will remove all duplicate flows and keep only the oldest one of each type.')) {
+            return;
+        }
+        
+        const button = $(this);
+        const originalText = button.html();
+        
+        button.html('<span class="dashicons dashicons-update-alt"></span> Cleaning...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_cleanup_duplicates',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessModal('Cleanup Complete!', 
+                        'Removed ' + (response.data.removed_count || 0) + ' duplicate flows. Refreshing page...');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showErrorModal('Cleanup Failed', response.data.message || 'Unknown error occurred');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Cleanup AJAX Error:', {xhr, status, error});
                 showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
             },
             complete: function() {
