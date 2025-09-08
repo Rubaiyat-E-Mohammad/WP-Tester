@@ -38,9 +38,10 @@ if ($flow_id > 0) {
 
 $steps = json_decode($flow->steps ?? '[]', true) ?: [];
 
-// Debug: Log the steps being loaded
-error_log('WP Tester: Loading flow with ' . count($steps) . ' steps');
-error_log('WP Tester: Steps data: ' . ($flow->steps ?? 'null'));
+// Only log if there are issues loading steps
+if (empty($steps) && !empty($flow->steps)) {
+    error_log('WP Tester: Warning - Flow has steps data but decoded to empty array');
+}
 ?>
 
 <div class="wrap">
@@ -385,7 +386,10 @@ jQuery(document).ready(function($) {
         const steps = JSON.parse($('#flow_steps').val() || '[]');
         const step = steps[currentStepIndex];
         
-        console.log(`Edit clicked! Index: ${currentStepIndex}, Total steps: ${steps.length}, Step data:`, step);
+        // Only log if there's an issue
+        if (!step) {
+            console.warn(`Edit clicked but step not found at index ${currentStepIndex}`);
+        }
         
         if (!step) {
             showErrorModal('Step not found');
@@ -425,22 +429,15 @@ jQuery(document).ready(function($) {
             timeout: parseInt($('#step-timeout').val()) || 30
         };
         
-        console.log('Form data collected:', formData);
-        console.log('Current step index:', currentStepIndex);
-        
         // Validate
         if (!formData.action) {
-            console.log('Validation failed: No action selected');
             showErrorModal('Please select an action type');
             return;
         }
         if (!formData.target) {
-            console.log('Validation failed: No target entered');
             showErrorModal('Please enter a target');
             return;
         }
-        
-        console.log('Validation passed, proceeding to save');
         
         // Save step
         const steps = JSON.parse($('#flow_steps').val() || '[]');
@@ -448,29 +445,20 @@ jQuery(document).ready(function($) {
         
         if (currentStepIndex !== null && currentStepIndex >= 0) {
             // Editing existing step
-            console.log(`Editing step at index ${currentStepIndex}. Steps before: ${stepsBefore}`);
             steps[currentStepIndex] = formData;
         } else {
             // Adding new step
-            console.log(`Adding new step. Steps before: ${stepsBefore}`);
             steps.push(formData);
         }
         
-        console.log(`Steps after: ${steps.length}. Steps array:`, steps);
-        
         // Ensure proper JSON encoding
         const encodedSteps = JSON.stringify(steps, null, 0);
-        console.log('Encoded steps:', encodedSteps);
         $('#flow_steps').val(encodedSteps);
         updateStepsList();
         $('#step-editor-modal').hide();
         
         // Reset currentStepIndex
         currentStepIndex = null;
-        console.log('=== SAVE STEP COMPLETED ===');
-        console.log('Final steps count:', JSON.parse($('#flow_steps').val() || '[]').length);
-        console.log('DOM steps count:', $('#steps-list .step-item').length);
-        console.log('=== END SAVE STEP DEBUG ===');
     });
     
     // Cancel step
@@ -503,8 +491,6 @@ jQuery(document).ready(function($) {
     }
     
     function populateStepForm(step) {
-        console.log('Populating form with step:', step);
-        
         // Clear form first
         $('#step-form')[0].reset();
         // Set values
@@ -521,13 +507,10 @@ jQuery(document).ready(function($) {
         } else {
             $('#step-data-group').hide();
         }
-        
-        console.log('Form populated successfully');
     }
     
     function updateStepsList() {
         const steps = JSON.parse($('#flow_steps').val() || '[]');
-        console.log('Updating steps list with:', steps.length, 'steps');
         let html = '';
         
         steps.forEach((step, index) => {
@@ -546,39 +529,31 @@ jQuery(document).ready(function($) {
         });
         
         $('#steps-list').html(html);
-        console.log('Steps list updated successfully');
     }
     
     // Initialize steps list
-    console.log('Initial steps from PHP:', $('#flow_steps').val());
     updateStepsList();
     
-    // Add form submission debugging and validation
+    // Add form submission validation
     $('form').on('submit', function(e) {
         const stepsValue = $('#flow_steps').val();
-        console.log('Form submitting with steps:', stepsValue);
         
         // Ensure steps are properly formatted
         try {
             // Clean and validate the JSON
             const cleanStepsValue = cleanAndValidateJSON(stepsValue || '[]');
             const steps = JSON.parse(cleanStepsValue);
-            console.log('Parsed steps:', steps);
-            console.log('Steps count:', steps.length);
             
             // Validate that we have steps
             if (steps.length === 0) {
                 console.warn('No steps found in form submission!');
-                // Don't prevent submission, but log the issue
             }
             
             // Set the cleaned JSON
             $('#flow_steps').val(cleanStepsValue);
-            console.log('Steps validated and re-encoded:', cleanStepsValue);
             
             // Store steps in sessionStorage as backup
             sessionStorage.setItem('wp_tester_steps_backup', cleanStepsValue);
-            console.log('Steps backed up to sessionStorage');
             
         } catch (error) {
             console.error('Error parsing steps:', error);
@@ -598,7 +573,6 @@ jQuery(document).ready(function($) {
                 
                 // If current steps are empty but we have backup, restore them
                 if (currentSteps.length === 0 && steps.length > 0) {
-                    console.log('Restoring steps from backup:', steps);
                     $('#flow_steps').val(JSON.stringify(steps));
                     updateStepsList();
                 }

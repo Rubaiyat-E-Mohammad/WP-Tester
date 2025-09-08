@@ -91,6 +91,7 @@ class WP_Tester_Flow_Executor {
         }
         
         $this->screenshot_handler = $screenshots_dir;
+        error_log('WP Tester: Screenshot handler initialized: ' . $screenshots_dir);
     }
     
     /**
@@ -111,6 +112,10 @@ class WP_Tester_Flow_Executor {
         $this->test_run_id = uniqid('test_', true);
         $this->execution_log = array();
         $this->screenshots_to_save = array();
+        
+        // Debug screenshot settings
+        $screenshot_enabled = isset($this->settings['screenshot_on_failure']) ? $this->settings['screenshot_on_failure'] : true;
+        error_log('WP Tester: Screenshot on failure enabled: ' . ($screenshot_enabled ? 'yes' : 'no'));
         
         try {
             // Get flow details
@@ -195,12 +200,12 @@ class WP_Tester_Flow_Executor {
                                 'screenshot_type' => 'failure',
                                 'caption' => $step_result['error']
                             );
-                            // Screenshot added to save array
+                            error_log('WP Tester: Screenshot added to save array for step ' . ($step_number + 1));
                         } else {
-                            // Failed to take screenshot for failed step
+                            error_log('WP Tester: Failed to take screenshot for failed step ' . ($step_number + 1));
                         }
                     } else {
-                        // Screenshot on failure is disabled in settings
+                        error_log('WP Tester: Screenshot on failure is disabled in settings');
                     }
                     
                     // Stop execution on critical failure
@@ -235,14 +240,26 @@ class WP_Tester_Flow_Executor {
             
             // Save screenshots to database
             if ($result_id && !empty($this->screenshots_to_save)) {
+                error_log('WP Tester: Saving ' . count($this->screenshots_to_save) . ' screenshots to database');
                 foreach ($this->screenshots_to_save as $screenshot) {
-                    $this->database->save_screenshot(
+                    $saved = $this->database->save_screenshot(
                         $result_id,
                         $screenshot['step_number'],
                         $screenshot['screenshot_path'],
                         $screenshot['screenshot_type'],
                         $screenshot['caption']
                     );
+                    if ($saved) {
+                        error_log('WP Tester: Screenshot saved to database for step ' . $screenshot['step_number']);
+                    } else {
+                        error_log('WP Tester: Failed to save screenshot to database for step ' . $screenshot['step_number']);
+                    }
+                }
+            } else {
+                if (empty($this->screenshots_to_save)) {
+                    error_log('WP Tester: No screenshots to save');
+                } else {
+                    error_log('WP Tester: No result ID for saving screenshots');
                 }
             }
             
@@ -1014,6 +1031,9 @@ class WP_Tester_Flow_Executor {
             error_log('WP Tester: Screenshot file was not created: ' . $screenshot_path);
             return null;
         }
+        
+        // Log successful screenshot creation
+        error_log('WP Tester: Screenshot created successfully: ' . $screenshot_path);
         
         return $screenshot_path;
     }

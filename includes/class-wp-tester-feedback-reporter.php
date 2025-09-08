@@ -189,25 +189,47 @@ class WP_Tester_Feedback_Reporter {
         foreach ($screenshots as $screenshot) {
             $upload_dir = wp_upload_dir();
             $screenshot_url = '';
+            $file_exists = false;
             
-            // Check if screenshot is in uploads directory
-            if (strpos($screenshot->screenshot_path, $upload_dir['basedir']) === 0) {
-                $screenshot_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $screenshot->screenshot_path);
-            } else {
-                // Screenshot is in temp directory or elsewhere, copy to uploads and create URL
-                $filename = basename($screenshot->screenshot_path);
-                $uploads_screenshot_path = $upload_dir['basedir'] . '/wp-tester-screenshots/' . $filename;
+            // Ensure uploads directory exists
+            $uploads_screenshots_dir = $upload_dir['basedir'] . '/wp-tester-screenshots';
+            if (!file_exists($uploads_screenshots_dir)) {
+                wp_mkdir_p($uploads_screenshots_dir);
+            }
+            
+            // Get filename from screenshot path
+            $filename = basename($screenshot->screenshot_path);
+            $uploads_screenshot_path = $uploads_screenshots_dir . '/' . $filename;
+            
+            // Check if original file exists
+            if (file_exists($screenshot->screenshot_path)) {
+                $file_exists = true;
                 
-                // Copy file to uploads directory if it exists and is different
-                if (file_exists($screenshot->screenshot_path) && $screenshot->screenshot_path !== $uploads_screenshot_path) {
-                    if (!file_exists($upload_dir['basedir'] . '/wp-tester-screenshots')) {
-                        wp_mkdir_p($upload_dir['basedir'] . '/wp-tester-screenshots');
+                // Copy to uploads directory if not already there
+                if ($screenshot->screenshot_path !== $uploads_screenshot_path) {
+                    if (copy($screenshot->screenshot_path, $uploads_screenshot_path)) {
+                        // Update the screenshot path in database to point to uploads directory
+                        global $wpdb;
+                        $wpdb->update(
+                            $wpdb->prefix . 'wp_tester_screenshots',
+                            array('screenshot_path' => $uploads_screenshot_path),
+                            array('id' => $screenshot->id),
+                            array('%s'),
+                            array('%d')
+                        );
                     }
-                    copy($screenshot->screenshot_path, $uploads_screenshot_path);
                 }
                 
                 // Create URL for uploads directory
                 $screenshot_url = $upload_dir['baseurl'] . '/wp-tester-screenshots/' . $filename;
+            } else {
+                // Check if file exists in uploads directory
+                if (file_exists($uploads_screenshot_path)) {
+                    $file_exists = true;
+                    $screenshot_url = $upload_dir['baseurl'] . '/wp-tester-screenshots/' . $filename;
+                } else {
+                    error_log('WP Tester: Screenshot file not found: ' . $screenshot->screenshot_path);
+                }
             }
             
             $visual_evidence[] = array(
@@ -215,9 +237,9 @@ class WP_Tester_Feedback_Reporter {
                 'type' => $screenshot->screenshot_type,
                 'caption' => $screenshot->caption,
                 'url' => $screenshot_url,
-                'path' => $screenshot->screenshot_path,
+                'path' => $uploads_screenshot_path,
                 'created_at' => $screenshot->created_at,
-                'file_exists' => file_exists($screenshot->screenshot_path)
+                'file_exists' => $file_exists
             );
         }
         

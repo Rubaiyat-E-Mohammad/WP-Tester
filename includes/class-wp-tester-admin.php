@@ -430,21 +430,15 @@ class WP_Tester_Admin {
             $is_active = isset($_POST['is_active']) ? 1 : 0;
             $steps = array();
             if (isset($_POST['steps'])) {
-                // Debug: Log the received steps data
-                error_log('WP Tester: Received steps data: ' . print_r($_POST['steps'], true));
-                
                 if (is_string($_POST['steps'])) {
                     // Clean the JSON string - remove any extra escaping
                     $clean_steps = stripslashes($_POST['steps']);
-                    error_log('WP Tester: Cleaned steps data: ' . $clean_steps);
                     
                     $decoded_steps = json_decode($clean_steps, true);
                     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_steps)) {
                         $steps = $decoded_steps;
-                        error_log('WP Tester: Successfully decoded ' . count($steps) . ' steps');
                     } else {
                         error_log('WP Tester: JSON decode error: ' . json_last_error_msg());
-                        error_log('WP Tester: Raw JSON: ' . $clean_steps);
                         
                         // Try to fix common JSON issues
                         $fixed_json = $this->fix_json_syntax($clean_steps);
@@ -452,9 +446,8 @@ class WP_Tester_Admin {
                             $decoded_steps = json_decode($fixed_json, true);
                             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_steps)) {
                                 $steps = $decoded_steps;
-                                error_log('WP Tester: Successfully decoded after fix: ' . count($steps) . ' steps');
                             } else {
-                                error_log('WP Tester: Still failed after fix: ' . json_last_error_msg());
+                                error_log('WP Tester: JSON fix failed: ' . json_last_error_msg());
                                 $steps = array();
                             }
                         } else {
@@ -463,18 +456,11 @@ class WP_Tester_Admin {
                     }
                 } elseif (is_array($_POST['steps'])) {
                     $steps = $_POST['steps'];
-                    error_log('WP Tester: Received steps as array: ' . count($steps) . ' steps');
                 }
-            } else {
-                error_log('WP Tester: No steps data received in POST');
             }
             $expected_outcome = sanitize_text_field($_POST['expected_outcome'] ?? '');
             
             if ($flow_name && $start_url) {
-                // Debug: Log what we're about to save
-                error_log('WP Tester: About to save ' . count($steps) . ' steps to database');
-                error_log('WP Tester: Steps data: ' . wp_json_encode($steps));
-                
                 // Ensure steps are properly encoded
                 $encoded_steps = wp_json_encode($steps);
                 if (json_last_error() !== JSON_ERROR_NONE) {
@@ -501,22 +487,13 @@ class WP_Tester_Admin {
                     array('%d')
                 );
                 
-                // Debug: Log the database result
-                error_log('WP Tester: Database update result: ' . ($result !== false ? 'success' : 'failed'));
                 if ($result === false) {
-                    error_log('WP Tester: Database error: ' . $wpdb->last_error);
+                    error_log('WP Tester: Database update failed: ' . $wpdb->last_error);
                 }
                 
                 if ($result !== false) {
                     // Refresh the flow data
                     $flow = $this->database->get_flow($flow_id);
-                    
-                    // Debug: Verify what was actually saved
-                    if ($flow) {
-                        $saved_steps = json_decode($flow->steps, true);
-                        error_log('WP Tester: Flow updated successfully. Saved steps count: ' . count($saved_steps ?: []));
-                        error_log('WP Tester: Saved steps data: ' . $flow->steps);
-                    }
                     
                     add_action('admin_notices', function() {
                         echo '<div class="notice notice-success is-dismissible"><p>' . __('Flow updated successfully!', 'wp-tester') . '</p></div>';
@@ -563,7 +540,10 @@ class WP_Tester_Admin {
         // 5. Try to fix malformed URLs in JSON
         $json_string = preg_replace('/"([^"]*https?:\/\/[^"]*)"([^"]*)"([^"]*)"/', '"$1$2$3"', $json_string);
         
-        error_log('WP Tester: Fixed JSON: ' . $json_string);
+        // Only log if there was an actual fix applied
+        if ($json_string !== stripslashes($json_string)) {
+            error_log('WP Tester: JSON syntax fixed');
+        }
         
         return $json_string;
     }
