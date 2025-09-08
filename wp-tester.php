@@ -113,6 +113,13 @@ class WP_Tester {
      */
     private function init_components() {
         $this->database = new WP_Tester_Database();
+        
+        // Update database schema on admin pages
+        if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/wp-admin/') !== false) {
+            $this->database->update_flows_table_schema();
+            $this->database->update_crawl_results_table_schema();
+        }
+        
         $this->crawler = new WP_Tester_Crawler();
         $this->flow_executor = new WP_Tester_Flow_Executor();
         $this->feedback_reporter = new WP_Tester_Feedback_Reporter();

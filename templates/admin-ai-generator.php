@@ -499,13 +499,11 @@ jQuery(document).ready(function($) {
     }
     
     // Initialize plugin selection counter
-    console.log('Document ready - initializing plugin selection counter');
     updateSelectedPluginsCount();
     
     // Add click handlers for plugin cards
     $('.plugin-card').on('click', function(e) {
         const pluginSlug = $(this).data('plugin-slug');
-        console.log('Card clicked via jQuery handler:', pluginSlug);
         togglePluginSelection(pluginSlug);
     });
     
@@ -526,8 +524,6 @@ jQuery(document).ready(function($) {
         const selectedModel = $('#ai-model-select').val();
         const apiKey = $('#ai-api-key').val();
         
-        console.log('Save AI Config - Selected Model:', selectedModel);
-        console.log('Save AI Config - API Key:', apiKey ? '***' + apiKey.slice(-4) : 'empty');
         
         if (!selectedModel) {
             showErrorModal('Model Selection Required', 'Please select an AI model first.');
@@ -557,7 +553,6 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-                console.log('Save AI Config - AJAX Response:', response);
                 if (response.success) {
                     // Show success animation
                     button.removeClass('saving').addClass('success');
@@ -650,27 +645,18 @@ jQuery(document).ready(function($) {
         const countElement = $('#selected-plugins-count');
         const newText = selectedCount + ' plugin' + (selectedCount !== 1 ? 's' : '') + ' selected';
         
-        console.log('Updating selected count:', selectedCount);
-        console.log('Count element found:', countElement.length > 0);
-        console.log('New text:', newText);
         
         countElement.text(newText);
     }
     
     // Toggle plugin selection
     function togglePluginSelection(pluginSlug) {
-        console.log('=== TOGGLE PLUGIN SELECTION ===');
-        console.log('Plugin slug:', pluginSlug);
         
         const card = $(`.plugin-card[data-plugin-slug="${pluginSlug}"]`);
         const checkbox = card.find('.plugin-checkbox');
         const indicator = card.find('.plugin-selection-indicator');
         const checkmark = indicator.find('.checkmark');
         
-        console.log('Card found:', card.length > 0);
-        console.log('Card element:', card[0]);
-        console.log('Checkbox found:', checkbox.length > 0);
-        console.log('Checkbox element:', checkbox[0]);
         
         if (card.length === 0) {
             console.error('Card not found for slug:', pluginSlug);
@@ -684,18 +670,13 @@ jQuery(document).ready(function($) {
         
         // Toggle checkbox
         const isChecked = checkbox.prop('checked');
-        console.log('Current checkbox state:', isChecked);
-        
         checkbox.prop('checked', !isChecked);
-        console.log('New checkbox state:', !isChecked);
         
         // Update visual state using CSS classes
         if (!isChecked) {
             card.addClass('selected');
-            console.log('Added selected class to card');
         } else {
             card.removeClass('selected');
-            console.log('Removed selected class from card');
         }
         
         // Force update the counter
@@ -703,7 +684,6 @@ jQuery(document).ready(function($) {
             updateSelectedPluginsCount();
         }, 100);
         
-        console.log('=== END TOGGLE ===');
     }
     
     // AI Model Selection
@@ -715,7 +695,6 @@ jQuery(document).ready(function($) {
     
     // Load available models on page load
     function loadAvailableModels() {
-        console.log('Loading available AI models...');
         $.ajax({
             url: ajaxurl,
             type: 'POST',
@@ -724,7 +703,6 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-                console.log('AI Models Response:', response);
                 if (response.success) {
                     availableModels = response.data;
                     populateModelDropdown();
@@ -739,7 +717,6 @@ jQuery(document).ready(function($) {
     }
     
     function populateModelDropdown() {
-        console.log('Populating model dropdown with:', availableModels);
         const modelSelect = $('#ai-model-select');
         const description = $('#ai-model-description');
         

@@ -329,8 +329,6 @@ jQuery(document).ready(function($) {
     $('#test-connection').on('click', function(e) {
         e.preventDefault();
         
-        console.log('Test connection button clicked');
-        console.log('AJAX URL:', ajaxurl);
         
         const button = $(this);
         const originalText = button.html();
@@ -344,7 +342,6 @@ jQuery(document).ready(function($) {
                 action: 'wp_tester_test_connection'
             },
             success: function(response) {
-                console.log('Test connection response:', response);
                 if (response.success) {
                     showSuccessModal('Connection Test', 'AJAX connection is working! Response: ' + response.data.message);
                 } else {
@@ -366,9 +363,6 @@ jQuery(document).ready(function($) {
     $('#cleanup-flows').on('click', function(e) {
         e.preventDefault();
         
-        console.log('Cleanup flows button clicked');
-        console.log('AJAX URL:', ajaxurl);
-        console.log('Nonce:', '<?php echo wp_create_nonce('wp_tester_nonce'); ?>');
         
         if (!confirm('⚠️ WARNING: This will delete ALL flows permanently!\n\nAre you absolutely sure you want to delete all flows? This action cannot be undone.')) {
             return;
@@ -384,7 +378,6 @@ jQuery(document).ready(function($) {
         
         button.html('<span class="dashicons dashicons-update-alt"></span> Deleting All Flows...').prop('disabled', true);
         
-        console.log('Sending AJAX request to cleanup all flows');
         
         $.ajax({
             url: ajaxurl,
@@ -394,7 +387,6 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-                console.log('Cleanup flows response:', response);
                 if (response.success) {
                     showSuccessModal('All Flows Deleted!', 
                         'Successfully deleted ' + (response.data.deleted_count || 0) + ' flows. Refreshing page...');

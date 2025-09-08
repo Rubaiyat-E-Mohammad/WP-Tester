@@ -1081,12 +1081,26 @@ class WP_Tester_Ajax {
             global $wpdb;
             $crawl_results_table = $wpdb->prefix . 'wp_tester_crawl_results';
             
+            // Ensure schema is up to date
+            $database = new WP_Tester_Database();
+            $database->update_crawl_results_table_schema();
+            
             // Debug: Log the table name and query
             error_log("WP Tester: Cleanup crawl duplicates using table: {$crawl_results_table}");
             
+            // Check if table exists first
+            $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$crawl_results_table}'");
+            if (!$table_exists) {
+                wp_send_json_error(array('message' => __('Crawl results table does not exist', 'wp-tester')));
+                return;
+            }
+            
             // Find duplicate crawl results based on URL and page_type
+            // Use COALESCE to handle missing columns gracefully
             $duplicates = $wpdb->get_results(
-                "SELECT url, page_type, GROUP_CONCAT(id ORDER BY last_crawled ASC) as ids, COUNT(*) as count
+                "SELECT url, page_type, 
+                        GROUP_CONCAT(id ORDER BY COALESCE(last_crawled, created_at, '1970-01-01') ASC) as ids, 
+                        COUNT(*) as count
                  FROM {$crawl_results_table} 
                  GROUP BY url, page_type 
                  HAVING COUNT(*) > 1"
@@ -1207,7 +1221,7 @@ class WP_Tester_Ajax {
                 'export_date' => current_time('mysql'),
                 'plugin_version' => WP_TESTER_VERSION,
                 'site_url' => get_site_url(),
-                'exported_by' => wp_get_current_user()->display_name
+                'exported_by' => wp_get_current_user()->display_name ?? 'Unknown'
             );
             
             // Generate filename

@@ -19,14 +19,24 @@ if ($flow_id > 0) {
         wp_die('Flow not found');
     }
 } else {
-    // For new flows, use the empty flow object created by add_flow_page
-    // This should already be set by the admin class
-    if (!isset($flow) || !is_object($flow)) {
-        wp_die('Flow object not found');
-    }
+    // For new flows, create an empty flow object
+    $flow = (object) array(
+        'id' => 0,
+        'flow_name' => '',
+        'flow_type' => 'login',
+        'start_url' => '',
+        'steps' => '[]',
+        'expected_outcome' => '',
+        'priority' => 5,
+        'is_active' => 1,
+        'ai_generated' => 0,
+        'ai_provider' => '',
+        'created_at' => current_time('mysql'),
+        'updated_at' => current_time('mysql')
+    );
 }
 
-$steps = json_decode($flow->steps, true) ?: [];
+$steps = json_decode($flow->steps ?? '[]', true) ?: [];
 ?>
 
 <div class="wrap">
@@ -364,11 +374,11 @@ jQuery(document).ready(function($) {
         
         // Validate
         if (!formData.action) {
-            alert('Please select an action type');
+            showErrorModal('Please select an action type');
             return;
         }
         if (!formData.target) {
-            alert('Please enter a target');
+            showErrorModal('Please enter a target');
             return;
         }
         

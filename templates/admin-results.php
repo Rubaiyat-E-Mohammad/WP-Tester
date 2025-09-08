@@ -511,7 +511,6 @@ jQuery(document).ready(function($) {
     $('#run-test').on('click', function(e) {
         e.preventDefault();
         
-        console.log('Run Test button clicked!');
         
         const button = $(this);
         const originalText = button.html();

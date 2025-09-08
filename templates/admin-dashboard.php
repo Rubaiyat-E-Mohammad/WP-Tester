@@ -384,15 +384,11 @@ $active_flows = $stats['active_flows'] ?? 0;
 <script>
 jQuery(document).ready(function($) {
     // Debug: Check if buttons exist
-    console.log('Run All Tests button found:', $('#run-all-tests').length);
-    console.log('Run First Test button found:', $('#run-first-test').length);
     
     // Run all tests functionality
     $('#run-all-tests, #run-first-test').on('click', function(e) {
         e.preventDefault();
         
-        console.log('Run Test button clicked!');
-        console.log('wpTesterData available:', typeof wpTesterData !== 'undefined');
         
         const button = $(this);
         const originalText = button.html();

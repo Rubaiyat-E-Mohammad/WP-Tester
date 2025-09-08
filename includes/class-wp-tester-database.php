@@ -53,12 +53,18 @@ class WP_Tester_Database {
             content_hash varchar(64),
             interactive_elements longtext,
             discovered_flows longtext,
+            forms_found int(11) DEFAULT 0,
+            links_found int(11) DEFAULT 0,
+            crawled_at datetime DEFAULT CURRENT_TIMESTAMP,
             last_crawled datetime DEFAULT CURRENT_TIMESTAMP,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
             status varchar(20) DEFAULT 'active',
             PRIMARY KEY (id),
             KEY url (url(191)),
             KEY page_type (page_type),
-            KEY last_crawled (last_crawled)
+            KEY last_crawled (last_crawled),
+            KEY crawled_at (crawled_at),
+            KEY created_at (created_at)
         ) $charset_collate;";
         
         // Flows table
@@ -142,6 +148,9 @@ class WP_Tester_Database {
     public function save_crawl_result($url, $page_type, $title, $content_hash, $interactive_elements, $discovered_flows) {
         global $wpdb;
         
+        // Ensure schema is up to date
+        $this->update_crawl_results_table_schema();
+        
         $result = $wpdb->replace(
             $this->crawl_results_table,
             array(
@@ -151,10 +160,14 @@ class WP_Tester_Database {
                 'content_hash' => $content_hash,
                 'interactive_elements' => wp_json_encode($interactive_elements),
                 'discovered_flows' => wp_json_encode($discovered_flows),
+                'forms_found' => is_array($interactive_elements) ? count($interactive_elements) : 0,
+                'links_found' => 0, // Will be set properly by crawler
+                'crawled_at' => current_time('mysql'),
                 'last_crawled' => current_time('mysql'),
+                'created_at' => current_time('mysql'),
                 'status' => 'active'
             ),
-            array('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+            array('%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%s')
         );
         
         // Update the global last crawl timestamp
@@ -175,6 +188,9 @@ class WP_Tester_Database {
      */
     public function get_crawl_results($limit = 50, $offset = 0, $filters = array()) {
         global $wpdb;
+        
+        // Ensure schema is up to date
+        $this->update_crawl_results_table_schema();
         
         $where_conditions = array('status = "active"');
         $where_values = array();
@@ -209,6 +225,9 @@ class WP_Tester_Database {
      */
     public function get_crawl_results_count($filters = array()) {
         global $wpdb;
+        
+        // Ensure schema is up to date
+        $this->update_crawl_results_table_schema();
         
         $where_conditions = array('status = "active"');
         $where_values = array();
@@ -626,6 +645,35 @@ class WP_Tester_Database {
             } else {
                 error_log('WP Tester: Error adding AI generation columns to flows table: ' . $wpdb->last_error);
             }
+        }
+    }
+    
+    /**
+     * Update crawl results table schema to include missing fields
+     */
+    public function update_crawl_results_table_schema() {
+        global $wpdb;
+        
+        // Check if forms_found column exists
+        $forms_column_exists = $wpdb->get_results($wpdb->prepare(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+             WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'forms_found'",
+            $wpdb->dbname,
+            $this->crawl_results_table
+        ));
+        
+        if (empty($forms_column_exists)) {
+            // Add missing columns
+            $wpdb->query("ALTER TABLE {$this->crawl_results_table} ADD COLUMN forms_found int(11) DEFAULT 0");
+            $wpdb->query("ALTER TABLE {$this->crawl_results_table} ADD COLUMN links_found int(11) DEFAULT 0");
+            $wpdb->query("ALTER TABLE {$this->crawl_results_table} ADD COLUMN crawled_at datetime DEFAULT CURRENT_TIMESTAMP");
+            $wpdb->query("ALTER TABLE {$this->crawl_results_table} ADD COLUMN created_at datetime DEFAULT CURRENT_TIMESTAMP");
+            
+            // Add indexes
+            $wpdb->query("ALTER TABLE {$this->crawl_results_table} ADD INDEX crawled_at (crawled_at)");
+            $wpdb->query("ALTER TABLE {$this->crawl_results_table} ADD INDEX created_at (created_at)");
+            
+            error_log('WP Tester: Updated crawl results table schema');
         }
     }
 

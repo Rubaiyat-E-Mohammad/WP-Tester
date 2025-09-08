@@ -376,9 +376,14 @@ class WP_Tester_Admin {
             'flow_name' => '',
             'flow_type' => 'login',
             'start_url' => '',
+            'steps' => '[]',
+            'expected_outcome' => '',
             'priority' => 5,
             'is_active' => 1,
-            'steps' => '[]'
+            'ai_generated' => 0,
+            'ai_provider' => '',
+            'created_at' => current_time('mysql'),
+            'updated_at' => current_time('mysql')
         );
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-flow-edit.php';
