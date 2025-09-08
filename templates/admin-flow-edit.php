@@ -75,7 +75,7 @@ $steps = json_decode($flow->steps ?? '[]', true) ?: [];
             wp_nonce_field('wp_tester_add_flow', 'wp_tester_nonce');
         }
         ?>
-        <input type="hidden" name="steps" id="flow_steps" value="<?php echo esc_attr(json_encode($steps)); ?>">
+        <input type="hidden" name="steps" id="flow_steps" value="<?php echo htmlspecialchars(json_encode($steps), ENT_QUOTES, 'UTF-8'); ?>">
         
         <div class="modern-card">
             <div class="modern-card-header">
