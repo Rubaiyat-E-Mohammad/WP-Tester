@@ -14,17 +14,23 @@ if ($flow_id > 0) {
     global $wpdb;
     $flows_table = $wpdb->prefix . 'wp_tester_flows';
     $flow = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$flows_table} WHERE id = %d", $flow_id));
-}
-
-if (!$flow) {
-    wp_die('Flow not found');
+    
+    if (!$flow) {
+        wp_die('Flow not found');
+    }
+} else {
+    // For new flows, use the empty flow object created by add_flow_page
+    // This should already be set by the admin class
+    if (!isset($flow) || !is_object($flow)) {
+        wp_die('Flow object not found');
+    }
 }
 
 $steps = json_decode($flow->steps, true) ?: [];
 ?>
 
 <div class="wrap">
-    <h1>Edit Flow: <?php echo esc_html($flow->flow_name); ?></h1>
+    <h1><?php echo ($flow_id > 0) ? 'Edit Flow: ' . esc_html($flow->flow_name) : 'Add New Flow'; ?></h1>
     
     <div class="modern-card">
         <div class="modern-card-header">
@@ -51,8 +57,14 @@ $steps = json_decode($flow->steps, true) ?: [];
     </div>
     
     <form method="post" action="">
-        <?php wp_nonce_field('wp_tester_edit_flow', 'wp_tester_nonce'); ?>
-        <input type="hidden" name="flow_id" value="<?php echo $flow_id; ?>">
+        <?php 
+        if ($flow_id > 0) {
+            wp_nonce_field('wp_tester_edit_flow', 'wp_tester_nonce');
+            echo '<input type="hidden" name="flow_id" value="' . $flow_id . '">';
+        } else {
+            wp_nonce_field('wp_tester_add_flow', 'wp_tester_nonce');
+        }
+        ?>
         <input type="hidden" name="steps" id="flow_steps" value="<?php echo esc_attr(json_encode($steps)); ?>">
         
         <div class="modern-card">
@@ -106,7 +118,7 @@ $steps = json_decode($flow->steps, true) ?: [];
                 </div>
                 
                 <div class="form-group">
-                    <button type="submit" class="modern-btn modern-btn-primary">Save Flow</button>
+                    <button type="submit" class="modern-btn modern-btn-primary"><?php echo ($flow_id > 0) ? 'Update Flow' : 'Create Flow'; ?></button>
                     <a href="<?php echo admin_url('admin.php?page=wp-tester-flows'); ?>" class="modern-btn modern-btn-secondary">Cancel</a>
                 </div>
             </div>
