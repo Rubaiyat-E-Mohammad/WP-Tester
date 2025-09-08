@@ -245,47 +245,47 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
             
-            <div class="modern-grid grid-4" style="max-height: 500px; overflow-y: auto; gap: 0.75rem;">
+            <div class="plugin-cards-grid" style="max-height: 500px; overflow-y: auto;">
                 <?php foreach ($available_plugins as $plugin): ?>
                 <div class="plugin-card" 
                      data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
-                     style="cursor: pointer; position: relative; background: white; border: 2px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                     style="cursor: pointer; position: relative; background: white; border: 2px solid #e5e7eb; border-radius: 8px; padding: 1rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
                     
                     <!-- Header with icon and selection -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
-                            <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #1FC09A, #0ea5e9); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <span class="dashicons dashicons-admin-plugins" style="color: white; font-size: 18px;"></span>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0;">
+                            <div style="width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #1FC09A, #0ea5e9); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <span class="dashicons dashicons-admin-plugins" style="color: white; font-size: 14px;"></span>
                             </div>
-                            <div style="flex: 1;">
-                                <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #00265e; line-height: 1.3; margin-bottom: 0.25rem;">
+                            <div style="flex: 1; min-width: 0;">
+                                <h3 style="margin: 0; font-size: 0.875rem; font-weight: 700; color: #00265e; line-height: 1.2; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     <?php echo esc_html($plugin['name']); ?>
                                 </h3>
-                                <div style="display: inline-block; padding: 0.25rem 0.75rem; background: #f0f9ff; color: #0369a1; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                                <div style="display: inline-block; padding: 0.125rem 0.5rem; background: #f0f9ff; color: #0369a1; border-radius: 12px; font-size: 0.625rem; font-weight: 600; text-transform: uppercase;">
                                     <?php echo esc_html($plugin['type']); ?>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Selection Indicator -->
-                        <div class="plugin-selection-indicator" style="width: 24px; height: 24px; border: 2px solid #d1d5db; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; cursor: pointer; z-index: 10;">
-                            <div class="checkmark" style="width: 10px; height: 10px; background: #1FC09A; border-radius: 50%; opacity: 0; transition: opacity 0.3s ease;"></div>
+                        <div class="plugin-selection-indicator" style="width: 20px; height: 20px; border: 2px solid #d1d5db; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; cursor: pointer; z-index: 10; flex-shrink: 0;">
+                            <div class="checkmark" style="width: 8px; height: 8px; background: #1FC09A; border-radius: 50%; opacity: 0; transition: opacity 0.3s ease;"></div>
                         </div>
                     </div>
                     
                     <!-- Description -->
-                    <p style="margin: 0 0 1rem 0; font-size: 0.875rem; color: #64748b; line-height: 1.5; min-height: 2.5rem;">
-                        <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 12)); ?>
+                    <p style="margin: 0 0 0.75rem 0; font-size: 0.75rem; color: #64748b; line-height: 1.4; min-height: 2rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 8)); ?>
                     </p>
                     
                     <!-- Footer with version and author -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid #f1f5f9;">
-                        <div style="font-size: 0.75rem; color: #9ca3af;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid #f1f5f9;">
+                        <div style="font-size: 0.625rem; color: #9ca3af;">
                             <div style="font-weight: 600; color: #64748b;">v<?php echo esc_html($plugin['version']); ?></div>
-                            <div><?php echo esc_html($plugin['author']); ?></div>
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html($plugin['author']); ?></div>
                         </div>
-                        <div style="font-size: 0.75rem; color: #1FC09A; font-weight: 600;">
-                            Ready to test
+                        <div style="font-size: 0.625rem; color: #1FC09A; font-weight: 600;">
+                            Ready
                         </div>
                     </div>
                     
@@ -514,7 +514,14 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         const button = $(this);
         const originalText = button.html();
-        button.html('<span class="dashicons dashicons-update-alt"></span> Saving...').prop('disabled', true);
+        
+        // Add loading animation
+        button.addClass('saving');
+        button.html(`
+            <div class="save-spinner"></div>
+            <span>Saving Configuration...</span>
+        `);
+        button.prop('disabled', true);
         
         const selectedModel = $('#ai-model-select').val();
         const apiKey = $('#ai-api-key').val();
@@ -552,23 +559,52 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 console.log('Save AI Config - AJAX Response:', response);
                 if (response.success) {
-                    // Reset button state immediately
-                    button.html(originalText).prop('disabled', false);
+                    // Show success animation
+                    button.removeClass('saving').addClass('success');
+                    button.html(`
+                        <span class="dashicons dashicons-yes-alt"></span>
+                        <span>Configuration Saved!</span>
+                    `);
+                    
+                    // Show success modal
                     showSuccessModal('Configuration Saved', 'AI configuration saved successfully!');
+                    
                     // Reload after a short delay to allow modal to show
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
                 } else {
+                    // Show error animation
+                    button.removeClass('saving').addClass('error');
+                    button.html(`
+                        <span class="dashicons dashicons-warning"></span>
+                        <span>Save Failed</span>
+                    `);
+                    
                     showErrorModal('Save Failed', 'Failed to save configuration: ' + (response.data.message || 'Unknown error'));
-                    // Reset button state on error
-                    button.html(originalText).prop('disabled', false);
+                    
+                    // Reset button after delay
+                    setTimeout(function() {
+                        button.removeClass('error');
+                        button.html(originalText).prop('disabled', false);
+                    }, 2000);
                 }
             },
             error: function() {
+                // Show error animation
+                button.removeClass('saving').addClass('error');
+                button.html(`
+                    <span class="dashicons dashicons-warning"></span>
+                    <span>Connection Error</span>
+                `);
+                
                 showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
-                // Reset button state on error
-                button.html(originalText).prop('disabled', false);
+                
+                // Reset button after delay
+                setTimeout(function() {
+                    button.removeClass('error');
+                    button.html(originalText).prop('disabled', false);
+                }, 2000);
             }
         });
     });
@@ -934,16 +970,16 @@ jQuery(document).ready(function($) {
 </script>
 
 <style>
-/* Plugin card styling - modern design */
+/* Plugin card styling - responsive design */
 .plugin-card {
     transition: all 0.3s ease;
-    min-height: 200px;
+    min-height: 140px;
     width: 100%;
 }
 
 .plugin-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(31, 192, 154, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(31, 192, 154, 0.15);
     border-color: #1FC09A;
 }
 
@@ -955,8 +991,8 @@ jQuery(document).ready(function($) {
 .plugin-card.selected {
     border-color: #1FC09A !important;
     background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%) !important;
-    transform: translateY(-4px) !important;
-    box-shadow: 0 12px 32px rgba(31, 192, 154, 0.2) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(31, 192, 154, 0.2) !important;
 }
 
 .plugin-card.selected h3 {
@@ -972,15 +1008,37 @@ jQuery(document).ready(function($) {
 .plugin-card.selected .checkmark {
     opacity: 1 !important;
     background: white !important;
-    width: 10px !important;
-    height: 10px !important;
+    width: 8px !important;
+    height: 8px !important;
 }
 
-/* Ensure grid layout works properly */
-.modern-grid.grid-4 {
+/* Responsive grid layout */
+.plugin-cards-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1200px) {
+    .plugin-cards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 0.875rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .plugin-cards-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .plugin-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
 }
 
 /* Ensure cards are clickable */
@@ -996,5 +1054,78 @@ jQuery(document).ready(function($) {
 .plugin-selection-indicator {
     pointer-events: auto;
     cursor: pointer;
+}
+
+/* Save Configuration Button Animations */
+#save-ai-config {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+#save-ai-config.saving {
+    background: linear-gradient(135deg, #1FC09A, #0ea5e9) !important;
+    transform: scale(0.98);
+    box-shadow: 0 4px 20px rgba(31, 192, 154, 0.3);
+}
+
+#save-ai-config.success {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    transform: scale(1.02);
+    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+}
+
+#save-ai-config.error {
+    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    transform: scale(1.02);
+    box-shadow: 0 6px 25px rgba(239, 68, 68, 0.4);
+}
+
+/* Spinner Animation */
+.save-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Button Content Animation */
+#save-ai-config span {
+    transition: all 0.3s ease;
+}
+
+#save-ai-config .dashicons {
+    transition: all 0.3s ease;
+}
+
+/* Pulse Animation for Success */
+#save-ai-config.success {
+    animation: pulse-success 0.6s ease-in-out;
+}
+
+@keyframes pulse-success {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1.02); }
+}
+
+/* Shake Animation for Error */
+#save-ai-config.error {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 </style>
