@@ -207,7 +207,7 @@ if (isset($flow->steps) && !empty($flow->steps)) {
             </div>
 
             <!-- Hidden input for flow steps -->
-            <input type="hidden" name="flow_steps" id="flow_steps" value="<?php echo esc_attr(json_encode($flow_steps)); ?>">
+            <input type="hidden" name="steps" id="flow_steps" value="<?php echo esc_attr(json_encode($flow_steps)); ?>">
 
             <!-- Save Button -->
             <div style="margin-top: 2rem; text-align: center;">
@@ -220,6 +220,127 @@ if (isset($flow->steps) && !empty($flow->steps)) {
 
     </div>
 </div>
+
+<style>
+/* Modal Styles */
+.wp-tester-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wp-tester-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.wp-tester-modal-header {
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.wp-tester-modal-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.wp-tester-modal-header h3 {
+    margin: 0;
+    flex: 1;
+    color: #1f2937;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.wp-tester-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.wp-tester-modal-close:hover {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.wp-tester-modal-body {
+    padding: 1.5rem;
+}
+
+.wp-tester-modal-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #00265e;
+    box-shadow: 0 0 0 3px rgba(0, 38, 94, 0.1);
+}
+
+.form-group textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+</style>
 
 <script>
 jQuery(document).ready(function($) {
@@ -342,12 +463,14 @@ jQuery(document).ready(function($) {
         }).trigger('change');
         
         // Handle modal close
-        modal.find('#cancel-step, .wp-tester-modal-close').on('click', function() {
+        modal.find('#cancel-step, .wp-tester-modal-close').on('click', function(e) {
+            e.preventDefault();
             closeStepEditor();
         });
         
         // Handle save step
-        modal.find('#save-step').on('click', function() {
+        modal.find('#save-step').on('click', function(e) {
+            e.preventDefault();
             saveStep(stepIndex);
         });
         
@@ -357,9 +480,20 @@ jQuery(document).ready(function($) {
                 closeStepEditor();
             }
         });
+        
+        // Handle ESC key to close modal
+        $(document).on('keydown.modal', function(e) {
+            if (e.keyCode === 27) { // ESC key
+                closeStepEditor();
+                $(document).off('keydown.modal');
+            }
+        });
     }
     
     window.closeStepEditor = function() {
+        // Clean up event handlers
+        $(document).off('keydown.modal');
+        
         $('#wp-tester-step-editor-modal').fadeOut(300, function() {
             $(this).remove();
         });
@@ -510,6 +644,69 @@ jQuery(document).ready(function($) {
         `);
         $('.wp-tester-content').prepend(notice);
         setTimeout(() => notice.fadeOut(), 3000);
+    }
+    
+    function showSuccessModal(title, message) {
+        // Remove any existing success modals first
+        $('[id^="wp-tester-success-modal"]').remove();
+        
+        const modalId = 'wp-tester-success-modal-' + Date.now();
+        const modal = $(`
+            <div id="${modalId}" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
+                    <div class="wp-tester-modal-header">
+                        <div class="wp-tester-modal-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <span class="dashicons dashicons-yes-alt"></span>
+                        </div>
+                        <h3>${title}</h3>
+                        <button class="wp-tester-modal-close">&times;</button>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="wp-tester-modal-footer">
+                        <button class="modern-btn modern-btn-primary" onclick="$('#${modalId}').fadeOut(300, function() { $(this).remove(); });">OK</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(modal);
+        modal.fadeIn(300);
+        
+        // Auto close after 3 seconds
+        setTimeout(() => {
+            modal.fadeOut(300, function() { $(this).remove(); });
+        }, 3000);
+    }
+    
+    function showErrorModal(title, message) {
+        // Remove any existing error modals first
+        $('[id^="wp-tester-error-modal"]').remove();
+        
+        const modalId = 'wp-tester-error-modal-' + Date.now();
+        const modal = $(`
+            <div id="${modalId}" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
+                    <div class="wp-tester-modal-header">
+                        <div class="wp-tester-modal-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                            <span class="dashicons dashicons-warning"></span>
+                        </div>
+                        <h3>${title}</h3>
+                        <button class="wp-tester-modal-close">&times;</button>
+                    </div>
+                    <div class="wp-tester-modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="wp-tester-modal-footer">
+                        <button class="modern-btn modern-btn-primary" onclick="$('#${modalId}').fadeOut(300, function() { $(this).remove(); });">OK</button>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(modal);
+        modal.fadeIn(300);
     }
     
     function showTestFlowDialog() {

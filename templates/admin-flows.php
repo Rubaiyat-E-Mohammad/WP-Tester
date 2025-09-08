@@ -25,6 +25,10 @@ if (!defined('ABSPATH')) {
                     <span class="dashicons dashicons-arrow-left-alt2"></span>
                     Dashboard
                 </a>
+                <button id="test-connection" class="modern-btn modern-btn-secondary modern-btn-small">
+                    <span class="dashicons dashicons-admin-tools"></span>
+                    Test Connection
+                </button>
                 <button id="cleanup-flows" class="modern-btn modern-btn-danger modern-btn-small">
                     <span class="dashicons dashicons-trash"></span>
                     Cleanup Flows
@@ -36,7 +40,7 @@ if (!defined('ABSPATH')) {
                 <button id="wp-tester-discover-flows" class="modern-btn modern-btn-primary modern-btn-small">
                     <span class="dashicons dashicons-search"></span>
                     Discover Flows
-                </button>
+        </button>
             </div>
         </div>
     </div>
@@ -321,9 +325,50 @@ jQuery(document).ready(function($) {
         });
     });
     
+    // Test connection functionality
+    $('#test-connection').on('click', function(e) {
+        e.preventDefault();
+        
+        console.log('Test connection button clicked');
+        console.log('AJAX URL:', ajaxurl);
+        
+        const button = $(this);
+        const originalText = button.html();
+        
+        button.html('<span class="dashicons dashicons-update-alt"></span> Testing...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_test_connection'
+            },
+            success: function(response) {
+                console.log('Test connection response:', response);
+                if (response.success) {
+                    showSuccessModal('Connection Test', 'AJAX connection is working! Response: ' + response.data.message);
+                } else {
+                    showErrorModal('Connection Test Failed', response.data.message || 'Unknown error');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Test connection AJAX error:', {xhr, status, error});
+                console.error('Response text:', xhr.responseText);
+                showErrorModal('Connection Test Failed', 'Could not connect to server. Error: ' + error);
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
+    });
+    
     // Cleanup all flows functionality
     $('#cleanup-flows').on('click', function(e) {
         e.preventDefault();
+        
+        console.log('Cleanup flows button clicked');
+        console.log('AJAX URL:', ajaxurl);
+        console.log('Nonce:', '<?php echo wp_create_nonce('wp_tester_nonce'); ?>');
         
         if (!confirm('⚠️ WARNING: This will delete ALL flows permanently!\n\nAre you absolutely sure you want to delete all flows? This action cannot be undone.')) {
             return;
@@ -339,6 +384,8 @@ jQuery(document).ready(function($) {
         
         button.html('<span class="dashicons dashicons-update-alt"></span> Deleting All Flows...').prop('disabled', true);
         
+        console.log('Sending AJAX request to cleanup all flows');
+        
         $.ajax({
             url: ajaxurl,
             type: 'POST',
@@ -347,16 +394,19 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
+                console.log('Cleanup flows response:', response);
                 if (response.success) {
                     showSuccessModal('All Flows Deleted!', 
                         'Successfully deleted ' + (response.data.deleted_count || 0) + ' flows. Refreshing page...');
                     setTimeout(() => location.reload(), 2000);
                 } else {
+                    console.error('Cleanup failed:', response.data);
                     showErrorModal('Cleanup Failed', response.data.message || 'Unknown error occurred');
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Cleanup All Flows AJAX Error:', {xhr, status, error});
+                console.error('Response text:', xhr.responseText);
                 showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
             },
             complete: function() {
@@ -446,7 +496,7 @@ jQuery(document).ready(function($) {
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'wp_tester_test_flow',
+            action: 'wp_tester_test_flow',
                 flow_id: flowId[1],
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },

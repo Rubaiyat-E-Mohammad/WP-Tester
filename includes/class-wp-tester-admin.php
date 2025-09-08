@@ -400,7 +400,15 @@ class WP_Tester_Admin {
             $start_url = esc_url_raw($_POST['start_url'] ?? '');
             $priority = intval($_POST['priority'] ?? 5);
             $is_active = isset($_POST['is_active']) ? 1 : 0;
-            $steps = isset($_POST['steps']) ? $_POST['steps'] : array();
+            $steps = array();
+            if (isset($_POST['steps'])) {
+                if (is_string($_POST['steps'])) {
+                    $decoded_steps = json_decode($_POST['steps'], true);
+                    $steps = is_array($decoded_steps) ? $decoded_steps : array();
+                } elseif (is_array($_POST['steps'])) {
+                    $steps = $_POST['steps'];
+                }
+            }
             $expected_outcome = sanitize_text_field($_POST['expected_outcome'] ?? '');
             
             if ($flow_name && $start_url) {

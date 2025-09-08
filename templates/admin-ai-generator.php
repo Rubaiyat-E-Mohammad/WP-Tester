@@ -274,7 +274,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                     </div>
                     
                     <!-- Description -->
-                    <p style="margin: 0 0 0.75rem 0; font-size: 0.75rem; color: #64748b; line-height: 1.4; min-height: 2rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    <p style="margin: 0 0 0.75rem 0; font-size: 0.75rem; color: #64748b; line-height: 1.4; min-height: 2rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                         <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 8)); ?>
                     </p>
                     
@@ -986,11 +986,14 @@ jQuery(document).ready(function($) {
     padding: 1rem;
     overflow: hidden;
     word-wrap: break-word;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
 }
 
 .plugin-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 38, 94, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 38, 94, 0.15);
     border-color: #00265e;
 }
 
@@ -1000,10 +1003,12 @@ jQuery(document).ready(function($) {
 }
 
 .plugin-card.selected {
-    border-color: #00265e !important;
+    border: 2px solid #00265e !important;
     background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 24px rgba(0, 38, 94, 0.2) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 38, 94, 0.2) !important;
+    position: relative;
+    z-index: 1;
 }
 
 .plugin-card.selected h3 {
@@ -1087,24 +1092,45 @@ jQuery(document).ready(function($) {
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
+    background: #00265e !important;
+    border: 2px solid #00265e !important;
+    border-radius: 50px !important;
+    padding: 12px 24px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    box-shadow: 0 4px 15px rgba(0, 38, 94, 0.2) !important;
+}
+
+#save-ai-config:hover {
+    background: #001a3d !important;
+    border-color: #001a3d !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(0, 38, 94, 0.3) !important;
 }
 
 #save-ai-config.saving {
     background: linear-gradient(135deg, #00265e, #0ea5e9) !important;
+    border-color: #0ea5e9 !important;
     transform: scale(0.98);
     box-shadow: 0 4px 20px rgba(0, 38, 94, 0.3);
+    border-radius: 50px !important;
 }
 
 #save-ai-config.success {
     background: linear-gradient(135deg, #10b981, #059669) !important;
+    border-color: #059669 !important;
     transform: scale(1.02);
     box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+    border-radius: 50px !important;
 }
 
 #save-ai-config.error {
     background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+    border-color: #dc2626 !important;
     transform: scale(1.02);
     box-shadow: 0 6px 25px rgba(239, 68, 68, 0.4);
+    border-radius: 50px !important;
 }
 
 /* Spinner Animation */

@@ -50,6 +50,21 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_get_available_plugins', array($this, 'get_available_plugins'));
         add_action('wp_ajax_wp_tester_get_available_ai_models', array($this, 'get_available_ai_models'));
         add_action('wp_ajax_wp_tester_load_more_crawl_results', array($this, 'load_more_crawl_results'));
+        add_action('wp_ajax_wp_tester_test_connection', array($this, 'test_connection'));
+    }
+    
+    /**
+     * Test AJAX connection
+     */
+    public function test_connection() {
+        global $current_user;
+        $user_id = isset($current_user->ID) ? $current_user->ID : 0;
+        
+        wp_send_json_success(array(
+            'message' => 'AJAX connection working',
+            'timestamp' => current_time('mysql'),
+            'user_id' => $user_id
+        ));
     }
     
     /**
@@ -713,7 +728,11 @@ class WP_Tester_Ajax {
      * Cleanup all flows (delete all flows)
      */
     public function cleanup_all_flows() {
-        check_ajax_referer('wp_tester_nonce', 'nonce');
+        // Check nonce
+        if (!check_ajax_referer('wp_tester_nonce', 'nonce', false)) {
+            wp_send_json_error(array('message' => __('Security check failed. Please refresh the page and try again.', 'wp-tester')));
+            return;
+        }
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
@@ -723,7 +742,16 @@ class WP_Tester_Ajax {
         try {
             global $wpdb;
             $flows_table = $wpdb->prefix . 'wp_tester_flows';
-            $results_table = $wpdb->prefix . 'wp_tester_results';
+            $results_table = $wpdb->prefix . 'wp_tester_test_results';
+            
+            // Check if tables exist
+            $flows_exists = $wpdb->get_var("SHOW TABLES LIKE '{$flows_table}'");
+            $results_exists = $wpdb->get_var("SHOW TABLES LIKE '{$results_table}'");
+            
+            if (!$flows_exists) {
+                wp_send_json_error(array('message' => __('Flows table does not exist. Please deactivate and reactivate the plugin.', 'wp-tester')));
+                return;
+            }
             
             // Count flows before deletion
             $total_flows = $wpdb->get_var("SELECT COUNT(*) FROM {$flows_table}");
@@ -731,8 +759,11 @@ class WP_Tester_Ajax {
             // Delete all flows
             $deleted_flows = $wpdb->query("DELETE FROM {$flows_table}");
             
-            // Also clean up related test results
-            $deleted_results = $wpdb->query("DELETE FROM {$results_table}");
+            // Also clean up related test results if table exists
+            $deleted_results = 0;
+            if ($results_exists) {
+                $deleted_results = $wpdb->query("DELETE FROM {$results_table}");
+            }
             
             wp_send_json_success(array(
                 'message' => sprintf(__('Successfully deleted all %d flows and %d related test results.', 'wp-tester'), $deleted_flows, $deleted_results),
@@ -740,11 +771,18 @@ class WP_Tester_Ajax {
                 'deleted_results' => $deleted_results,
                 'debug_info' => array(
                     'flows_before' => $total_flows,
-                    'flows_after' => 0
+                    'flows_after' => 0,
+                    'flows_table' => $flows_table,
+                    'results_table' => $results_table,
+                    'tables_exist' => array(
+                        'flows' => $flows_exists ? 'yes' : 'no',
+                        'results' => $results_exists ? 'yes' : 'no'
+                    )
                 )
             ));
             
         } catch (Exception $e) {
+            error_log('WP Tester: Cleanup all flows error: ' . $e->getMessage());
             wp_send_json_error(array(
                 'message' => __('Failed to cleanup all flows: ', 'wp-tester') . $e->getMessage()
             ));
