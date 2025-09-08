@@ -727,7 +727,7 @@ class WP_Tester_Database {
     public function save_test_result($flow_id, $test_run_id, $status, $steps_executed, $steps_passed, $steps_failed, $execution_time, $error_message = '', $detailed_log = '', $suggestions = '') {
         global $wpdb;
         
-        return $wpdb->insert(
+        $result = $wpdb->insert(
             $this->test_results_table,
             array(
                 'flow_id' => $flow_id,
@@ -744,6 +744,13 @@ class WP_Tester_Database {
             ),
             array('%d', '%s', '%s', '%d', '%d', '%d', '%f', '%s', '%s', '%s', '%s')
         );
+        
+        if ($result === false) {
+            error_log('WP Tester: Failed to save test result. Error: ' . $wpdb->last_error);
+            return false;
+        }
+        
+        return $wpdb->insert_id;
     }
     
     /**
