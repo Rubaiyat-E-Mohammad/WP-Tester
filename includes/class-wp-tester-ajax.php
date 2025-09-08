@@ -955,16 +955,9 @@ class WP_Tester_Ajax {
             
             switch ($action) {
                 case 'delete':
-                    error_log("WP Tester: Starting bulk delete operation");
-                    error_log("WP Tester: Using table: {$test_results_table}");
-                    error_log("WP Tester: Deleting result IDs: " . wp_json_encode($result_ids));
-                    
                     $placeholders = implode(',', array_fill(0, count($result_ids), '%d'));
                     $delete_sql = "DELETE FROM {$test_results_table} WHERE id IN ({$placeholders})";
-                    error_log("WP Tester: Delete SQL: {$delete_sql}");
-                    
                     $deleted_count = $wpdb->query($wpdb->prepare($delete_sql, ...$result_ids));
-                    error_log("WP Tester: Deleted {$deleted_count} test results");
                     
                     if ($deleted_count === false) {
                         error_log("WP Tester: Delete query failed: " . $wpdb->last_error);
@@ -1345,7 +1338,8 @@ class WP_Tester_Ajax {
                 'max_flows_per_plugin' => intval($_POST['max_flows_per_plugin'] ?? 5),
                 'focus_areas' => array_filter(explode(',', $_POST['focus_areas'] ?? 'ecommerce,content,user_management,settings')),
                 'ai_provider' => isset($_POST['ai_provider']) ? sanitize_text_field($_POST['ai_provider']) : 'free',
-                'ai_model' => isset($_POST['ai_model']) ? sanitize_text_field($_POST['ai_model']) : 'gpt-3.5-turbo'
+                'ai_model' => isset($_POST['ai_model']) ? sanitize_text_field($_POST['ai_model']) : 'gpt-3.5-turbo',
+                'custom_prompt' => isset($_POST['custom_prompt']) ? sanitize_text_field($_POST['custom_prompt']) : ''
             );
             
             // Set the selected AI model

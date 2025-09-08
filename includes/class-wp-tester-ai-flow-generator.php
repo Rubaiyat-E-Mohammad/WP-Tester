@@ -676,7 +676,7 @@ class WP_Tester_AI_Flow_Generator {
                 break;
             }
             
-            $flow_data = $this->generate_flow_with_ai($page, 'frontend', $site_info);
+            $flow_data = $this->generate_flow_with_ai($page, 'frontend', $site_info, $options['custom_prompt'] ?? '');
             if ($flow_data && $this->is_unique_flow($flow_data)) {
                 $flow_id = $this->save_ai_generated_flow($flow_data);
                 if ($flow_id) {
@@ -700,7 +700,7 @@ class WP_Tester_AI_Flow_Generator {
                 break;
             }
             
-            $flow_data = $this->generate_flow_with_ai($page, 'admin', $site_info);
+            $flow_data = $this->generate_flow_with_ai($page, 'admin', $site_info, $options['custom_prompt'] ?? '');
             if ($flow_data && $this->is_unique_flow($flow_data)) {
                 $flow_id = $this->save_ai_generated_flow($flow_data);
                 if ($flow_id) {
@@ -1273,9 +1273,9 @@ class WP_Tester_AI_Flow_Generator {
     /**
      * Generate flow using AI
      */
-    private function generate_flow_with_ai($page, $area, $site_info) {
+    private function generate_flow_with_ai($page, $area, $site_info, $custom_prompt = '') {
         try {
-            $prompt = $this->build_ai_prompt($page, $area, $site_info);
+            $prompt = $this->build_ai_prompt($page, $area, $site_info, $custom_prompt);
             $ai_response = $this->call_ai_api($prompt);
             
             if ($ai_response && isset($ai_response['flow'])) {
@@ -1291,9 +1291,9 @@ class WP_Tester_AI_Flow_Generator {
     }
     
     /**
-     * Build AI prompt for flow generation
+     * Build AI prompt for flow generation with custom user prompt
      */
-    private function build_ai_prompt($page, $area, $site_info) {
+    private function build_ai_prompt($page, $area, $site_info, $custom_prompt = '') {
         $prompt = "You are a senior WordPress QA automation engineer with 15+ years of experience in web application testing, user experience analysis, and automated test design. You specialize in creating comprehensive, realistic test scenarios that catch real-world bugs and validate critical user journeys.\n\n";
         
         $prompt .= "## MISSION CRITICAL CONTEXT\n";
@@ -1309,6 +1309,14 @@ class WP_Tester_AI_Flow_Generator {
         if (!empty($page['content'])) {
             $content_preview = substr(strip_tags($page['content']), 0, 1000);
             $prompt .= "- Page Content Analysis: " . $content_preview . "...\n";
+        }
+        
+        // Add custom user prompt if provided
+        if (!empty($custom_prompt)) {
+            $prompt .= "\n## CUSTOM USER REQUIREMENTS\n";
+            $prompt .= "**User-Specified Testing Focus:**\n";
+            $prompt .= $custom_prompt . "\n";
+            $prompt .= "\n**IMPORTANT:** Incorporate the above user requirements into your test flow design. The user has specific testing needs that should be prioritized.\n";
         }
         
         $prompt .= "\n## EXPERT TESTING STRATEGY\n";

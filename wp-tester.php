@@ -99,6 +99,8 @@ class WP_Tester {
         require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-database.php';
         require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-crawler.php';
         require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-flow-executor.php';
+        require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-playwright-executor.php';
+        require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-selenium-executor.php';
         require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-feedback-reporter.php';
         require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-scheduler.php';
         require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-admin.php';

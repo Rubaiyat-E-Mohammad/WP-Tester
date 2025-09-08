@@ -159,6 +159,21 @@ if (!defined('ABSPATH')) {
             </div>
 
             
+                    <!-- Testing Engine -->
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                            Testing Engine
+                        </label>
+                        <select name="wp_tester_settings[testing_engine]" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                            <option value="basic" <?php selected(($settings['testing_engine'] ?? 'basic'), 'basic'); ?>>Basic (Current System)</option>
+                            <option value="playwright" <?php selected(($settings['testing_engine'] ?? 'basic'), 'playwright'); ?>>Playwright (Recommended)</option>
+                            <option value="selenium" <?php selected(($settings['testing_engine'] ?? 'basic'), 'selenium'); ?>>Selenium WebDriver</option>
+                        </select>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                            Playwright provides the most reliable web automation. Selenium is a good alternative. Basic mode uses the current system.
+                        </p>
+                    </div>
+
                     <!-- Screenshot on Failure -->
                     <div>
                         <label style="display: flex; align-items: center; gap: 0.75rem; font-weight: 600; color: #374151; font-size: 0.875rem;">

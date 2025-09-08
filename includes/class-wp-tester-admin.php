@@ -360,13 +360,36 @@ class WP_Tester_Admin {
             $start_url = esc_url_raw($_POST['start_url'] ?? '');
             $priority = intval($_POST['priority'] ?? 5);
             $is_active = isset($_POST['is_active']) ? 1 : 0;
+            $expected_outcome = sanitize_text_field($_POST['expected_outcome'] ?? '');
+            
+            // Handle steps
+            $steps = array();
+            if (isset($_POST['steps'])) {
+                if (is_string($_POST['steps'])) {
+                    $decoded_steps = json_decode($_POST['steps'], true);
+                    $steps = is_array($decoded_steps) ? $decoded_steps : array();
+                } elseif (is_array($_POST['steps'])) {
+                    $steps = $_POST['steps'];
+                }
+            }
             
             if ($flow_name && $start_url) {
-                $result = $this->database->save_flow($flow_name, $flow_type, $start_url, array(), '', $priority);
+                $result = $this->database->save_flow($flow_name, $flow_type, $start_url, $steps, $expected_outcome, $priority);
                 if ($result) {
-                    wp_redirect(admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . $this->database->get_flow_id_by_name($flow_name)));
+                    add_action('admin_notices', function() {
+                        echo '<div class="notice notice-success is-dismissible"><p>' . __('Flow created successfully!', 'wp-tester') . '</p></div>';
+                    });
+                    wp_redirect(admin_url('admin.php?page=wp-tester-flows'));
                     exit;
+                } else {
+                    add_action('admin_notices', function() {
+                        echo '<div class="notice notice-error is-dismissible"><p>' . __('Failed to create flow. Please try again.', 'wp-tester') . '</p></div>';
+                    });
                 }
+            } else {
+                add_action('admin_notices', function() {
+                    echo '<div class="notice notice-error is-dismissible"><p>' . __('Flow name and start URL are required.', 'wp-tester') . '</p></div>';
+                });
             }
         }
         
@@ -491,12 +514,8 @@ class WP_Tester_Admin {
             wp_die(__('Test result not found.', 'wp-tester'));
         }
         
-        // Debug: Log screenshot information
+        // Get screenshot information for the report
         $screenshots = $this->database->get_screenshots($result_id);
-        error_log("WP Tester: Found " . count($screenshots) . " screenshots for result ID: $result_id");
-        foreach ($screenshots as $screenshot) {
-            error_log("WP Tester: Screenshot - Step: {$screenshot->step_number}, Path: {$screenshot->screenshot_path}, Type: {$screenshot->screenshot_type}");
-        }
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-result-view.php';
     }

@@ -345,9 +345,15 @@ jQuery(document).ready(function($) {
         const steps = JSON.parse($('#flow_steps').val() || '[]');
         const step = steps[currentStepIndex];
         
+        if (!step) {
+            showErrorModal('Step not found');
+            return;
+        }
+        
         $('#modal-title').text('Edit Step');
         $('#save-step').text('Update Step');
-        populateStepForm(step);
+        resetStepForm(); // Reset first
+        populateStepForm(step); // Then populate
         $('#step-editor-modal').show();
     });
     
@@ -384,20 +390,26 @@ jQuery(document).ready(function($) {
         
         // Save step
         const steps = JSON.parse($('#flow_steps').val() || '[]');
-        if (currentStepIndex !== null) {
+        if (currentStepIndex !== null && currentStepIndex >= 0) {
+            // Editing existing step
             steps[currentStepIndex] = formData;
         } else {
+            // Adding new step
             steps.push(formData);
         }
         
         $('#flow_steps').val(JSON.stringify(steps));
         updateStepsList();
         $('#step-editor-modal').hide();
+        
+        // Reset currentStepIndex
+        currentStepIndex = null;
     });
     
     // Cancel step
     $('#cancel-step, .modal-close').on('click', function() {
         $('#step-editor-modal').hide();
+        currentStepIndex = null; // Reset currentStepIndex
     });
     
     // Close modal on outside click
