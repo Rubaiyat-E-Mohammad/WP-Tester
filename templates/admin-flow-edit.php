@@ -37,6 +37,10 @@ if ($flow_id > 0) {
 }
 
 $steps = json_decode($flow->steps ?? '[]', true) ?: [];
+
+// Debug: Log the steps being loaded
+error_log('WP Tester: Loading flow with ' . count($steps) . ' steps');
+error_log('WP Tester: Steps data: ' . ($flow->steps ?? 'null'));
 ?>
 
 <div class="wrap">
@@ -75,7 +79,7 @@ $steps = json_decode($flow->steps ?? '[]', true) ?: [];
             wp_nonce_field('wp_tester_add_flow', 'wp_tester_nonce');
         }
         ?>
-        <input type="hidden" name="steps" id="flow_steps" value="<?php echo htmlspecialchars(json_encode($steps), ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="steps" id="flow_steps" value="<?php echo htmlspecialchars(json_encode($steps, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>">
         
         <div class="modern-card">
             <div class="modern-card-header">
@@ -508,6 +512,62 @@ jQuery(document).ready(function($) {
     // Initialize steps list
     console.log('Initial steps from PHP:', $('#flow_steps').val());
     updateStepsList();
+    
+    // Add form submission debugging and validation
+    $('form').on('submit', function(e) {
+        const stepsValue = $('#flow_steps').val();
+        console.log('Form submitting with steps:', stepsValue);
+        
+        // Ensure steps are properly formatted
+        try {
+            const steps = JSON.parse(stepsValue || '[]');
+            console.log('Parsed steps:', steps);
+            console.log('Steps count:', steps.length);
+            
+            // Validate that we have steps
+            if (steps.length === 0) {
+                console.warn('No steps found in form submission!');
+                // Don't prevent submission, but log the issue
+            }
+            
+            // Re-encode to ensure proper formatting
+            $('#flow_steps').val(JSON.stringify(steps));
+            console.log('Steps validated and re-encoded:', JSON.stringify(steps));
+            
+            // Store steps in sessionStorage as backup
+            sessionStorage.setItem('wp_tester_steps_backup', JSON.stringify(steps));
+            console.log('Steps backed up to sessionStorage');
+            
+        } catch (error) {
+            console.error('Error parsing steps:', error);
+            e.preventDefault();
+            alert('Error with steps data. Please try again.');
+            return false;
+        }
+    });
+    
+    // Check for steps backup on page load
+    $(document).ready(function() {
+        const backupSteps = sessionStorage.getItem('wp_tester_steps_backup');
+        if (backupSteps) {
+            try {
+                const steps = JSON.parse(backupSteps);
+                const currentSteps = JSON.parse($('#flow_steps').val() || '[]');
+                
+                // If current steps are empty but we have backup, restore them
+                if (currentSteps.length === 0 && steps.length > 0) {
+                    console.log('Restoring steps from backup:', steps);
+                    $('#flow_steps').val(JSON.stringify(steps));
+                    updateStepsList();
+                }
+                
+                // Clear backup after use
+                sessionStorage.removeItem('wp_tester_steps_backup');
+            } catch (error) {
+                console.error('Error restoring steps from backup:', error);
+            }
+        }
+    });
     
     // Error modal function
     function showErrorModal(title, message) {

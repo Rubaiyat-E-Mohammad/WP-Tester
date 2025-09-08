@@ -430,16 +430,39 @@ class WP_Tester_Admin {
             $is_active = isset($_POST['is_active']) ? 1 : 0;
             $steps = array();
             if (isset($_POST['steps'])) {
+                // Debug: Log the received steps data
+                error_log('WP Tester: Received steps data: ' . print_r($_POST['steps'], true));
+                
                 if (is_string($_POST['steps'])) {
                     $decoded_steps = json_decode($_POST['steps'], true);
-                    $steps = is_array($decoded_steps) ? $decoded_steps : array();
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_steps)) {
+                        $steps = $decoded_steps;
+                        error_log('WP Tester: Successfully decoded ' . count($steps) . ' steps');
+                    } else {
+                        error_log('WP Tester: JSON decode error: ' . json_last_error_msg());
+                        $steps = array();
+                    }
                 } elseif (is_array($_POST['steps'])) {
                     $steps = $_POST['steps'];
+                    error_log('WP Tester: Received steps as array: ' . count($steps) . ' steps');
                 }
+            } else {
+                error_log('WP Tester: No steps data received in POST');
             }
             $expected_outcome = sanitize_text_field($_POST['expected_outcome'] ?? '');
             
             if ($flow_name && $start_url) {
+                // Debug: Log what we're about to save
+                error_log('WP Tester: About to save ' . count($steps) . ' steps to database');
+                error_log('WP Tester: Steps data: ' . wp_json_encode($steps));
+                
+                // Ensure steps are properly encoded
+                $encoded_steps = wp_json_encode($steps);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    error_log('WP Tester: JSON encoding error: ' . json_last_error_msg());
+                    $encoded_steps = '[]';
+                }
+                
                 // Update the flow
                 global $wpdb;
                 $result = $wpdb->update(
@@ -448,7 +471,7 @@ class WP_Tester_Admin {
                         'flow_name' => $flow_name,
                         'flow_type' => $flow_type,
                         'start_url' => $start_url,
-                        'steps' => wp_json_encode($steps),
+                        'steps' => $encoded_steps,
                         'expected_outcome' => $expected_outcome,
                         'priority' => $priority,
                         'is_active' => $is_active,
@@ -459,9 +482,23 @@ class WP_Tester_Admin {
                     array('%d')
                 );
                 
+                // Debug: Log the database result
+                error_log('WP Tester: Database update result: ' . ($result !== false ? 'success' : 'failed'));
+                if ($result === false) {
+                    error_log('WP Tester: Database error: ' . $wpdb->last_error);
+                }
+                
                 if ($result !== false) {
                     // Refresh the flow data
                     $flow = $this->database->get_flow($flow_id);
+                    
+                    // Debug: Verify what was actually saved
+                    if ($flow) {
+                        $saved_steps = json_decode($flow->steps, true);
+                        error_log('WP Tester: Flow updated successfully. Saved steps count: ' . count($saved_steps ?: []));
+                        error_log('WP Tester: Saved steps data: ' . $flow->steps);
+                    }
+                    
                     add_action('admin_notices', function() {
                         echo '<div class="notice notice-success is-dismissible"><p>' . __('Flow updated successfully!', 'wp-tester') . '</p></div>';
                     });
