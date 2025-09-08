@@ -434,13 +434,32 @@ class WP_Tester_Admin {
                 error_log('WP Tester: Received steps data: ' . print_r($_POST['steps'], true));
                 
                 if (is_string($_POST['steps'])) {
-                    $decoded_steps = json_decode($_POST['steps'], true);
+                    // Clean the JSON string - remove any extra escaping
+                    $clean_steps = stripslashes($_POST['steps']);
+                    error_log('WP Tester: Cleaned steps data: ' . $clean_steps);
+                    
+                    $decoded_steps = json_decode($clean_steps, true);
                     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_steps)) {
                         $steps = $decoded_steps;
                         error_log('WP Tester: Successfully decoded ' . count($steps) . ' steps');
                     } else {
                         error_log('WP Tester: JSON decode error: ' . json_last_error_msg());
-                        $steps = array();
+                        error_log('WP Tester: Raw JSON: ' . $clean_steps);
+                        
+                        // Try to fix common JSON issues
+                        $fixed_json = $this->fix_json_syntax($clean_steps);
+                        if ($fixed_json) {
+                            $decoded_steps = json_decode($fixed_json, true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded_steps)) {
+                                $steps = $decoded_steps;
+                                error_log('WP Tester: Successfully decoded after fix: ' . count($steps) . ' steps');
+                            } else {
+                                error_log('WP Tester: Still failed after fix: ' . json_last_error_msg());
+                                $steps = array();
+                            }
+                        } else {
+                            $steps = array();
+                        }
                     }
                 } elseif (is_array($_POST['steps'])) {
                     $steps = $_POST['steps'];
@@ -515,6 +534,38 @@ class WP_Tester_Admin {
         }
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-flow-edit.php';
+    }
+    
+    /**
+     * Fix common JSON syntax issues
+     */
+    private function fix_json_syntax($json_string) {
+        if (empty($json_string)) {
+            return false;
+        }
+        
+        // Remove any extra escaping
+        $json_string = stripslashes($json_string);
+        
+        // Fix common issues with malformed JSON
+        // 1. Fix unescaped quotes in strings
+        $json_string = preg_replace('/"([^"]*)"([^"]*)"([^"]*)"/', '"$1\\"$2\\"$3"', $json_string);
+        
+        // 2. Fix missing quotes around object keys
+        $json_string = preg_replace('/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/', '$1"$2":', $json_string);
+        
+        // 3. Fix trailing commas
+        $json_string = preg_replace('/,(\s*[}\]])/', '$1', $json_string);
+        
+        // 4. Fix single quotes to double quotes
+        $json_string = str_replace("'", '"', $json_string);
+        
+        // 5. Try to fix malformed URLs in JSON
+        $json_string = preg_replace('/"([^"]*https?:\/\/[^"]*)"([^"]*)"([^"]*)"/', '"$1$2$3"', $json_string);
+        
+        error_log('WP Tester: Fixed JSON: ' . $json_string);
+        
+        return $json_string;
     }
     
     /**

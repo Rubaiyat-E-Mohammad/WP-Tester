@@ -79,7 +79,7 @@ error_log('WP Tester: Steps data: ' . ($flow->steps ?? 'null'));
             wp_nonce_field('wp_tester_add_flow', 'wp_tester_nonce');
         }
         ?>
-        <input type="hidden" name="steps" id="flow_steps" value="<?php echo htmlspecialchars(json_encode($steps, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8'); ?>">
+        <input type="hidden" name="steps" id="flow_steps" value="<?php echo htmlspecialchars(json_encode($steps, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, 'UTF-8'); ?>">
         
         <div class="modern-card">
             <div class="modern-card-header">
@@ -120,8 +120,8 @@ error_log('WP Tester: Steps data: ' . ($flow->steps ?? 'null'));
                 </div>
                 
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" name="is_active" value="1" <?php checked($flow->is_active ?? 1, 1); ?>>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_active" value="1" class="small-checkbox" <?php checked($flow->is_active ?? 1, 1); ?>>
                         Active Flow
                     </label>
                 </div>
@@ -328,6 +328,42 @@ error_log('WP Tester: Steps data: ' . ($flow->steps ?? 'null'));
 .modern-card-body {
     padding: 20px;
 }
+
+/* Small checkbox styling */
+.checkbox-label {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    margin-bottom: 0 !important;
+    font-weight: 600 !important;
+}
+
+.small-checkbox {
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1px solid #ddd !important;
+    border-radius: 3px !important;
+    background: white !important;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.small-checkbox:checked {
+    background: #00265e !important;
+    border-color: #00265e !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e") !important;
+    background-size: 12px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+.small-checkbox:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(0, 38, 94, 0.2) !important;
+}
 </style>
 
 <script>
@@ -421,7 +457,11 @@ jQuery(document).ready(function($) {
         }
         
         console.log(`Steps after: ${steps.length}. Steps array:`, steps);
-        $('#flow_steps').val(JSON.stringify(steps));
+        
+        // Ensure proper JSON encoding
+        const encodedSteps = JSON.stringify(steps, null, 0);
+        console.log('Encoded steps:', encodedSteps);
+        $('#flow_steps').val(encodedSteps);
         updateStepsList();
         $('#step-editor-modal').hide();
         
@@ -520,7 +560,9 @@ jQuery(document).ready(function($) {
         
         // Ensure steps are properly formatted
         try {
-            const steps = JSON.parse(stepsValue || '[]');
+            // Clean and validate the JSON
+            const cleanStepsValue = cleanAndValidateJSON(stepsValue || '[]');
+            const steps = JSON.parse(cleanStepsValue);
             console.log('Parsed steps:', steps);
             console.log('Steps count:', steps.length);
             
@@ -530,12 +572,12 @@ jQuery(document).ready(function($) {
                 // Don't prevent submission, but log the issue
             }
             
-            // Re-encode to ensure proper formatting
-            $('#flow_steps').val(JSON.stringify(steps));
-            console.log('Steps validated and re-encoded:', JSON.stringify(steps));
+            // Set the cleaned JSON
+            $('#flow_steps').val(cleanStepsValue);
+            console.log('Steps validated and re-encoded:', cleanStepsValue);
             
             // Store steps in sessionStorage as backup
-            sessionStorage.setItem('wp_tester_steps_backup', JSON.stringify(steps));
+            sessionStorage.setItem('wp_tester_steps_backup', cleanStepsValue);
             console.log('Steps backed up to sessionStorage');
             
         } catch (error) {
@@ -568,6 +610,35 @@ jQuery(document).ready(function($) {
             }
         }
     });
+    
+    // JSON validation and cleaning function
+    function cleanAndValidateJSON(jsonString) {
+        try {
+            // First, try to parse as-is
+            const parsed = JSON.parse(jsonString);
+            return JSON.stringify(parsed, null, 0);
+        } catch (error) {
+            console.warn('JSON parse error, attempting to fix:', error);
+            
+            // Try to fix common issues
+            let fixed = jsonString;
+            
+            // Remove extra escaping
+            fixed = fixed.replace(/\\"/g, '"');
+            fixed = fixed.replace(/\\\\/g, '\\');
+            
+            // Fix unescaped quotes in URLs
+            fixed = fixed.replace(/"([^"]*https?:\/\/[^"]*)"([^"]*)"([^"]*)"/g, '"$1$2$3"');
+            
+            try {
+                const parsed = JSON.parse(fixed);
+                return JSON.stringify(parsed, null, 0);
+            } catch (secondError) {
+                console.error('Could not fix JSON:', secondError);
+                return '[]';
+            }
+        }
+    }
     
     // Error modal function
     function showErrorModal(title, message) {
