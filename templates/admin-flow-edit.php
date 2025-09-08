@@ -463,8 +463,16 @@ jQuery(document).ready(function($) {
         }).trigger('change');
         
         // Handle modal close
-        modal.find('#cancel-step, .wp-tester-modal-close').on('click', function(e) {
+        modal.find('#cancel-step').on('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
+            console.log('Cancel button clicked');
+            closeStepEditor();
+        });
+        
+        modal.find('.wp-tester-modal-close').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             closeStepEditor();
         });
         
@@ -491,15 +499,19 @@ jQuery(document).ready(function($) {
     }
     
     window.closeStepEditor = function() {
+        console.log('closeStepEditor called');
         // Clean up event handlers
         $(document).off('keydown.modal');
         
         $('#wp-tester-step-editor-modal').fadeOut(300, function() {
+            console.log('Modal removed');
             $(this).remove();
         });
     }
     
     window.saveStep = function(stepIndex = null) {
+        console.log('saveStep called with stepIndex:', stepIndex);
+        
         const formData = {
             action: $('#step-action').val(),
             target: $('#step-target').val(),
@@ -508,9 +520,16 @@ jQuery(document).ready(function($) {
             timeout: parseInt($('#step-timeout').val()) || 30
         };
         
+        console.log('Form data:', formData);
+        
         // Validate required fields
-        if (!formData.action || !formData.target) {
-            showErrorModal('Validation Error', 'Please fill in all required fields.');
+        if (!formData.action || formData.action.trim() === '') {
+            showErrorModal('Validation Error', 'Please select an action type.');
+            return;
+        }
+        
+        if (!formData.target || formData.target.trim() === '') {
+            showErrorModal('Validation Error', 'Please enter a target (CSS selector or URL).');
             return;
         }
         
@@ -665,7 +684,7 @@ jQuery(document).ready(function($) {
                         <p>${message}</p>
                     </div>
                     <div class="wp-tester-modal-footer">
-                        <button class="modern-btn modern-btn-primary" onclick="$('#${modalId}').fadeOut(300, function() { $(this).remove(); });">OK</button>
+                        <button class="modern-btn modern-btn-primary" id="success-modal-ok">OK</button>
                     </div>
                 </div>
             </div>
@@ -673,6 +692,33 @@ jQuery(document).ready(function($) {
         
         $('body').append(modal);
         modal.fadeIn(300);
+        
+        // Add proper event handlers
+        modal.find('#success-modal-ok, .wp-tester-modal-close').on('click', function(e) {
+            e.preventDefault();
+            modal.fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Handle clicking outside modal to close
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Handle ESC key to close modal
+        $(document).on('keydown.successModal', function(e) {
+            if (e.keyCode === 27) { // ESC key
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+                $(document).off('keydown.successModal');
+            }
+        });
         
         // Auto close after 3 seconds
         setTimeout(() => {
@@ -699,7 +745,7 @@ jQuery(document).ready(function($) {
                         <p>${message}</p>
                     </div>
                     <div class="wp-tester-modal-footer">
-                        <button class="modern-btn modern-btn-primary" onclick="$('#${modalId}').fadeOut(300, function() { $(this).remove(); });">OK</button>
+                        <button class="modern-btn modern-btn-primary" id="error-modal-ok">OK</button>
                     </div>
                 </div>
             </div>
@@ -707,6 +753,33 @@ jQuery(document).ready(function($) {
         
         $('body').append(modal);
         modal.fadeIn(300);
+        
+        // Add proper event handlers
+        modal.find('#error-modal-ok, .wp-tester-modal-close').on('click', function(e) {
+            e.preventDefault();
+            modal.fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Handle clicking outside modal to close
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Handle ESC key to close modal
+        $(document).on('keydown.errorModal', function(e) {
+            if (e.keyCode === 27) { // ESC key
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+                $(document).off('keydown.errorModal');
+            }
+        });
     }
     
     function showTestFlowDialog() {

@@ -264,11 +264,22 @@ if (!defined('ABSPATH')) {
             <div style="margin-top: 2rem; text-align: center;">
                 <?php submit_button('Save Settings', 'primary', 'submit', false, array(
                     'class' => 'modern-btn modern-btn-primary',
-                    'style' => 'padding: 0.75rem 2rem; font-size: 0.875rem; font-weight: 600;'
+                    'style' => 'padding: 12px 24px; font-size: 0.875rem; font-weight: 600; background: #00265e !important; border: 2px solid #00265e !important; border-radius: 50px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; box-shadow: 0 4px 15px rgba(0, 38, 94, 0.2) !important;'
                 )); ?>
             </div>
 
     </form>
+    
+    <style>
+    /* Save Settings Button Hover Effects */
+    .modern-btn.modern-btn-primary:hover {
+        background: #001a3d !important;
+        border-color: #001a3d !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(0, 38, 94, 0.3) !important;
+        transition: all 0.3s ease !important;
+    }
+    </style>
     
         <!-- Additional Actions -->
         <div class="modern-card" style="margin-top: 2rem;">

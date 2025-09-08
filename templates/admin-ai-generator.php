@@ -572,10 +572,7 @@ jQuery(document).ready(function($) {
                     // Reset button after 1 second
                     setTimeout(function() {
                         button.removeClass('success');
-                        button.html(`
-                            <span class="dashicons dashicons-admin-generic"></span>
-                            <span>Save Configuration</span>
-                        `);
+                        button.html(originalText);
                         button.prop('disabled', false);
                     }, 1000);
                 } else {
