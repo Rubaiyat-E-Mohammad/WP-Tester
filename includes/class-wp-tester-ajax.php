@@ -84,7 +84,8 @@ class WP_Tester_Ajax {
                 set_time_limit(300); // 5 minutes max
             }
             
-            $executor = new WP_Tester_Flow_Executor();
+            $admin = new WP_Tester_Admin();
+            $executor = $admin->get_test_executor();
             $database = new WP_Tester_Database();
             
             $flows = $database->get_flows(true); // Get active flows only
@@ -207,7 +208,8 @@ class WP_Tester_Ajax {
         }
         
         try {
-            $executor = new WP_Tester_Flow_Executor();
+            $admin = new WP_Tester_Admin();
+            $executor = $admin->get_test_executor();
             $result = $executor->execute_flow($flow_id, true);
             
             if ($result['success']) {
@@ -254,7 +256,8 @@ class WP_Tester_Ajax {
             // Set execution time limit for single test
             set_time_limit(120); // 2 minutes
             
-            $executor = new WP_Tester_Flow_Executor();
+            $admin = new WP_Tester_Admin();
+            $executor = $admin->get_test_executor();
             $result = $executor->execute_flow($flow_id, true);
             
             if ($result['success']) {
@@ -400,7 +403,8 @@ class WP_Tester_Ajax {
             
             switch ($action) {
                 case 'test':
-                    $executor = new WP_Tester_Flow_Executor();
+                    $admin = new WP_Tester_Admin();
+                    $executor = $admin->get_test_executor();
                     $results = $executor->execute_multiple_flows($flow_ids);
                     
                     wp_send_json_success(array(

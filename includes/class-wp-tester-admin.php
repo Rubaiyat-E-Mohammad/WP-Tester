@@ -192,6 +192,14 @@ class WP_Tester_Admin {
         );
         
         add_settings_field(
+            'test_engine',
+            __('Test Engine', 'wp-tester'),
+            array($this, 'test_engine_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
             'crawl_frequency',
             __('Crawl Frequency', 'wp-tester'),
             array($this, 'crawl_frequency_callback'),
@@ -549,6 +557,20 @@ class WP_Tester_Admin {
     }
     
     /**
+     * Get the selected test executor
+     */
+    public function get_test_executor() {
+        $settings = get_option('wp_tester_settings', array());
+        $test_engine = isset($settings['test_engine']) ? $settings['test_engine'] : 'playwright';
+        
+        if ($test_engine === 'selenium') {
+            return new WP_Tester_Selenium_Executor();
+        } else {
+            return new WP_Tester_Playwright_Executor();
+        }
+    }
+    
+    /**
      * Test flow page
      */
     private function test_flow_page($flow_id) {
@@ -557,8 +579,8 @@ class WP_Tester_Admin {
             wp_die(__('Flow not found.', 'wp-tester'));
         }
         
-        // Execute the flow
-        $executor = new WP_Tester_Flow_Executor();
+        // Execute the flow using selected engine
+        $executor = $this->get_test_executor();
         $result = $executor->execute_flow($flow_id, true);
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-flow-test.php';
@@ -604,6 +626,20 @@ class WP_Tester_Admin {
      */
     public function general_section_callback() {
         echo '<p>' . __('Configure general settings for WP Tester.', 'wp-tester') . '</p>';
+    }
+    
+    public function test_engine_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $test_engine = isset($settings['test_engine']) ? $settings['test_engine'] : 'playwright';
+        
+        echo '<select name="wp_tester_settings[test_engine]" id="test_engine">';
+        echo '<option value="playwright" ' . selected($test_engine, 'playwright', false) . '>Playwright (Default - Real Screenshots)</option>';
+        echo '<option value="selenium" ' . selected($test_engine, 'selenium', false) . '>Selenium (Alternative)</option>';
+        echo '</select>';
+        
+        echo '<p class="description">';
+        echo __('Playwright is the default engine for real browser automation and screenshots. Selenium is an alternative option.', 'wp-tester');
+        echo '</p>';
     }
     
     public function crawl_frequency_callback() {

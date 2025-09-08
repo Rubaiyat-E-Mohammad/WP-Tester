@@ -62,7 +62,8 @@ class WP_Tester_Scheduler {
      */
     public function run_scheduled_tests() {
         try {
-            $executor = new WP_Tester_Flow_Executor();
+            $admin = new WP_Tester_Admin();
+            $executor = $admin->get_test_executor();
             $database = new WP_Tester_Database();
             
             // Get flows that need testing (prioritize by priority and last test date)
