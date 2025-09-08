@@ -76,14 +76,8 @@ class WP_Tester_Playwright_Executor {
             
         } catch (Exception $e) {
             error_log('WP Tester Playwright Execution Error: ' . $e->getMessage());
-            return array(
-                'success' => false,
-                'error' => $e->getMessage(),
-                'steps_executed' => 0,
-                'steps_passed' => 0,
-                'steps_failed' => 0,
-                'execution_time' => 0
-            );
+            // Re-throw the exception to trigger fallback to regular executor
+            throw $e;
         }
     }
     
@@ -183,12 +177,24 @@ class WP_Tester_Playwright_Executor {
         $test_file = sys_get_temp_dir() . '/wp-tester-test-' . $test_run_id . '.spec.js';
         file_put_contents($test_file, $script);
         
-        // Run Playwright test
-        $command = "npx playwright test {$test_file} --reporter=json";
-        $output = shell_exec($command . ' 2>&1');
+        error_log('WP Tester: Created Playwright test file: ' . $test_file);
+        error_log('WP Tester: Test script content: ' . substr($script, 0, 500));
+        
+        // Check if Playwright is available
+        $playwright_check = shell_exec('npx playwright --version 2>&1');
+        error_log('WP Tester: Playwright version check: ' . $playwright_check);
+        
+        // Run Playwright test with better error handling
+        $command = "npx playwright test {$test_file} --reporter=json 2>&1";
+        error_log('WP Tester: Running command: ' . $command);
+        
+        $output = shell_exec($command);
+        error_log('WP Tester: Command output: ' . $output);
         
         // Clean up test file
-        unlink($test_file);
+        if (file_exists($test_file)) {
+            unlink($test_file);
+        }
         
         // Parse results
         return $this->parse_playwright_results($output);
@@ -198,17 +204,19 @@ class WP_Tester_Playwright_Executor {
      * Parse Playwright test results
      */
     private function parse_playwright_results($output) {
+        // Log the raw output for debugging
+        error_log('WP Tester: Playwright raw output: ' . $output);
+        
         $results = json_decode($output, true);
         
-        if (!$results || !isset($results['suites'])) {
-            return array(
-                'success' => false,
-                'error' => 'Failed to parse Playwright results',
-                'steps_executed' => 0,
-                'steps_passed' => 0,
-                'steps_failed' => 0,
-                'execution_time' => 0
-            );
+        if (!$results) {
+            error_log('WP Tester: Failed to decode JSON from Playwright output');
+            return $this->parse_text_output($output);
+        }
+        
+        if (!isset($results['suites'])) {
+            error_log('WP Tester: No suites found in Playwright JSON results');
+            return $this->parse_text_output($output);
         }
         
         $total_tests = 0;
@@ -239,6 +247,49 @@ class WP_Tester_Playwright_Executor {
     }
     
     /**
+     * Parse text output when JSON fails
+     */
+    private function parse_text_output($output) {
+        error_log('WP Tester: Parsing Playwright text output');
+        
+        // Check for common success/failure patterns in text output
+        if (strpos($output, '✓') !== false || strpos($output, 'PASS') !== false || strpos($output, 'passed') !== false) {
+            return array(
+                'success' => true,
+                'error' => '',
+                'steps_executed' => 1,
+                'steps_passed' => 1,
+                'steps_failed' => 0,
+                'execution_time' => 1.0,
+                'raw_output' => $output
+            );
+        }
+        
+        if (strpos($output, '✗') !== false || strpos($output, 'FAIL') !== false || strpos($output, 'failed') !== false) {
+            return array(
+                'success' => false,
+                'error' => 'Test failed - check Playwright output for details',
+                'steps_executed' => 1,
+                'steps_passed' => 0,
+                'steps_failed' => 1,
+                'execution_time' => 1.0,
+                'raw_output' => $output
+            );
+        }
+        
+        // If we can't determine the result, assume failure
+        return array(
+            'success' => false,
+            'error' => 'Unable to parse Playwright output: ' . substr($output, 0, 200),
+            'steps_executed' => 0,
+            'steps_passed' => 0,
+            'steps_failed' => 0,
+            'execution_time' => 0,
+            'raw_output' => $output
+        );
+    }
+    
+    /**
      * Save test results to database
      */
     private function save_test_results($flow_id, $test_run_id, $result) {
@@ -263,8 +314,30 @@ class WP_Tester_Playwright_Executor {
      * Check if Playwright is installed
      */
     public function is_playwright_available() {
+        // Check if npx is available
+        $npx_check = shell_exec('npx --version 2>&1');
+        if (strpos($npx_check, 'npm') === false) {
+            error_log('WP Tester: npx not available');
+            return false;
+        }
+        
+        // Check if Playwright is installed
         $output = shell_exec('npx playwright --version 2>&1');
-        return strpos($output, 'playwright') !== false;
+        error_log('WP Tester: Playwright version check output: ' . $output);
+        
+        if (strpos($output, 'playwright') === false || strpos($output, 'error') !== false) {
+            error_log('WP Tester: Playwright not properly installed');
+            return false;
+        }
+        
+        // Check if browsers are installed
+        $browser_check = shell_exec('npx playwright install --dry-run 2>&1');
+        if (strpos($browser_check, 'browsers') !== false) {
+            error_log('WP Tester: Playwright browsers not installed');
+            return false;
+        }
+        
+        return true;
     }
     
     /**

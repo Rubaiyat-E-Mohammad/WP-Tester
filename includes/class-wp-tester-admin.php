@@ -191,13 +191,6 @@ class WP_Tester_Admin {
             'wp_tester_settings'
         );
         
-        add_settings_field(
-            'test_engine',
-            __('Test Engine', 'wp-tester'),
-            array($this, 'test_engine_callback'),
-            'wp_tester_settings',
-            'wp_tester_general'
-        );
         
         add_settings_field(
             'crawl_frequency',
@@ -557,16 +550,43 @@ class WP_Tester_Admin {
     }
     
     /**
-     * Get the selected test executor
+     * Get the test executor (Playwright with fallback)
      */
     public function get_test_executor() {
-        $settings = get_option('wp_tester_settings', array());
-        $test_engine = isset($settings['test_engine']) ? $settings['test_engine'] : 'playwright';
+        // Try Playwright first
+        if (class_exists('WP_Tester_Playwright_Executor')) {
+            $playwright = new WP_Tester_Playwright_Executor();
+            if ($playwright->is_playwright_available()) {
+                error_log('WP Tester: Using Playwright executor');
+                return $playwright;
+            }
+        }
         
-        if ($test_engine === 'selenium') {
-            return new WP_Tester_Selenium_Executor();
-        } else {
-            return new WP_Tester_Playwright_Executor();
+        // Fallback to regular executor if Playwright fails
+        error_log('WP Tester: Playwright not available, falling back to regular executor');
+        return new WP_Tester_Flow_Executor();
+    }
+    
+    /**
+     * Execute flow with automatic fallback
+     */
+    public function execute_flow_with_fallback($flow_id, $manual_trigger = false) {
+        $executor = $this->get_test_executor();
+        
+        try {
+            return $executor->execute_flow($flow_id, $manual_trigger);
+        } catch (Exception $e) {
+            error_log('WP Tester: Primary executor failed: ' . $e->getMessage());
+            
+            // If Playwright failed, try regular executor
+            if ($executor instanceof WP_Tester_Playwright_Executor) {
+                error_log('WP Tester: Falling back to regular executor');
+                $fallback_executor = new WP_Tester_Flow_Executor();
+                return $fallback_executor->execute_flow($flow_id, $manual_trigger);
+            }
+            
+            // If regular executor also fails, return error
+            throw $e;
         }
     }
     
@@ -579,9 +599,8 @@ class WP_Tester_Admin {
             wp_die(__('Flow not found.', 'wp-tester'));
         }
         
-        // Execute the flow using selected engine
-        $executor = $this->get_test_executor();
-        $result = $executor->execute_flow($flow_id, true);
+        // Execute the flow with automatic fallback
+        $result = $this->execute_flow_with_fallback($flow_id, true);
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-flow-test.php';
     }
@@ -628,19 +647,6 @@ class WP_Tester_Admin {
         echo '<p>' . __('Configure general settings for WP Tester.', 'wp-tester') . '</p>';
     }
     
-    public function test_engine_callback() {
-        $settings = get_option('wp_tester_settings', array());
-        $test_engine = isset($settings['test_engine']) ? $settings['test_engine'] : 'playwright';
-        
-        echo '<select name="wp_tester_settings[test_engine]" id="test_engine">';
-        echo '<option value="playwright" ' . selected($test_engine, 'playwright', false) . '>Playwright (Default - Real Screenshots)</option>';
-        echo '<option value="selenium" ' . selected($test_engine, 'selenium', false) . '>Selenium (Alternative)</option>';
-        echo '</select>';
-        
-        echo '<p class="description">';
-        echo __('Playwright is the default engine for real browser automation and screenshots. Selenium is an alternative option.', 'wp-tester');
-        echo '</p>';
-    }
     
     public function crawl_frequency_callback() {
         $settings = get_option('wp_tester_settings', array());

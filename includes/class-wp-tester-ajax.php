@@ -85,7 +85,6 @@ class WP_Tester_Ajax {
             }
             
             $admin = new WP_Tester_Admin();
-            $executor = $admin->get_test_executor();
             $database = new WP_Tester_Database();
             
             $flows = $database->get_flows(true); // Get active flows only
@@ -115,7 +114,7 @@ class WP_Tester_Ajax {
                     break;
                 }
                 
-                $result = $executor->execute_flow($flow->id, true);
+                $result = $admin->execute_flow_with_fallback($flow->id, true);
                 $results[] = array(
                     'flow_id' => $flow->id,
                     'flow_name' => $flow->flow_name,
@@ -209,8 +208,7 @@ class WP_Tester_Ajax {
         
         try {
             $admin = new WP_Tester_Admin();
-            $executor = $admin->get_test_executor();
-            $result = $executor->execute_flow($flow_id, true);
+            $result = $admin->execute_flow_with_fallback($flow_id, true);
             
             if ($result['success']) {
                 wp_send_json_success(array(
@@ -257,8 +255,7 @@ class WP_Tester_Ajax {
             set_time_limit(120); // 2 minutes
             
             $admin = new WP_Tester_Admin();
-            $executor = $admin->get_test_executor();
-            $result = $executor->execute_flow($flow_id, true);
+            $result = $admin->execute_flow_with_fallback($flow_id, true);
             
             if ($result['success']) {
                 wp_send_json_success(array(
@@ -404,8 +401,10 @@ class WP_Tester_Ajax {
             switch ($action) {
                 case 'test':
                     $admin = new WP_Tester_Admin();
-                    $executor = $admin->get_test_executor();
-                    $results = $executor->execute_multiple_flows($flow_ids);
+                    $results = array();
+                    foreach ($flow_ids as $flow_id) {
+                        $results[$flow_id] = $admin->execute_flow_with_fallback($flow_id);
+                    }
                     
                     wp_send_json_success(array(
                         'message' => sprintf(__('Tested %d flows.', 'wp-tester'), count($flow_ids ?: [])),

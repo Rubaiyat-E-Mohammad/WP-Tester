@@ -63,7 +63,6 @@ class WP_Tester_Scheduler {
     public function run_scheduled_tests() {
         try {
             $admin = new WP_Tester_Admin();
-            $executor = $admin->get_test_executor();
             $database = new WP_Tester_Database();
             
             // Get flows that need testing (prioritize by priority and last test date)
@@ -73,7 +72,7 @@ class WP_Tester_Scheduler {
             $success_count = 0;
             
             foreach ($flows as $flow) {
-                $result = $executor->execute_flow($flow->id, false);
+                $result = $admin->execute_flow_with_fallback($flow->id, false);
                 $test_count++;
                 
                 if ($result['success'] && $result['status'] === 'passed') {
