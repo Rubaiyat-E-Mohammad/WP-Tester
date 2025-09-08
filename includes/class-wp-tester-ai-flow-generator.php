@@ -40,9 +40,9 @@ class WP_Tester_AI_Flow_Generator {
                 'type' => 'chat',
                 'free_tier' => true,
                 'api_url' => 'https://api.openai.com/v1/chat/completions',
-                'max_tokens' => 1000,
-                'temperature' => 0.7,
-                'description' => 'Fast and efficient for most tasks'
+                'max_tokens' => 3000,
+                'temperature' => 0.2,
+                'description' => 'Fast and efficient for most tasks with enhanced flow generation quality'
             ),
             'gemini-pro' => array(
                 'name' => 'Gemini Pro',
@@ -50,9 +50,9 @@ class WP_Tester_AI_Flow_Generator {
                 'type' => 'chat',
                 'free_tier' => true,
                 'api_url' => 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
-                'max_tokens' => 1000,
-                'temperature' => 0.7,
-                'description' => 'Google\'s advanced AI model with free tier'
+                'max_tokens' => 3000,
+                'temperature' => 0.2,
+                'description' => 'Google\'s advanced AI model with free tier - excellent for detailed flow generation'
             ),
             'gemini-pro-vision' => array(
                 'name' => 'Gemini Pro Vision',
@@ -80,9 +80,9 @@ class WP_Tester_AI_Flow_Generator {
                 'type' => 'chat',
                 'free_tier' => true,
                 'api_url' => 'https://api.deepseek.com/v1/chat/completions',
-                'max_tokens' => 1000,
-                'temperature' => 0.7,
-                'description' => 'Advanced reasoning and coding capabilities'
+                'max_tokens' => 2500,
+                'temperature' => 0.2,
+                'description' => 'Advanced reasoning and coding capabilities with enhanced flow generation'
             ),
             'deepseek-coder' => array(
                 'name' => 'DeepSeek Coder',
@@ -90,9 +90,9 @@ class WP_Tester_AI_Flow_Generator {
                 'type' => 'code',
                 'free_tier' => true,
                 'api_url' => 'https://api.deepseek.com/v1/chat/completions',
-                'max_tokens' => 1000,
-                'temperature' => 0.3,
-                'description' => 'Specialized for code generation and analysis'
+                'max_tokens' => 2500,
+                'temperature' => 0.1,
+                'description' => 'Specialized for code generation and analysis with precise flow creation'
             ),
             'starcoder' => array(
                 'name' => 'StarCoder',
@@ -140,9 +140,9 @@ class WP_Tester_AI_Flow_Generator {
                 'type' => 'chat',
                 'free_tier' => true,
                 'api_url' => 'https://api.anthropic.com/v1/messages',
-                'max_tokens' => 1000,
-                'temperature' => 0.7,
-                'description' => 'Fast and efficient Claude model'
+                'max_tokens' => 2500,
+                'temperature' => 0.2,
+                'description' => 'Fast and efficient Claude model with enhanced flow generation'
             ),
             'mistral-7b' => array(
                 'name' => 'Mistral 7B',
@@ -771,9 +771,15 @@ class WP_Tester_AI_Flow_Generator {
      * Get plugin information
      */
     private function get_plugin_info($plugin_slug) {
-        $plugin_file = WP_PLUGIN_DIR . '/' . $plugin_slug;
+        $plugin_dir = WP_PLUGIN_DIR . '/' . $plugin_slug;
         
-        if (!file_exists($plugin_file)) {
+        if (!file_exists($plugin_dir) || !is_dir($plugin_dir)) {
+            return null;
+        }
+        
+        // Find the main plugin file
+        $plugin_file = $this->find_main_plugin_file($plugin_dir, $plugin_slug);
+        if (!$plugin_file) {
             return null;
         }
         
@@ -788,6 +794,42 @@ class WP_Tester_AI_Flow_Generator {
             'plugin_uri' => $plugin_data['PluginURI'],
             'file' => $plugin_file
         );
+    }
+    
+    /**
+     * Find the main plugin file in a plugin directory
+     */
+    private function find_main_plugin_file($plugin_dir, $plugin_slug) {
+        // Common main plugin file names
+        $possible_files = array(
+            $plugin_slug . '.php',
+            $plugin_slug . '/' . $plugin_slug . '.php',
+            'index.php',
+            'main.php',
+            'plugin.php'
+        );
+        
+        foreach ($possible_files as $file) {
+            $file_path = $plugin_dir . '/' . $file;
+            if (file_exists($file_path) && is_file($file_path)) {
+                // Check if it's a valid WordPress plugin file
+                $content = file_get_contents($file_path);
+                if (strpos($content, 'Plugin Name:') !== false || strpos($content, '<?php') !== false) {
+                    return $file_path;
+                }
+            }
+        }
+        
+        // If no standard file found, look for any PHP file with plugin header
+        $files = glob($plugin_dir . '/*.php');
+        foreach ($files as $file) {
+            $content = file_get_contents($file);
+            if (strpos($content, 'Plugin Name:') !== false) {
+                return $file;
+            }
+        }
+        
+        return null;
     }
     
     /**
@@ -863,7 +905,16 @@ class WP_Tester_AI_Flow_Generator {
         );
         
         // Analyze plugin file for common patterns
+        if (!isset($plugin_info['file']) || !file_exists($plugin_info['file']) || !is_file($plugin_info['file'])) {
+            error_log('WP Tester: Plugin file not found or invalid: ' . ($plugin_info['file'] ?? 'undefined'));
+            return $functionality;
+        }
+        
         $plugin_content = file_get_contents($plugin_info['file']);
+        if ($plugin_content === false) {
+            error_log('WP Tester: Failed to read plugin file: ' . $plugin_info['file']);
+            return $functionality;
+        }
         
         // Detect plugin type based on common patterns
         if (strpos($plugin_content, 'woocommerce') !== false || strpos($plugin_info['name'], 'WooCommerce') !== false) {
@@ -932,42 +983,176 @@ class WP_Tester_AI_Flow_Generator {
      * Build AI prompt for plugin flow generation
      */
     private function build_plugin_ai_prompt($page, $plugin_info, $plugin_functionality, $site_info) {
-        $prompt = "You are a WordPress testing expert. Generate a test flow for a plugin page:\n\n";
-        $prompt .= "Plugin: {$plugin_info['name']}\n";
-        $prompt .= "Plugin Description: {$plugin_info['description']}\n";
-        $prompt .= "Plugin Type: {$plugin_functionality['type']}\n";
-        $prompt .= "Page URL: {$page['url']}\n";
-        $prompt .= "Page Title: {$page['title']}\n";
-        $prompt .= "Page Area: {$page['area']}\n";
-        $prompt .= "Site Type: {$site_info['type']}\n";
+        $prompt = "You are a senior WordPress plugin QA automation engineer with 15+ years of experience in plugin testing, WordPress core integration, and automated test design. You specialize in creating comprehensive test scenarios that validate plugin functionality, catch integration bugs, and ensure plugins work seamlessly with WordPress.\n\n";
         
+        $prompt .= "## PLUGIN ANALYSIS & CONTEXT\n";
+        $prompt .= "**Plugin Deep Dive:**\n";
+        $prompt .= "- Plugin Name: {$plugin_info['name']}\n";
+        $prompt .= "- Plugin Slug: {$plugin_info['slug']}\n";
+        $prompt .= "- Plugin Description: {$plugin_info['description']}\n";
+        $prompt .= "- Plugin Type: {$plugin_functionality['type']}\n";
+        $prompt .= "- Plugin Version: {$plugin_info['version']}\n";
+        $prompt .= "- Plugin Author: {$plugin_info['author']}\n";
+        $prompt .= "- Plugin URI: {$plugin_info['plugin_uri']}\n";
+        
+        $prompt .= "\n**Target Page Context:**\n";
+        $prompt .= "- Page URL: {$page['url']}\n";
+        $prompt .= "- Page Title: {$page['title']}\n";
+        $prompt .= "- Page Area: {$page['area']}\n";
+        $prompt .= "- Site Type: {$site_info['type']}\n";
+        $prompt .= "- WordPress Version: " . get_bloginfo('version') . "\n";
+        $theme = wp_get_theme();
+        $prompt .= "- Active Theme: " . ($theme ? $theme->get_template() : 'Unknown') . "\n";
+        
+        $prompt .= "\n**Plugin Capabilities Analysis:**\n";
         if ($plugin_functionality['has_shortcodes']) {
-            $prompt .= "Plugin has shortcodes: Yes\n";
+            $prompt .= "- ✅ Shortcode Support: Plugin provides shortcode functionality for content integration\n";
         }
         if ($plugin_functionality['has_widgets']) {
-            $prompt .= "Plugin has widgets: Yes\n";
+            $prompt .= "- ✅ Widget Support: Plugin provides widget functionality for sidebars\n";
         }
         if ($plugin_functionality['has_custom_post_types']) {
-            $prompt .= "Plugin has custom post types: Yes\n";
+            $prompt .= "- ✅ Custom Post Types: Plugin creates custom content types\n";
+        }
+        if ($plugin_functionality['has_custom_taxonomies']) {
+            $prompt .= "- ✅ Custom Taxonomies: Plugin creates custom categorization systems\n";
+        }
+        if ($plugin_functionality['has_frontend']) {
+            $prompt .= "- ✅ Frontend Features: Plugin affects frontend display and functionality\n";
+        }
+        if ($plugin_functionality['has_admin']) {
+            $prompt .= "- ✅ Admin Interface: Plugin adds admin interface and management tools\n";
         }
         
-        $prompt .= "\nGenerate a JSON response with the following structure:\n";
+        $prompt .= "\n## EXPERT PLUGIN TESTING STRATEGY\n";
+        $prompt .= "Your mission is to create a test flow that:\n";
+        $prompt .= "1. **Validates Core Plugin Functionality** - Test the plugin's primary purpose and features\n";
+        $prompt .= "2. **Tests WordPress Integration** - Ensure proper hooks, filters, actions, and core compatibility\n";
+        $prompt .= "3. **Validates User Workflows** - Test real user scenarios and common interaction patterns\n";
+        $prompt .= "4. **Checks Data Integrity & Persistence** - Ensure data is saved, retrieved, and displayed correctly\n";
+        $prompt .= "5. **Tests Error Handling & Edge Cases** - Verify graceful handling of invalid inputs and failure scenarios\n";
+        $prompt .= "6. **Validates Security & Permissions** - Test access controls, data sanitization, and security measures\n";
+        $prompt .= "7. **Checks Performance Impact** - Ensure plugin doesn't cause slowdowns or resource issues\n";
+        $prompt .= "8. **Tests Cross-Theme Compatibility** - Verify plugin works with different themes\n";
+        $prompt .= "9. **Validates Plugin Updates & Migration** - Test upgrade paths and data migration\n";
+        $prompt .= "10. **Tests Plugin Deactivation/Cleanup** - Ensure clean removal without leaving traces\n";
+        
+        $prompt .= "\n## ADVANCED PLUGIN ACTION FRAMEWORK\n";
+        $prompt .= "Use these actions strategically for plugin testing:\n";
+        $prompt .= "- **visit**: Navigate to plugin admin pages, frontend pages, or specific URLs\n";
+        $prompt .= "- **click**: Interact with plugin buttons, links, tabs, toggles, and controls\n";
+        $prompt .= "- **fill**: Enter data in plugin forms, settings, and input fields\n";
+        $prompt .= "- **select**: Choose options from plugin dropdowns, checkboxes, and radio buttons\n";
+        $prompt .= "- **wait**: Pause for AJAX calls, data processing, plugin operations (2-5 seconds)\n";
+        $prompt .= "- **hover**: Trigger tooltips, previews, hover effects, and contextual menus\n";
+        $prompt .= "- **scroll**: Navigate through long plugin pages, content, and settings\n";
+        $prompt .= "- **keyboard**: Use keyboard shortcuts, accessibility features, and navigation\n";
+        $prompt .= "- **upload**: Test file uploads, media handling, and import functionality\n";
+        $prompt .= "- **export/import**: Test data export/import, backup/restore functionality\n";
+        $prompt .= "- **toggle**: Test on/off switches, enable/disable features, and settings toggles\n";
+        
+        $prompt .= "\n## PRECISION PLUGIN CSS SELECTOR STRATEGY\n";
+        $prompt .= "Use plugin-specific selectors in this priority order:\n";
+        $prompt .= "1. **Plugin-specific data attributes**: [data-{$plugin_info['slug']}='value'], [data-plugin='{$plugin_info['slug']}']\n";
+        $prompt .= "2. **Plugin form elements**: input[name='{$plugin_info['slug']}_field'], select[name='{$plugin_info['slug']}_option']\n";
+        $prompt .= "3. **Plugin-specific IDs**: #{$plugin_info['slug']}-element, #{$plugin_info['slug']}-settings\n";
+        $prompt .= "4. **Plugin classes**: .{$plugin_info['slug']}-class, .plugin-{$plugin_info['slug']}, .{$plugin_info['slug']}-admin\n";
+        $prompt .= "5. **WordPress admin selectors**: .wrap, .form-table, .button-primary, .notice\n";
+        $prompt .= "6. **Plugin-specific buttons**: .{$plugin_info['slug']}-button, .{$plugin_info['slug']}-submit\n";
+        $prompt .= "7. **Plugin tabs and navigation**: .{$plugin_info['slug']}-nav, .{$plugin_info['slug']}-tabs\n";
+        $prompt .= "8. **Plugin-specific containers**: .{$plugin_info['slug']}-container, .{$plugin_info['slug']}-wrapper\n";
+        
+        $prompt .= "\n## COMPREHENSIVE PLUGIN TEST DATA LIBRARY\n";
+        $prompt .= "Use realistic, plugin-appropriate test data:\n";
+        $prompt .= "- **Plugin Settings**: Realistic configuration values that match plugin purpose\n";
+        $prompt .= "- **Content Data**: Meaningful test content that demonstrates plugin functionality\n";
+        $prompt .= "- **User Data**: Diverse, realistic user information for user management plugins\n";
+        $prompt .= "- **File Uploads**: Appropriate file types, sizes, and formats for plugin functionality\n";
+        $prompt .= "- **API Keys**: Test/development keys for plugins that integrate with external services\n";
+        $prompt .= "- **Database Values**: Realistic database entries that test plugin data handling\n";
+        $prompt .= "- **Plugin-specific Data**: Custom post types, taxonomies, and plugin-specific content\n";
+        $prompt .= "- **Configuration Values**: Settings that test plugin's configuration options\n";
+        
+        $prompt .= "\n## PLUGIN-SPECIFIC EXPECTED RESULTS\n";
+        $prompt .= "Define plugin-specific, measurable outcomes:\n";
+        $prompt .= "- **Functionality Success**: Plugin features work as documented and expected\n";
+        $prompt .= "- **Data Persistence**: Settings, content, and data are saved and retrieved correctly\n";
+        $prompt .= "- **User Feedback**: Appropriate success/error messages, notifications, and alerts\n";
+        $prompt .= "- **WordPress Integration**: Proper hooks, filters, actions, and core compatibility\n";
+        $prompt .= "- **Security Validation**: Proper permission checks, data sanitization, and access controls\n";
+        $prompt .= "- **Performance Impact**: No significant slowdown, memory leaks, or resource issues\n";
+        $prompt .= "- **UI/UX Validation**: Proper interface rendering, responsive design, and user experience\n";
+        $prompt .= "- **Plugin State Management**: Proper activation, deactivation, and configuration states\n";
+        
+        $prompt .= "\n## STRICT JSON RESPONSE FORMAT\n";
+        $prompt .= "Generate ONLY a valid JSON response with this exact structure:\n";
         $prompt .= "{\n";
-        $prompt .= "  \"flow_name\": \"Plugin-specific descriptive name\",\n";
-        $prompt .= "  \"flow_type\": \"plugin_admin|plugin_frontend|plugin_setup|plugin_configuration\",\n";
-        $prompt .= "  \"description\": \"What this plugin flow tests\",\n";
+        $prompt .= "  \"flow_name\": \"[Plugin-specific descriptive name that clearly indicates what is being tested]\",\n";
+        $prompt .= "  \"flow_type\": \"[plugin_admin|plugin_frontend|plugin_setup|plugin_configuration|plugin_integration|plugin_security|plugin_performance|plugin_migration]\",\n";
+        $prompt .= "  \"description\": \"[Detailed explanation of what this plugin flow tests, why it's important, and what bugs it might catch]\",\n";
         $prompt .= "  \"steps\": [\n";
         $prompt .= "    {\n";
-        $prompt .= "      \"action\": \"visit|click|fill|select|wait\",\n";
-        $prompt .= "      \"target\": \"URL or CSS selector\",\n";
-        $prompt .= "      \"value\": \"Value for fill/select actions\",\n";
-        $prompt .= "      \"expected_result\": \"What should happen\"\n";
+        $prompt .= "      \"action\": \"[visit|click|fill|select|wait|hover|scroll|keyboard|upload|export|import|toggle]\",\n";
+        $prompt .= "      \"target\": \"[Plugin-specific CSS selector or URL]\",\n";
+        $prompt .= "      \"value\": \"[Realistic plugin test data]\",\n";
+        $prompt .= "      \"expected_result\": \"[Specific, measurable plugin outcome with success criteria]\",\n";
+        $prompt .= "      \"wait_time\": [Optional: seconds to wait after this step]\n";
         $prompt .= "    }\n";
         $prompt .= "  ],\n";
-        $prompt .= "  \"priority\": \"high|medium|low\",\n";
-        $prompt .= "  \"tags\": [\"plugin\", \"{$plugin_info['slug']}\", \"tag3\"]\n";
+        $prompt .= "  \"priority\": \"[high|medium|low based on plugin functionality importance and user impact]\",\n";
+        $prompt .= "  \"tags\": [\"plugin\", \"{$plugin_info['slug']}\", \"[relevant functionality tags]\"]\n";
         $prompt .= "}\n\n";
-        $prompt .= "Focus on plugin-specific functionality and common user workflows. Make the flow name unique and descriptive.";
+        
+        $prompt .= "## EXPERT PLUGIN QUALITY STANDARDS\n";
+        $prompt .= "1. **Flow name must be plugin-specific and descriptive** - Include plugin name and exact functionality being tested\n";
+        $prompt .= "2. **Test actual plugin features** - Focus on plugin's unique functionality, not generic WordPress features\n";
+        $prompt .= "3. **Include comprehensive error scenarios** - Test plugin error handling, edge cases, and failure modes\n";
+        $prompt .= "4. **Use plugin-appropriate test data** - Test data should match plugin's purpose and functionality\n";
+        $prompt .= "5. **Test WordPress integration thoroughly** - Verify proper hooks, filters, actions, and core compatibility\n";
+        $prompt .= "6. **Consider different plugin user personas** - Admin users, editors, subscribers, and guests\n";
+        $prompt .= "7. **Test plugin security comprehensively** - Verify permission checks, data validation, and security measures\n";
+        $prompt .= "8. **Validate plugin performance impact** - Ensure plugin doesn't cause performance issues\n";
+        $prompt .= "9. **Test plugin state management** - Verify proper activation, deactivation, and configuration states\n";
+        $prompt .= "10. **Focus on business-critical plugin functionality** - Prioritize features that impact user experience and business goals\n";
+        
+        $prompt .= "\n## EXCELLENT PLUGIN FLOW NAME EXAMPLES\n";
+        $prompt .= "- \"{$plugin_info['name']} - Complete Settings Configuration and Validation Workflow\"\n";
+        $prompt .= "- \"{$plugin_info['name']} - User Registration and Profile Management with Plugin Features\"\n";
+        $prompt .= "- \"{$plugin_info['name']} - Content Creation, Management, and Publishing Workflow\"\n";
+        $prompt .= "- \"{$plugin_info['name']} - Data Import/Export and Backup/Restore Functionality\"\n";
+        $prompt .= "- \"{$plugin_info['name']} - Frontend Display, User Interaction, and Public Features\"\n";
+        $prompt .= "- \"{$plugin_info['name']} - Admin Dashboard, User Management, and Administrative Controls\"\n";
+        $prompt .= "- \"{$plugin_info['name']} - Plugin Activation, Configuration, and Integration Testing\"\n";
+        $prompt .= "- \"{$plugin_info['name']} - Security Validation, Permission Checks, and Access Control Testing\"\n";
+        
+        $prompt .= "\n## CONCRETE PLUGIN TESTING EXAMPLES\n";
+        $prompt .= "**For a Contact Form Plugin:**\n";
+        $prompt .= "- Test form creation and configuration\n";
+        $prompt .= "- Test form submission with valid and invalid data\n";
+        $prompt .= "- Test email notifications and delivery\n";
+        $prompt .= "- Test form validation and error handling\n";
+        $prompt .= "- Test form styling and customization\n";
+        $prompt .= "- Test form analytics and reporting\n";
+        
+        $prompt .= "\n**For an E-commerce Plugin:**\n";
+        $prompt .= "- Test product creation and management\n";
+        $prompt .= "- Test shopping cart and checkout process\n";
+        $prompt .= "- Test payment gateway integration\n";
+        $prompt .= "- Test order management and fulfillment\n";
+        $prompt .= "- Test customer management and communication\n";
+        $prompt .= "- Test reporting and analytics features\n";
+        
+        $prompt .= "\n**For a SEO Plugin:**\n";
+        $prompt .= "- Test meta tag configuration and validation\n";
+        $prompt .= "- Test sitemap generation and submission\n";
+        $prompt .= "- Test keyword analysis and optimization\n";
+        $prompt .= "- Test social media integration\n";
+        $prompt .= "- Test performance monitoring and recommendations\n";
+        $prompt .= "- Test plugin integration with other SEO tools\n";
+        
+        $prompt .= "\n## FINAL PLUGIN TESTING INSTRUCTIONS\n";
+        $prompt .= "Create a comprehensive, realistic test flow that thoroughly validates the {$plugin_info['name']} plugin functionality. Think like a real user who wants to accomplish specific tasks with this plugin. Focus on scenarios that would actually break in production and cause user frustration. Make every step actionable, specific, and valuable for catching real plugin bugs.\n\n";
+        $prompt .= "Remember: Plugin testing is about validating the plugin's unique value proposition. Test what makes this plugin special, not just generic WordPress functionality. Quality over quantity - better to have 5 well-thought-out steps that test core plugin features than 15 generic steps.";
         
         return $prompt;
     }
@@ -1109,33 +1294,135 @@ class WP_Tester_AI_Flow_Generator {
      * Build AI prompt for flow generation
      */
     private function build_ai_prompt($page, $area, $site_info) {
-        $prompt = "You are a WordPress testing expert. Generate a test flow for the following page:\n\n";
-        $prompt .= "Page URL: {$page['url']}\n";
-        $prompt .= "Page Title: {$page['title']}\n";
-        $prompt .= "Area: {$area}\n";
-        $prompt .= "Site Type: {$site_info['type']}\n";
+        $prompt = "You are a senior WordPress QA automation engineer with 15+ years of experience in web application testing, user experience analysis, and automated test design. You specialize in creating comprehensive, realistic test scenarios that catch real-world bugs and validate critical user journeys.\n\n";
+        
+        $prompt .= "## MISSION CRITICAL CONTEXT\n";
+        $prompt .= "**Target Page Analysis:**\n";
+        $prompt .= "- URL: {$page['url']}\n";
+        $prompt .= "- Page Title: {$page['title']}\n";
+        $prompt .= "- Testing Area: {$area}\n";
+        $prompt .= "- Site Type: {$site_info['type']}\n";
+        $prompt .= "- WordPress Version: " . get_bloginfo('version') . "\n";
+        $theme = wp_get_theme();
+        $prompt .= "- Active Theme: " . ($theme ? $theme->get_template() : 'Unknown') . "\n";
         
         if (!empty($page['content'])) {
-            $prompt .= "Page Content: " . substr($page['content'], 0, 500) . "...\n";
+            $content_preview = substr(strip_tags($page['content']), 0, 1000);
+            $prompt .= "- Page Content Analysis: " . $content_preview . "...\n";
         }
         
-        $prompt .= "\nGenerate a JSON response with the following structure:\n";
+        $prompt .= "\n## EXPERT TESTING STRATEGY\n";
+        $prompt .= "Your task is to create a test flow that:\n";
+        $prompt .= "1. **Simulates Real User Behavior** - Think like actual users, not robots\n";
+        $prompt .= "2. **Tests Critical Business Logic** - Focus on functionality that matters to business success\n";
+        $prompt .= "3. **Covers Edge Cases & Error Scenarios** - Test boundary conditions, invalid inputs, and failure modes\n";
+        $prompt .= "4. **Validates Data Integrity** - Ensure data is saved, retrieved, and displayed correctly\n";
+        $prompt .= "5. **Tests User Experience Flow** - Verify smooth navigation, feedback, and user satisfaction\n";
+        $prompt .= "6. **Checks Cross-Browser Compatibility** - Consider different browser behaviors\n";
+        $prompt .= "7. **Tests Performance & Responsiveness** - Ensure fast loading and mobile compatibility\n";
+        $prompt .= "8. **Validates Security & Permissions** - Test access controls and data protection\n";
+        
+        $prompt .= "\n## ADVANCED ACTION FRAMEWORK\n";
+        $prompt .= "Use these actions strategically:\n";
+        $prompt .= "- **visit**: Navigate to URLs (always start flows with this)\n";
+        $prompt .= "- **click**: Interact with buttons, links, checkboxes, radio buttons\n";
+        $prompt .= "- **fill**: Enter data in text fields, textareas, search boxes\n";
+        $prompt .= "- **select**: Choose from dropdowns, multi-selects, date pickers\n";
+        $prompt .= "- **wait**: Pause for AJAX calls, page transitions, animations (2-5 seconds)\n";
+        $prompt .= "- **hover**: Trigger tooltips, dropdown menus, preview effects\n";
+        $prompt .= "- **scroll**: Navigate long pages, reveal lazy-loaded content\n";
+        $prompt .= "- **keyboard**: Use Enter, Tab, Escape, arrow keys for accessibility\n";
+        $prompt .= "- **upload**: Test file uploads (images, documents, media)\n";
+        $prompt .= "- **drag**: Drag and drop interactions if applicable\n";
+        
+        $prompt .= "\n## PRECISION CSS SELECTOR STRATEGY\n";
+        $prompt .= "Use the most reliable selectors in this priority order:\n";
+        $prompt .= "1. **Data attributes**: [data-testid='submit-btn'], [data-cy='login-form']\n";
+        $prompt .= "2. **Form elements**: input[name='email'], select[name='country'], textarea[name='message']\n";
+        $prompt .= "3. **IDs**: #login-button, #search-form, #user-menu\n";
+        $prompt .= "4. **Semantic classes**: .btn-primary, .form-control, .nav-link, .card-title\n";
+        $prompt .= "5. **Text-based**: button:contains('Submit'), a:contains('Login'), input[placeholder*='Email']\n";
+        $prompt .= "6. **Role-based**: [role='button'], [role='link'], [role='textbox']\n";
+        $prompt .= "7. **Avoid**: Generic selectors like div, span, p without context\n";
+        
+        $prompt .= "\n## REALISTIC TEST DATA LIBRARY\n";
+        $prompt .= "Use diverse, realistic test data:\n";
+        $prompt .= "- **Names**: John Smith, Maria García, Ahmed Hassan, Li Wei, Priya Patel\n";
+        $prompt .= "- **Emails**: john.smith@example.com, maria.garcia@company.org, test.user+qa@domain.net\n";
+        $prompt .= "- **Phone Numbers**: +1-555-123-4567, +44-20-7946-0958, +91-98765-43210\n";
+        $prompt .= "- **Addresses**: 123 Main St, New York, NY 10001, 456 Oxford St, London W1C 1JN\n";
+        $prompt .= "- **Companies**: Acme Corp, Tech Solutions Inc, Global Enterprises Ltd\n";
+        $prompt .= "- **Content**: Meaningful, realistic text that makes sense in context\n";
+        $prompt .= "- **Passwords**: TestPass123!, SecureP@ssw0rd, MyStr0ng#Pass\n";
+        $prompt .= "- **URLs**: https://example.com, https://test-site.org, https://demo.net\n";
+        
+        $prompt .= "\n## COMPREHENSIVE EXPECTED RESULTS\n";
+        $prompt .= "Define specific, measurable outcomes:\n";
+        $prompt .= "- **Success Indicators**: Page loads, forms submit, data saves, redirects occur\n";
+        $prompt .= "- **Visual Feedback**: Success messages, error alerts, loading states, UI changes\n";
+        $prompt .= "- **Data Validation**: Correct data storage, retrieval, and display\n";
+        $prompt .= "- **Error Handling**: Proper validation messages, graceful error recovery\n";
+        $prompt .= "- **Performance Metrics**: Page load times, response times, resource usage\n";
+        $prompt .= "- **Accessibility**: Keyboard navigation, screen reader compatibility\n";
+        
+        $prompt .= "\n## STRICT JSON RESPONSE FORMAT\n";
+        $prompt .= "Generate ONLY a valid JSON response with this exact structure:\n";
         $prompt .= "{\n";
-        $prompt .= "  \"flow_name\": \"Unique descriptive name\",\n";
-        $prompt .= "  \"flow_type\": \"navigation|form|ecommerce|content|admin\",\n";
-        $prompt .= "  \"description\": \"What this flow tests\",\n";
+        $prompt .= "  \"flow_name\": \"[Specific, descriptive name that clearly indicates the test scenario]\",\n";
+        $prompt .= "  \"flow_type\": \"[navigation|form|ecommerce|content|admin|user_management|settings|security|api|integration]\",\n";
+        $prompt .= "  \"description\": \"[Detailed explanation of what this flow tests, why it's important, and what bugs it might catch]\",\n";
         $prompt .= "  \"steps\": [\n";
         $prompt .= "    {\n";
-        $prompt .= "      \"action\": \"visit|click|fill|select|wait\",\n";
-        $prompt .= "      \"target\": \"URL or CSS selector\",\n";
-        $prompt .= "      \"value\": \"Value for fill/select actions\",\n";
-        $prompt .= "      \"expected_result\": \"What should happen\"\n";
+        $prompt .= "      \"action\": \"[visit|click|fill|select|wait|hover|scroll|keyboard|upload|drag]\",\n";
+        $prompt .= "      \"target\": \"[Precise CSS selector or URL]\",\n";
+        $prompt .= "      \"value\": \"[Realistic test data for fill/select actions]\",\n";
+        $prompt .= "      \"expected_result\": \"[Specific, measurable outcome with success criteria]\",\n";
+        $prompt .= "      \"wait_time\": [Optional: seconds to wait after this step]\n";
         $prompt .= "    }\n";
         $prompt .= "  ],\n";
-        $prompt .= "  \"priority\": \"high|medium|low\",\n";
-        $prompt .= "  \"tags\": [\"tag1\", \"tag2\"]\n";
+        $prompt .= "  \"priority\": \"[high|medium|low based on business impact and user frequency]\",\n";
+        $prompt .= "  \"tags\": [\"[relevant tags for categorization and filtering]\"]\n";
         $prompt .= "}\n\n";
-        $prompt .= "Focus on realistic user interactions and common issues. Make the flow name unique and descriptive.";
+        
+        $prompt .= "## EXPERT QUALITY STANDARDS\n";
+        $prompt .= "1. **Flow name must be specific and actionable** - Include the exact functionality being tested\n";
+        $prompt .= "2. **Steps must be logical and sequential** - Each step should build naturally on the previous\n";
+        $prompt .= "3. **Include both positive and negative test cases** - Test success paths AND failure scenarios\n";
+        $prompt .= "4. **Use realistic, varied test data** - No placeholder text, use actual user-like data\n";
+        $prompt .= "5. **Specify measurable outcomes** - Each step should have clear success/failure criteria\n";
+        $prompt .= "6. **Consider different user personas** - Admin users, regular users, guests, etc.\n";
+        $prompt .= "7. **Test accessibility and usability** - Include keyboard navigation and screen reader considerations\n";
+        $prompt .= "8. **Focus on business-critical functionality** - Prioritize features that impact user experience and business goals\n";
+        
+        $prompt .= "\n## EXCELLENT FLOW NAME EXAMPLES\n";
+        $prompt .= "- \"Complete User Registration with Email Verification and Profile Setup\"\n";
+        $prompt .= "- \"E-commerce Product Purchase with Payment Gateway and Order Confirmation\"\n";
+        $prompt .= "- \"Content Creation with Media Upload, SEO Settings, and Publishing Workflow\"\n";
+        $prompt .= "- \"Admin User Management with Role Assignment and Permission Validation\"\n";
+        $prompt .= "- \"Contact Form Submission with Validation, Email Notification, and Success Feedback\"\n";
+        $prompt .= "- \"Search Functionality with Filters, Sorting, and Result Pagination\"\n";
+        $prompt .= "- \"User Login with Remember Me, Password Reset, and Account Lockout Protection\"\n";
+        
+        $prompt .= "\n## CONCRETE TESTING EXAMPLES\n";
+        $prompt .= "**For a Contact Form Page:**\n";
+        $prompt .= "- Test valid form submission with all fields\n";
+        $prompt .= "- Test form validation with missing required fields\n";
+        $prompt .= "- Test email format validation\n";
+        $prompt .= "- Test form submission with special characters\n";
+        $prompt .= "- Test form reset/clear functionality\n";
+        $prompt .= "- Test form submission with very long text\n";
+        
+        $prompt .= "\n**For an E-commerce Product Page:**\n";
+        $prompt .= "- Test product image gallery and zoom functionality\n";
+        $prompt .= "- Test add to cart with different quantities\n";
+        $prompt .= "- Test product reviews and rating system\n";
+        $prompt .= "- Test related products and recommendations\n";
+        $prompt .= "- Test product sharing and wishlist functionality\n";
+        $prompt .= "- Test mobile responsiveness and touch interactions\n";
+        
+        $prompt .= "\n## FINAL INSTRUCTIONS\n";
+        $prompt .= "Create a comprehensive, realistic test flow that thoroughly validates the functionality of this page. Think like a real user who wants to accomplish specific tasks. Focus on scenarios that would actually break in production and cause user frustration. Make every step actionable, specific, and valuable for catching real bugs.\n\n";
+        $prompt .= "Remember: Quality over quantity. Better to have 5 well-thought-out steps than 15 generic ones.";
         
         return $prompt;
     }
@@ -1179,6 +1466,8 @@ class WP_Tester_AI_Flow_Generator {
      * Call OpenAI API
      */
     private function call_openai_api($prompt, $model_config, $api_key) {
+        $system_message = "You are a senior WordPress QA automation engineer with 15+ years of experience. You excel at creating comprehensive, realistic test flows that catch real-world bugs and validate critical user journeys. Your responses are always in valid JSON format and focus on actionable, specific test scenarios that provide real value for automated testing.";
+        
         $response = wp_remote_post($model_config['api_url'], array(
             'headers' => array(
                 'Authorization' => 'Bearer ' . $api_key,
@@ -1187,6 +1476,10 @@ class WP_Tester_AI_Flow_Generator {
             'body' => wp_json_encode(array(
                 'model' => $this->ai_model,
                 'messages' => array(
+                    array(
+                        'role' => 'system',
+                        'content' => $system_message
+                    ),
                     array(
                         'role' => 'user',
                         'content' => $prompt
@@ -1217,6 +1510,8 @@ class WP_Tester_AI_Flow_Generator {
      * Call Google Gemini API
      */
     private function call_gemini_api($prompt, $model_config, $api_key) {
+        $system_instruction = "You are a senior WordPress QA automation engineer with 15+ years of experience. You excel at creating comprehensive, realistic test flows that catch real-world bugs and validate critical user journeys. Your responses are always in valid JSON format and focus on actionable, specific test scenarios that provide real value for automated testing.";
+        
         $response = wp_remote_post($model_config['api_url'] . '?key=' . $api_key, array(
             'headers' => array(
                 'Content-Type' => 'application/json',
@@ -1225,7 +1520,7 @@ class WP_Tester_AI_Flow_Generator {
                 'contents' => array(
                     array(
                         'parts' => array(
-                            array('text' => $prompt)
+                            array('text' => $system_instruction . "\n\n" . $prompt)
                         )
                     )
                 ),
@@ -1256,6 +1551,8 @@ class WP_Tester_AI_Flow_Generator {
      * Call Grok API (X.AI)
      */
     private function call_grok_api($prompt, $model_config, $api_key) {
+        $system_message = "You are a senior WordPress QA automation engineer with 15+ years of experience. You excel at creating comprehensive, realistic test flows that catch real-world bugs and validate critical user journeys. Your responses are always in valid JSON format and focus on actionable, specific test scenarios that provide real value for automated testing.";
+        
         $response = wp_remote_post($model_config['api_url'], array(
             'headers' => array(
                 'Authorization' => 'Bearer ' . $api_key,
@@ -1264,6 +1561,10 @@ class WP_Tester_AI_Flow_Generator {
             'body' => wp_json_encode(array(
                 'model' => 'grok-beta',
                 'messages' => array(
+                    array(
+                        'role' => 'system',
+                        'content' => $system_message
+                    ),
                     array(
                         'role' => 'user',
                         'content' => $prompt

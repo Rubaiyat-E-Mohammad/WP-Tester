@@ -247,6 +247,14 @@ $visual_evidence = $report['visual_evidence'] ?? [];
                                 <div class="status-badge <?php echo esc_attr($step['status'] ?? 'pending'); ?>">
                                     <?php echo esc_html(ucfirst($step['status'] ?? 'Unknown')); ?>
                                 </div>
+                                <?php if (isset($step['error']) && !empty($step['error'])): ?>
+                                    <div class="step-error" style="margin-top: 0.5rem; padding: 0.5rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; color: #dc2626; font-size: 0.875rem;">
+                                        <strong>Error:</strong> <?php echo esc_html($step['error']); ?>
+                                        <?php if (isset($step['error_details']) && !empty($step['error_details'])): ?>
+                                            <br><strong>Details:</strong> <?php echo esc_html($step['error_details']); ?>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -341,8 +349,13 @@ $visual_evidence = $report['visual_evidence'] ?? [];
                                     <span class="dashicons dashicons-warning"></span>
                                 </div>
                                 <div class="item-details">
-                                    <h4><?php echo esc_html($failure['step'] ?? 'Unknown Step'); ?></h4>
-                                    <p><?php echo esc_html($failure['error'] ?? 'No error message available'); ?></p>
+                                    <h4><?php echo esc_html($failure['message'] ?? 'Unknown Step'); ?></h4>
+                                    <p><?php echo esc_html($failure['message'] ?? 'No error message available'); ?></p>
+                                    <?php if (isset($failure['error_details']) && !empty($failure['error_details'])): ?>
+                                        <p style="color: #dc2626; font-size: 0.875rem; margin-top: 0.5rem;">
+                                            <strong>Details:</strong> <?php echo esc_html($failure['error_details']); ?>
+                                        </p>
+                                    <?php endif; ?>
                                     <?php if (!empty($failure['suggestion'])): ?>
                                         <p style="color: #00265e; font-weight: 500; margin-top: 0.5rem;">
                                             💡 Suggestion: <?php echo esc_html($failure['suggestion']); ?>

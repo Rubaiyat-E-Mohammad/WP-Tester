@@ -64,29 +64,37 @@ class WP_Tester_Flow_Executor {
         $upload_dir = wp_upload_dir();
         $screenshots_dir = $upload_dir['basedir'] . '/wp-tester-screenshots';
         
+        // Ensure directory exists and is writable
         if (!file_exists($screenshots_dir)) {
             $created = wp_mkdir_p($screenshots_dir);
             if (!$created) {
-                // Failed to create screenshots directory
+                error_log('WP Tester: Failed to create screenshots directory: ' . $screenshots_dir);
                 // Fallback to temp directory
                 $screenshots_dir = sys_get_temp_dir() . '/wp-tester-screenshots';
                 if (!file_exists($screenshots_dir)) {
-                    wp_mkdir_p($screenshots_dir);
+                    $created = wp_mkdir_p($screenshots_dir);
+                    if (!$created) {
+                        error_log('WP Tester: Failed to create fallback screenshots directory: ' . $screenshots_dir);
+                    }
                 }
             }
         }
         
         // Verify directory is writable
         if (!is_writable($screenshots_dir)) {
-            // Screenshots directory is not writable
+            error_log('WP Tester: Screenshots directory is not writable: ' . $screenshots_dir);
             // Fallback to temp directory
             $screenshots_dir = sys_get_temp_dir() . '/wp-tester-screenshots';
             if (!file_exists($screenshots_dir)) {
-                wp_mkdir_p($screenshots_dir);
+                $created = wp_mkdir_p($screenshots_dir);
+                if (!$created) {
+                    error_log('WP Tester: Failed to create fallback screenshots directory: ' . $screenshots_dir);
+                }
             }
         }
         
         $this->screenshot_handler = $screenshots_dir;
+        error_log('WP Tester: Screenshots directory set to: ' . $screenshots_dir);
     }
     
     /**
@@ -178,9 +186,9 @@ class WP_Tester_Flow_Executor {
                     $steps_failed++;
                     $this->log_step('error', 'Step failed', $step_result);
                     
-                    // Take screenshot on failure if enabled
+                    // Take screenshot on failure if enabled (default: true)
                     $screenshot_enabled = isset($this->settings['screenshot_on_failure']) ? $this->settings['screenshot_on_failure'] : true;
-                    // Screenshot on failure enabled: " . ($screenshot_enabled ? 'Yes' : 'No')
+                    error_log('WP Tester: Screenshot on failure enabled: ' . ($screenshot_enabled ? 'Yes' : 'No'));
                     
                     if ($screenshot_enabled) {
                         $screenshot_path = $this->take_screenshot($flow_id, $step_number + 1, 'failure', $step_result['error']);
@@ -824,8 +832,14 @@ class WP_Tester_Flow_Executor {
         
         // Check if directory is writable before attempting to save
         if (!is_writable($screenshot_dir)) {
-            // Screenshot directory is not writable
-            return null; // Return null instead of failing
+            error_log('WP Tester: Screenshot directory is not writable: ' . $screenshot_dir);
+            return null;
+        }
+        
+        // Check if GD extension is available
+        if (!extension_loaded('gd')) {
+            error_log('WP Tester: GD extension not available for screenshot creation');
+            return null;
         }
         
         // Create a more meaningful placeholder image (400x300 PNG)
@@ -834,6 +848,10 @@ class WP_Tester_Flow_Executor {
         
         // Create image resource
         $image = imagecreate($width, $height);
+        if (!$image) {
+            error_log('WP Tester: Failed to create image resource for screenshot');
+            return null;
+        }
         
         // Define colors
         $bg_color = imagecolorallocate($image, 248, 250, 252); // Light gray background
@@ -890,12 +908,17 @@ class WP_Tester_Flow_Executor {
         imagedestroy($image);
         
         if ($result === false) {
-            // Failed to save screenshot
-            return null; // Return null instead of failing
+            error_log('WP Tester: Failed to save screenshot to: ' . $screenshot_path);
+            return null;
         }
         
-        // Successfully saved screenshot
+        // Verify file was created
+        if (!file_exists($screenshot_path)) {
+            error_log('WP Tester: Screenshot file was not created: ' . $screenshot_path);
+            return null;
+        }
         
+        error_log('WP Tester: Successfully created screenshot: ' . $screenshot_path);
         return $screenshot_path;
     }
     

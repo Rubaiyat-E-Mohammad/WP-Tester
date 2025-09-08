@@ -245,11 +245,11 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
             
-            <div class="plugin-cards-grid" style="max-height: 500px; overflow-y: auto;">
+            <div class="plugin-cards-grid" style="max-height: 500px; overflow-y: auto; width: 100%; max-width: 100%;">
                 <?php foreach ($available_plugins as $plugin): ?>
                 <div class="plugin-card" 
                      data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
-                     style="cursor: pointer; position: relative; background: white; border: 2px solid #e5e7eb; border-radius: 8px; padding: 1rem; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                     style="cursor: pointer; position: relative; background: white; border: 2px solid #e5e7eb; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
                     
                     <!-- Header with icon and selection -->
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
@@ -975,6 +975,12 @@ jQuery(document).ready(function($) {
     transition: all 0.3s ease;
     min-height: 140px;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 1rem;
+    overflow: hidden;
+    word-wrap: break-word;
 }
 
 .plugin-card:hover {
@@ -1012,24 +1018,27 @@ jQuery(document).ready(function($) {
     height: 8px !important;
 }
 
-/* Responsive grid layout */
+/* Fixed grid layout for consistent spacing */
 .plugin-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
-/* Responsive breakpoints */
-@media (max-width: 1200px) {
+/* Responsive breakpoints - much more aggressive */
+@media (max-width: 1024px) {
     .plugin-cards-grid {
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 0.875rem;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
     }
 }
 
 @media (max-width: 768px) {
     .plugin-cards-grid {
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
     }
 }
@@ -1038,6 +1047,18 @@ jQuery(document).ready(function($) {
     .plugin-cards-grid {
         grid-template-columns: 1fr;
         gap: 0.75rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .plugin-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+    
+    .plugin-card {
+        padding: 0.75rem;
+        min-height: 120px;
     }
 }
 

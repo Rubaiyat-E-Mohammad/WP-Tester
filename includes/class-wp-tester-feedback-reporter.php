@@ -110,6 +110,10 @@ class WP_Tester_Feedback_Reporter {
                     if (isset($log_entry['data']['execution_time'])) {
                         $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
                     }
+                    // Extract error details from step result data
+                    if (isset($log_entry['data']['error'])) {
+                        $step_details[$current_step]['error_details'] = $log_entry['data']['error'];
+                    }
                 }
             }
         }
@@ -144,11 +148,18 @@ class WP_Tester_Feedback_Reporter {
         
         foreach ($execution_log as $log_entry) {
             if ($log_entry['level'] === 'error') {
-                $failures[] = array(
+                $failure_data = array(
                     'timestamp' => $log_entry['timestamp'],
                     'message' => $log_entry['message'],
                     'data' => $log_entry['data']
                 );
+                
+                // Add detailed error information if available
+                if (isset($log_entry['data']['error'])) {
+                    $failure_data['error_details'] = $log_entry['data']['error'];
+                }
+                
+                $failures[] = $failure_data;
                 
                 // Categorize error patterns
                 $error_type = $this->categorize_error($log_entry['message']);
