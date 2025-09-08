@@ -483,8 +483,11 @@ jQuery(document).ready(function($) {
                             button.html('<span class="dashicons dashicons-yes-alt"></span> All Pages Loaded').prop('disabled', true);
                         }
                         
-                        // Show success message
-                        showSuccessModal('Pages Loaded', `Loaded ${response.data.loaded_count} more pages. Total: ${response.data.total_count} pages.`);
+                        // Update pagination info silently (no modal needed)
+                        const paginationInfo = button.siblings('p');
+                        if (paginationInfo.length) {
+                            paginationInfo.text(`Showing ${response.data.current_page * perPage} of ${response.data.total_count} pages`);
+                        }
                     } else {
                         button.html('<span class="dashicons dashicons-yes-alt"></span> No More Pages').prop('disabled', true);
                     }
