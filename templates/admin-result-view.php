@@ -396,7 +396,14 @@ if (!empty($visual_evidence)) {
 
 <script>
 function openScreenshotModal(imageUrl, caption) {
-    const modal = $(`
+    // Remove any existing modal
+    const existingModal = document.getElementById('screenshot-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create modal HTML
+    const modalHTML = `
         <div id="screenshot-modal" class="screenshot-modal-overlay">
             <div class="screenshot-modal">
                 <div class="screenshot-modal-header">
@@ -409,29 +416,131 @@ function openScreenshotModal(imageUrl, caption) {
                 </div>
             </div>
         </div>
-    `);
+    `;
     
-    $('body').append(modal);
-    modal.fadeIn(300);
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    const modal = document.getElementById('screenshot-modal');
+    
+    // Show modal with fade effect
+    modal.style.display = 'block';
+    modal.style.opacity = '0';
+    setTimeout(() => {
+        modal.style.opacity = '1';
+    }, 10);
     
     // Close modal handlers
-    modal.find('.screenshot-modal-close').on('click', function() {
-        modal.fadeOut(300, function() {
-            $(this).remove();
-        });
+    const closeBtn = modal.querySelector('.screenshot-modal-close');
+    closeBtn.addEventListener('click', function() {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
     });
     
-    modal.on('click', function(e) {
+    modal.addEventListener('click', function(e) {
         if (e.target === this) {
-            modal.fadeOut(300, function() {
-                $(this).remove();
-            });
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    });
+    
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal) {
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
         }
     });
 }
 </script>
 
 <style>
+/* Screenshot Modal */
+.screenshot-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.screenshot-modal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 8px;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.screenshot-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.screenshot-modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #1e293b;
+}
+
+.screenshot-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #64748b;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.screenshot-modal-close:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+.screenshot-modal-body {
+    padding: 1rem;
+    text-align: center;
+}
+
+.screenshot-modal-image {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.screenshot-modal-caption {
+    margin-top: 1rem;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
 /* Screenshots Grid */
 .screenshots-grid {
     display: grid;
