@@ -83,13 +83,10 @@ class WP_Tester_Flow_Executor {
         // Verify directory is writable
         if (!is_writable($screenshots_dir)) {
             error_log('WP Tester: Screenshots directory is not writable: ' . $screenshots_dir);
-            // Fallback to temp directory
-            $screenshots_dir = sys_get_temp_dir() . '/wp-tester-screenshots';
-            if (!file_exists($screenshots_dir)) {
-                $created = wp_mkdir_p($screenshots_dir);
-                if (!$created) {
-                    error_log('WP Tester: Failed to create fallback screenshots directory: ' . $screenshots_dir);
-                }
+            // Try to fix permissions
+            chmod($screenshots_dir, 0755);
+            if (!is_writable($screenshots_dir)) {
+                error_log('WP Tester: Could not make screenshots directory writable: ' . $screenshots_dir);
             }
         }
         

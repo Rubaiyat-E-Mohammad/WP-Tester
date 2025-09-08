@@ -188,7 +188,27 @@ class WP_Tester_Feedback_Reporter {
         
         foreach ($screenshots as $screenshot) {
             $upload_dir = wp_upload_dir();
-            $screenshot_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $screenshot->screenshot_path);
+            $screenshot_url = '';
+            
+            // Check if screenshot is in uploads directory
+            if (strpos($screenshot->screenshot_path, $upload_dir['basedir']) === 0) {
+                $screenshot_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $screenshot->screenshot_path);
+            } else {
+                // Screenshot is in temp directory or elsewhere, copy to uploads and create URL
+                $filename = basename($screenshot->screenshot_path);
+                $uploads_screenshot_path = $upload_dir['basedir'] . '/wp-tester-screenshots/' . $filename;
+                
+                // Copy file to uploads directory if it exists and is different
+                if (file_exists($screenshot->screenshot_path) && $screenshot->screenshot_path !== $uploads_screenshot_path) {
+                    if (!file_exists($upload_dir['basedir'] . '/wp-tester-screenshots')) {
+                        wp_mkdir_p($upload_dir['basedir'] . '/wp-tester-screenshots');
+                    }
+                    copy($screenshot->screenshot_path, $uploads_screenshot_path);
+                }
+                
+                // Create URL for uploads directory
+                $screenshot_url = $upload_dir['baseurl'] . '/wp-tester-screenshots/' . $filename;
+            }
             
             $visual_evidence[] = array(
                 'step_number' => $screenshot->step_number,

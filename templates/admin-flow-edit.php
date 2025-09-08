@@ -345,6 +345,8 @@ jQuery(document).ready(function($) {
         const steps = JSON.parse($('#flow_steps').val() || '[]');
         const step = steps[currentStepIndex];
         
+        console.log(`Edit clicked! Index: ${currentStepIndex}, Total steps: ${steps.length}, Step data:`, step);
+        
         if (!step) {
             showErrorModal('Step not found');
             return;
@@ -352,8 +354,7 @@ jQuery(document).ready(function($) {
         
         $('#modal-title').text('Edit Step');
         $('#save-step').text('Update Step');
-        resetStepForm(); // Reset first
-        populateStepForm(step); // Then populate
+        populateStepForm(step);
         $('#step-editor-modal').show();
     });
     
@@ -368,6 +369,12 @@ jQuery(document).ready(function($) {
         }
     });
     
+    // Prevent form submission
+    $('#step-form').on('submit', function(e) {
+        e.preventDefault();
+        $('#save-step').click();
+    });
+    
     // Save step
     $('#save-step').on('click', function() {
         const formData = {
@@ -378,32 +385,48 @@ jQuery(document).ready(function($) {
             timeout: parseInt($('#step-timeout').val()) || 30
         };
         
+        console.log('Form data collected:', formData);
+        console.log('Current step index:', currentStepIndex);
+        
         // Validate
         if (!formData.action) {
+            console.log('Validation failed: No action selected');
             showErrorModal('Please select an action type');
             return;
         }
         if (!formData.target) {
+            console.log('Validation failed: No target entered');
             showErrorModal('Please enter a target');
             return;
         }
         
+        console.log('Validation passed, proceeding to save');
+        
         // Save step
         const steps = JSON.parse($('#flow_steps').val() || '[]');
+        const stepsBefore = steps.length;
+        
         if (currentStepIndex !== null && currentStepIndex >= 0) {
             // Editing existing step
+            console.log(`Editing step at index ${currentStepIndex}. Steps before: ${stepsBefore}`);
             steps[currentStepIndex] = formData;
         } else {
             // Adding new step
+            console.log(`Adding new step. Steps before: ${stepsBefore}`);
             steps.push(formData);
         }
         
+        console.log(`Steps after: ${steps.length}. Steps array:`, steps);
         $('#flow_steps').val(JSON.stringify(steps));
         updateStepsList();
         $('#step-editor-modal').hide();
         
         // Reset currentStepIndex
         currentStepIndex = null;
+        console.log('=== SAVE STEP COMPLETED ===');
+        console.log('Final steps count:', JSON.parse($('#flow_steps').val() || '[]').length);
+        console.log('DOM steps count:', $('#steps-list .step-item').length);
+        console.log('=== END SAVE STEP DEBUG ===');
     });
     
     // Cancel step
@@ -436,18 +459,31 @@ jQuery(document).ready(function($) {
     }
     
     function populateStepForm(step) {
+        console.log('Populating form with step:', step);
+        
+        // Clear form first
+        $('#step-form')[0].reset();
+        // Set values
         $('#step-action').val(step.action || '');
         $('#step-target').val(step.target || '');
         $('#step-data').val(step.data || '');
         $('#step-description').val(step.description || '');
         $('#step-timeout').val(step.timeout || 30);
         
-        // Trigger change to show/hide data field
-        $('#step-action').trigger('change');
+        // Show/hide data field based on action
+        const action = step.action || '';
+        if (['fill_input', 'fill_form', 'verify'].includes(action)) {
+            $('#step-data-group').show();
+        } else {
+            $('#step-data-group').hide();
+        }
+        
+        console.log('Form populated successfully');
     }
     
     function updateStepsList() {
         const steps = JSON.parse($('#flow_steps').val() || '[]');
+        console.log('Updating steps list with:', steps.length, 'steps');
         let html = '';
         
         steps.forEach((step, index) => {
@@ -466,6 +502,37 @@ jQuery(document).ready(function($) {
         });
         
         $('#steps-list').html(html);
+        console.log('Steps list updated successfully');
+    }
+    
+    // Initialize steps list
+    console.log('Initial steps from PHP:', $('#flow_steps').val());
+    updateStepsList();
+    
+    // Error modal function
+    function showErrorModal(title, message) {
+        const modalHtml = `
+            <div id="error-modal" class="modal" style="display: block;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>${title}</h3>
+                        <span class="modal-close">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary modal-close">OK</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(modalHtml);
+        
+        $('.modal-close').on('click', function() {
+            $('#error-modal').remove();
+        });
     }
 });
 </script>

@@ -270,18 +270,6 @@ $visual_evidence = $report['visual_evidence'] ?? [];
                     <div class="status-badge info"><?php echo count($visual_evidence); ?> images</div>
                 </div>
                 
-                <!-- Debug Information -->
-                <div style="background: #f0f0f0; padding: 1rem; margin: 1rem; border-radius: 4px; font-family: monospace; font-size: 12px;">
-                    <strong>Debug Info:</strong><br>
-                    Visual Evidence Count: <?php echo count($visual_evidence); ?><br>
-                    <?php foreach ($visual_evidence as $i => $screenshot): ?>
-                        Screenshot <?php echo $i + 1; ?>: 
-                        Path: <?php echo esc_html($screenshot['path']); ?><br>
-                        URL: <?php echo esc_html($screenshot['url']); ?><br>
-                        Exists: <?php echo $screenshot['file_exists'] ? 'Yes' : 'No'; ?><br>
-                        Type: <?php echo esc_html($screenshot['type']); ?><br><br>
-                    <?php endforeach; ?>
-                </div>
 
                 <div class="screenshots-grid">
                     <?php foreach ($visual_evidence as $screenshot): ?>
