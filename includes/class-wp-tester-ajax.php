@@ -32,6 +32,7 @@ class WP_Tester_Ajax {
         // Modern UI AJAX actions
         add_action('wp_ajax_wp_tester_get_dashboard_stats', array($this, 'get_dashboard_stats'));
         add_action('wp_ajax_wp_tester_cleanup_duplicates', array($this, 'cleanup_duplicates'));
+        add_action('wp_ajax_wp_tester_cleanup_all_flows', array($this, 'cleanup_all_flows'));
         add_action('wp_ajax_wp_tester_get_duplicate_flows_info', array($this, 'get_duplicate_flows_info'));
         add_action('wp_ajax_wp_tester_cleanup_test_results', array($this, 'cleanup_test_results'));
         add_action('wp_ajax_wp_tester_cleanup_all_test_results', array($this, 'cleanup_all_test_results'));
@@ -704,6 +705,48 @@ class WP_Tester_Ajax {
         } catch (Exception $e) {
             wp_send_json_error(array(
                 'message' => __('Failed to cleanup duplicates: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Cleanup all flows (delete all flows)
+     */
+    public function cleanup_all_flows() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            global $wpdb;
+            $flows_table = $wpdb->prefix . 'wp_tester_flows';
+            $results_table = $wpdb->prefix . 'wp_tester_results';
+            
+            // Count flows before deletion
+            $total_flows = $wpdb->get_var("SELECT COUNT(*) FROM {$flows_table}");
+            
+            // Delete all flows
+            $deleted_flows = $wpdb->query("DELETE FROM {$flows_table}");
+            
+            // Also clean up related test results
+            $deleted_results = $wpdb->query("DELETE FROM {$results_table}");
+            
+            wp_send_json_success(array(
+                'message' => sprintf(__('Successfully deleted all %d flows and %d related test results.', 'wp-tester'), $deleted_flows, $deleted_results),
+                'deleted_count' => $deleted_flows,
+                'deleted_results' => $deleted_results,
+                'debug_info' => array(
+                    'flows_before' => $total_flows,
+                    'flows_after' => 0
+                )
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to cleanup all flows: ', 'wp-tester') . $e->getMessage()
             ));
         }
     }

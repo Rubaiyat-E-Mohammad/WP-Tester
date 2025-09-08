@@ -254,7 +254,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                     <!-- Header with icon and selection -->
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
                         <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0;">
-                            <div style="width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #1FC09A, #0ea5e9); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <div style="width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #00265e, #0ea5e9); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <span class="dashicons dashicons-admin-plugins" style="color: white; font-size: 14px;"></span>
                             </div>
                             <div style="flex: 1; min-width: 0;">
@@ -269,7 +269,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                         
                         <!-- Selection Indicator -->
                         <div class="plugin-selection-indicator" style="width: 20px; height: 20px; border: 2px solid #d1d5db; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; cursor: pointer; z-index: 10; flex-shrink: 0;">
-                            <div class="checkmark" style="width: 8px; height: 8px; background: #1FC09A; border-radius: 50%; opacity: 0; transition: opacity 0.3s ease;"></div>
+                            <div class="checkmark" style="width: 8px; height: 8px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.3s ease;"></div>
                         </div>
                     </div>
                     
@@ -284,7 +284,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                             <div style="font-weight: 600; color: #64748b;">v<?php echo esc_html($plugin['version']); ?></div>
                             <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html($plugin['author']); ?></div>
                         </div>
-                        <div style="font-size: 0.625rem; color: #1FC09A; font-weight: 600;">
+                        <div style="font-size: 0.625rem; color: #00265e; font-weight: 600;">
                             Ready
                         </div>
                     </div>
@@ -569,10 +569,15 @@ jQuery(document).ready(function($) {
                     // Show success modal
                     showSuccessModal('Configuration Saved', 'AI configuration saved successfully!');
                     
-                    // Reload after a short delay to allow modal to show
+                    // Reset button after 1 second
                     setTimeout(function() {
-                        location.reload();
-                    }, 2000);
+                        button.removeClass('success');
+                        button.html(`
+                            <span class="dashicons dashicons-admin-generic"></span>
+                            <span>Save Configuration</span>
+                        `);
+                        button.prop('disabled', false);
+                    }, 1000);
                 } else {
                     // Show error animation
                     button.removeClass('saving').addClass('error');
@@ -587,7 +592,7 @@ jQuery(document).ready(function($) {
                     setTimeout(function() {
                         button.removeClass('error');
                         button.html(originalText).prop('disabled', false);
-                    }, 2000);
+                    }, 1000);
                 }
             },
             error: function() {
@@ -604,7 +609,7 @@ jQuery(document).ready(function($) {
                 setTimeout(function() {
                     button.removeClass('error');
                     button.html(originalText).prop('disabled', false);
-                }, 2000);
+                }, 1000);
             }
         });
     });
@@ -985,30 +990,30 @@ jQuery(document).ready(function($) {
 
 .plugin-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(31, 192, 154, 0.15);
-    border-color: #1FC09A;
+    box-shadow: 0 8px 24px rgba(0, 38, 94, 0.15);
+    border-color: #00265e;
 }
 
 .plugin-card:hover .plugin-selection-indicator {
-    border-color: #1FC09A;
+    border-color: #00265e;
     transform: scale(1.1);
 }
 
 .plugin-card.selected {
-    border-color: #1FC09A !important;
+    border-color: #00265e !important;
     background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%) !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 8px 24px rgba(31, 192, 154, 0.2) !important;
+    box-shadow: 0 8px 24px rgba(0, 38, 94, 0.2) !important;
 }
 
 .plugin-card.selected h3 {
-    color: #1FC09A !important;
+    color: #00265e !important;
 }
 
 .plugin-card.selected .plugin-selection-indicator {
-    border-color: #1FC09A !important;
-    background: #1FC09A !important;
-    box-shadow: 0 4px 12px rgba(31, 192, 154, 0.3) !important;
+    border-color: #00265e !important;
+    background: #00265e !important;
+    box-shadow: 0 4px 12px rgba(0, 38, 94, 0.3) !important;
 }
 
 .plugin-card.selected .checkmark {
@@ -1085,9 +1090,9 @@ jQuery(document).ready(function($) {
 }
 
 #save-ai-config.saving {
-    background: linear-gradient(135deg, #1FC09A, #0ea5e9) !important;
+    background: linear-gradient(135deg, #00265e, #0ea5e9) !important;
     transform: scale(0.98);
-    box-shadow: 0 4px 20px rgba(31, 192, 154, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 38, 94, 0.3);
 }
 
 #save-ai-config.success {

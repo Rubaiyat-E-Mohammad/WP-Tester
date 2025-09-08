@@ -25,18 +25,18 @@ if (!defined('ABSPATH')) {
                     <span class="dashicons dashicons-arrow-left-alt2"></span>
                     Dashboard
                 </a>
-                    <button id="check-duplicates" class="modern-btn modern-btn-secondary modern-btn-small">
-                        <span class="dashicons dashicons-search"></span>
-                        Check Duplicates
-                    </button>
-                    <button id="cleanup-duplicates" class="modern-btn modern-btn-warning modern-btn-small">
-                        <span class="dashicons dashicons-trash"></span>
-                        Cleanup Duplicates
-                    </button>
+                <button id="cleanup-flows" class="modern-btn modern-btn-danger modern-btn-small">
+                    <span class="dashicons dashicons-trash"></span>
+                    Cleanup Flows
+                </button>
+                <button id="cleanup-duplicates" class="modern-btn modern-btn-warning modern-btn-small">
+                    <span class="dashicons dashicons-trash"></span>
+                    Cleanup Duplicates
+                </button>
                 <button id="wp-tester-discover-flows" class="modern-btn modern-btn-primary modern-btn-small">
                     <span class="dashicons dashicons-search"></span>
                     Discover Flows
-        </button>
+                </button>
             </div>
         </div>
     </div>
@@ -321,44 +321,43 @@ jQuery(document).ready(function($) {
         });
     });
     
-    // Check duplicates functionality
-    $('#check-duplicates').on('click', function(e) {
+    // Cleanup all flows functionality
+    $('#cleanup-flows').on('click', function(e) {
         e.preventDefault();
+        
+        if (!confirm('⚠️ WARNING: This will delete ALL flows permanently!\n\nAre you absolutely sure you want to delete all flows? This action cannot be undone.')) {
+            return;
+        }
+        
+        // Double confirmation for safety
+        if (!confirm('This is your final warning!\n\nClicking OK will permanently delete ALL flows in your system. Are you 100% sure?')) {
+            return;
+        }
         
         const button = $(this);
         const originalText = button.html();
         
-        button.html('<span class="dashicons dashicons-update-alt"></span> Checking...').prop('disabled', true);
+        button.html('<span class="dashicons dashicons-update-alt"></span> Deleting All Flows...').prop('disabled', true);
         
         $.ajax({
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'wp_tester_get_duplicate_flows_info',
+                action: 'wp_tester_cleanup_all_flows',
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
                 if (response.success) {
-                    const data = response.data;
-                    let message = `Total Flows: ${data.total_flows}\nDuplicate Groups: ${data.duplicate_groups_count}\n\n`;
-                    
-                    if (data.duplicate_groups_count > 0) {
-                        message += 'Duplicate Groups Found:\n';
-                        data.duplicate_groups.forEach((group, index) => {
-                            message += `${index + 1}. Type: ${group.flow_type}, URL: ${group.start_url}, Count: ${group.count}, IDs: ${group.ids}\n`;
-                        });
-                    } else {
-                        message += 'No duplicate groups found.';
-                    }
-                    
-                    showSuccessModal('Duplicate Check', message);
+                    showSuccessModal('All Flows Deleted!', 
+                        'Successfully deleted ' + (response.data.deleted_count || 0) + ' flows. Refreshing page...');
+                    setTimeout(() => location.reload(), 2000);
                 } else {
-                    showErrorModal('Duplicate Check Failed', 'Error checking duplicates: ' + (response.data.message || 'Unknown error'));
+                    showErrorModal('Cleanup Failed', response.data.message || 'Unknown error occurred');
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Check Duplicates AJAX Error:', {xhr, status, error});
-                showErrorModal('Connection Error', 'Error connecting to server');
+                console.error('Cleanup All Flows AJAX Error:', {xhr, status, error});
+                showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);

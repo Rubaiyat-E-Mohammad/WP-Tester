@@ -128,7 +128,7 @@ class WP_Tester_Flow_Executor {
                 // Create a simple validation step for flows with no defined steps
                 $steps = array(
                     array(
-                        'action' => 'visit',
+                        'action' => 'navigate',
                         'target' => $flow->start_url,
                         'description' => 'Validate page accessibility'
                     )
@@ -371,6 +371,7 @@ class WP_Tester_Flow_Executor {
     private function perform_step_action($step, $step_number, $flow, $timeout) {
         switch ($step['action']) {
             case 'navigate':
+            case 'visit':
                 return $this->navigate_to_url($step['target']);
                 
             case 'fill_form':
@@ -503,19 +504,82 @@ class WP_Tester_Flow_Executor {
      * Verify element presence/content
      */
     private function verify_element($target, $expected = null) {
-        // Simulate element verification
-        // In a real implementation, this would check the actual page content
+        // Get the current page content for verification
+        $current_url = $this->get_current_page_url();
+        
+        if (empty($current_url)) {
+            return array(
+                'success' => false,
+                'error' => 'No current page URL available for verification'
+            );
+        }
+        
+        // Fetch the page content
+        $response = wp_remote_get($current_url, array(
+            'timeout' => 15,
+            'user-agent' => 'WP-Tester/1.0'
+        ));
+        
+        if (is_wp_error($response)) {
+            return array(
+                'success' => false,
+                'error' => 'Failed to fetch page content for verification: ' . ($response ? $response->get_error_message() : 'Unknown error')
+            );
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $response_code = wp_remote_retrieve_response_code($response);
+        
+        if ($response_code >= 400) {
+            return array(
+                'success' => false,
+                'error' => 'HTTP error ' . $response_code . ' when verifying page content'
+            );
+        }
+        
+        // Check if target element/content exists
+        $element_found = false;
+        $content_matches = null;
+        
+        if ($target === 'body') {
+            // Check if body tag exists
+            $element_found = strpos($body, '<body') !== false;
+        } elseif ($target === 'title') {
+            // Check if title tag exists
+            $element_found = strpos($body, '<title') !== false;
+            if ($expected && $element_found) {
+                preg_match('/<title[^>]*>(.*?)<\/title>/i', $body, $matches);
+                $actual_title = isset($matches[1]) ? trim($matches[1]) : '';
+                $content_matches = !empty($actual_title);
+            }
+        } elseif (strpos($target, '.') === 0) {
+            // CSS class selector
+            $class_name = substr($target, 1);
+            $element_found = strpos($body, 'class="' . $class_name . '"') !== false || 
+                           strpos($body, "class='" . $class_name . "'") !== false ||
+                           strpos($body, 'class="' . $class_name . ' ') !== false;
+        } elseif (strpos($target, '#') === 0) {
+            // CSS ID selector
+            $id_name = substr($target, 1);
+            $element_found = strpos($body, 'id="' . $id_name . '"') !== false || 
+                           strpos($body, "id='" . $id_name . "'") !== false;
+        } else {
+            // Generic element or text search
+            $element_found = strpos($body, $target) !== false;
+        }
         
         $verification_results = array(
-            'element_found' => true,
-            'content_matches' => $expected ? true : null,
-            'target' => $target
+            'element_found' => $element_found,
+            'content_matches' => $content_matches,
+            'target' => $target,
+            'expected' => $expected,
+            'response_code' => $response_code
         );
         
-        if ($verification_results['element_found']) {
+        if ($element_found) {
             return array(
                 'success' => true,
-                'message' => 'Element verification successful',
+                'message' => 'Element verification successful: ' . $target . ' found',
                 'details' => $verification_results
             );
         } else {
@@ -528,17 +592,59 @@ class WP_Tester_Flow_Executor {
     }
     
     /**
+     * Get current page URL (simplified - in real implementation this would track navigation)
+     */
+    private function get_current_page_url() {
+        // For now, return home URL as a fallback
+        // In a real browser automation, this would track the actual current URL
+        return home_url();
+    }
+    
+    /**
      * Wait for element
      */
     private function wait_for_element($target, $timeout) {
-        // Simulate waiting for element
-        $wait_time = min($timeout, 10); // Max 10 seconds wait
+        $max_wait = min($timeout, 10); // Cap at 10 seconds
+        $wait_time = 0;
+        
+        // If target is a number, treat it as seconds to wait
+        if (is_numeric($target)) {
+            $wait_seconds = min(intval($target), $max_wait);
+            sleep($wait_seconds);
+            return array(
+                'success' => true,
+                'message' => 'Waited for ' . $wait_seconds . ' seconds',
+                'target' => $target,
+                'wait_time' => $wait_seconds
+            );
+        }
+        
+        // Otherwise, try to verify element exists (with retries)
+        $attempts = 0;
+        $max_attempts = min($max_wait, 5);
+        
+        while ($attempts < $max_attempts) {
+            $verification = $this->verify_element($target);
+            if ($verification['success']) {
+                return array(
+                    'success' => true,
+                    'message' => 'Element found after ' . $attempts . ' attempts',
+                    'target' => $target,
+                    'wait_time' => $attempts
+                );
+            }
+            
+            $attempts++;
+            if ($attempts < $max_attempts) {
+                sleep(1);
+            }
+        }
         
         return array(
-            'success' => true,
-            'message' => 'Wait completed',
+            'success' => false,
+            'error' => 'Element not found after waiting ' . $max_attempts . ' seconds: ' . $target,
             'target' => $target,
-            'wait_time' => $wait_time
+            'wait_time' => $max_attempts
         );
     }
     

@@ -262,6 +262,32 @@
     text-decoration: none;
 }
 
+.modern-btn-warning {
+    background: #f59e0b;
+    color: white;
+    border: 1px solid #d97706;
+}
+
+.modern-btn-warning:hover {
+    background: #d97706;
+    border-color: #b45309;
+    color: white;
+    text-decoration: none;
+}
+
+.modern-btn-danger {
+    background: #dc2626;
+    color: white;
+    border: 1px solid #b91c1c;
+}
+
+.modern-btn-danger:hover {
+    background: #b91c1c;
+    border-color: #991b1b;
+    color: white;
+    text-decoration: none;
+}
+
 .modern-btn-small {
     padding: 0.5rem 0.75rem;
     font-size: 0.8125rem;

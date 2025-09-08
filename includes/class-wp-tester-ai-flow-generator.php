@@ -1434,8 +1434,9 @@ class WP_Tester_AI_Flow_Generator {
         $model_config = $this->get_current_model_config();
         $api_key = get_option('wp_tester_ai_api_key', '');
         
-        if (empty($api_key)) {
-            // Fallback to rule-based generation
+        // For free models, try to use them even without API key
+        if (empty($api_key) && !$model_config['free_tier']) {
+            error_log('WP Tester: No API key provided for paid model, using fallback');
             return $this->generate_fallback_flow($prompt);
         }
         
@@ -1992,31 +1993,107 @@ class WP_Tester_AI_Flow_Generator {
         
         if ($area === 'admin') {
             $steps[] = array(
-                'action' => 'visit',
+                'action' => 'navigate',
                 'target' => $url,
                 'value' => '',
-                'expected_result' => 'Admin page loads successfully'
+                'expected_result' => 'Admin page loads successfully',
+                'description' => 'Navigate to admin page'
             );
             
             $steps[] = array(
                 'action' => 'wait',
-                'target' => '2',
+                'target' => 'body',
                 'value' => '',
-                'expected_result' => 'Page fully loads'
+                'expected_result' => 'Page fully loads',
+                'description' => 'Wait for page to load completely'
+            );
+            
+            $steps[] = array(
+                'action' => 'verify',
+                'target' => 'body',
+                'value' => '',
+                'expected_result' => 'Admin interface is accessible',
+                'description' => 'Verify admin interface loads'
+            );
+            
+            $steps[] = array(
+                'action' => 'verify',
+                'target' => '.wp-admin',
+                'value' => '',
+                'expected_result' => 'WordPress admin elements present',
+                'description' => 'Verify WordPress admin elements'
+            );
+            
+            $steps[] = array(
+                'action' => 'verify',
+                'target' => '#wpbody-content',
+                'value' => '',
+                'expected_result' => 'Admin content area loaded',
+                'description' => 'Verify admin content area'
+            );
+            
+            $steps[] = array(
+                'action' => 'verify',
+                'target' => '.notice, .error, .updated',
+                'value' => '',
+                'expected_result' => 'No critical admin errors',
+                'description' => 'Check for admin notices and errors'
             );
         } else {
             $steps[] = array(
-                'action' => 'visit',
+                'action' => 'navigate',
                 'target' => $url,
                 'value' => '',
-                'expected_result' => 'Page loads successfully'
+                'expected_result' => 'Page loads successfully',
+                'description' => 'Navigate to page'
             );
             
             $steps[] = array(
                 'action' => 'wait',
-                'target' => '1',
+                'target' => 'body',
                 'value' => '',
-                'expected_result' => 'Page content is visible'
+                'expected_result' => 'Page content is visible',
+                'description' => 'Wait for page to load completely'
+            );
+            
+            $steps[] = array(
+                'action' => 'verify',
+                'target' => 'body',
+                'value' => '',
+                'expected_result' => 'Page loads without errors',
+                'description' => 'Verify page loads successfully'
+            );
+            
+            $steps[] = array(
+                'action' => 'verify',
+                'target' => 'title',
+                'value' => '',
+                'expected_result' => 'Page title is present',
+                'description' => 'Verify page title exists'
+            );
+            
+            $steps[] = array(
+                'action' => 'verify',
+                'target' => 'main, .content, #content',
+                'value' => '',
+                'expected_result' => 'Main content area present',
+                'description' => 'Verify main content area'
+            );
+            
+            $steps[] = array(
+                'action' => 'verify',
+                'target' => 'img',
+                'value' => '',
+                'expected_result' => 'Images load properly',
+                'description' => 'Check for broken images'
+            );
+            
+            $steps[] = array(
+                'action' => 'verify',
+                'target' => 'a[href]',
+                'value' => '',
+                'expected_result' => 'Navigation links present',
+                'description' => 'Verify navigation links'
             );
         }
         
