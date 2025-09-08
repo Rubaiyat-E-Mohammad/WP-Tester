@@ -14,6 +14,14 @@ $execution_summary = $report['execution_summary'] ?? [];
 $step_details = $report['step_details'] ?? [];
 $failure_analysis = $report['failure_analysis'] ?? [];
 $visual_evidence = $report['visual_evidence'] ?? [];
+
+// Debug: Log what we received
+error_log('WP Tester: Template received ' . count($visual_evidence) . ' visual evidence items');
+if (!empty($visual_evidence)) {
+    foreach ($visual_evidence as $evidence) {
+        error_log('WP Tester: Template evidence - Step: ' . $evidence['step_number'] . ', File exists: ' . ($evidence['file_exists'] ? 'yes' : 'no') . ', URL: ' . ($evidence['url'] ?? 'none'));
+    }
+}
 ?>
 
 <div class="wp-tester-modern">

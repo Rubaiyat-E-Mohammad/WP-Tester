@@ -814,12 +814,21 @@ class WP_Tester_Database {
     public function get_screenshots($test_result_id) {
         global $wpdb;
         
-        return $wpdb->get_results($wpdb->prepare(
+        $screenshots = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$this->screenshots_table} 
              WHERE test_result_id = %d 
              ORDER BY step_number ASC",
             $test_result_id
         ));
+        
+        error_log('WP Tester: Retrieved ' . count($screenshots) . ' screenshots for result ID ' . $test_result_id);
+        if (!empty($screenshots)) {
+            foreach ($screenshots as $screenshot) {
+                error_log('WP Tester: Screenshot - Step: ' . $screenshot->step_number . ', Type: ' . $screenshot->screenshot_type . ', Path: ' . $screenshot->screenshot_path);
+            }
+        }
+        
+        return $screenshots;
     }
     
     /**

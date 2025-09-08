@@ -585,6 +585,15 @@ class WP_Tester_Admin {
         // Get screenshot information for the report
         $screenshots = $this->database->get_screenshots($result_id);
         
+        // Debug the report data
+        error_log('WP Tester: Report generated for result ID ' . $result_id);
+        error_log('WP Tester: Visual evidence count: ' . count($report['visual_evidence'] ?? []));
+        if (!empty($report['visual_evidence'])) {
+            foreach ($report['visual_evidence'] as $evidence) {
+                error_log('WP Tester: Visual evidence - Step: ' . $evidence['step_number'] . ', File exists: ' . ($evidence['file_exists'] ? 'yes' : 'no'));
+            }
+        }
+        
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-result-view.php';
     }
     
