@@ -101,13 +101,13 @@ if (!defined('ABSPATH')) {
                                     <input type="checkbox" name="wp_tester_settings[crawl_schedule_days][]" value="<?php echo $day; ?>" <?php checked(in_array($day, $selected_days)); ?> style="margin-bottom: 0.25rem; accent-color: #00265e;">
                                     <span style="font-size: 0.75rem; font-weight: 500; color: #374151; text-transform: capitalize;"><?php echo substr($day, 0, 3); ?></span>
                                 </label>
-                            <?php endforeach; ?>
-                        </div>
+            <?php endforeach; ?>
+        </div>
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
                             Select which days of the week to run scheduled crawls
                         </p>
-                    </div>
-
+    </div>
+    
                     <!-- Include Admin Panel in Crawl -->
                     <div>
                         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
@@ -156,7 +156,7 @@ if (!defined('ABSPATH')) {
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
                             Number of times to retry a failed step before marking it as failed
                         </p>
-                    </div>
+            </div>
 
             
                     <!-- Screenshot on Failure -->

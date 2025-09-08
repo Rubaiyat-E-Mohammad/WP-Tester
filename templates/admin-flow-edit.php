@@ -451,9 +451,9 @@ jQuery(document).ready(function($) {
         console.log('Modal appended and faded in');
         
         // Show/hide data field based on action type
-        $('#step-action').on('change', function() {
+        modal.find('#step-action').on('change', function() {
             const action = $(this).val();
-            const dataGroup = $('#step-data-group');
+            const dataGroup = modal.find('#step-data-group');
             
             if (['fill_input', 'fill_form', 'verify'].includes(action)) {
                 dataGroup.show();
@@ -463,17 +463,13 @@ jQuery(document).ready(function($) {
         }).trigger('change');
         
         // Handle modal close
-        modal.find('#cancel-step').on('click', function(e) {
+        // Single handler for both cancel and close buttons
+        modal.find('#cancel-step, .wp-tester-modal-close').on('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Cancel button clicked');
-            closeStepEditor();
-        });
-        
-        modal.find('.wp-tester-modal-close').on('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            closeStepEditor();
+            console.log('Cancel/Close button clicked');
+            $(document).off('keydown.modal');
+            modal.remove();
         });
         
         // Handle save step
@@ -485,15 +481,16 @@ jQuery(document).ready(function($) {
         // Handle clicking outside modal to close
         modal.on('click', function(e) {
             if (e.target === this) {
-                closeStepEditor();
+                $(document).off('keydown.modal');
+                modal.remove();
             }
         });
         
         // Handle ESC key to close modal
         $(document).on('keydown.modal', function(e) {
             if (e.keyCode === 27) { // ESC key
-                closeStepEditor();
                 $(document).off('keydown.modal');
+                modal.remove();
             }
         });
     }
@@ -502,22 +499,23 @@ jQuery(document).ready(function($) {
         console.log('closeStepEditor called');
         // Clean up event handlers
         $(document).off('keydown.modal');
-        
-        $('#wp-tester-step-editor-modal').fadeOut(300, function() {
-            console.log('Modal removed');
-            $(this).remove();
-        });
+        // Remove modal immediately
+        $('#wp-tester-step-editor-modal').remove();
     }
     
     window.saveStep = function(stepIndex = null) {
         console.log('saveStep called with stepIndex:', stepIndex);
         
+        // Use modal-scoped selectors to get the correct values
+        const modal = $('#wp-tester-step-editor-modal');
+        const action = modal.find('#step-action').val() || modal.find('#step-action option:first').val();
+        
         const formData = {
-            action: $('#step-action').val(),
-            target: $('#step-target').val(),
-            data: $('#step-data').val(),
-            description: $('#step-description').val(),
-            timeout: parseInt($('#step-timeout').val()) || 30
+            action: action,
+            target: modal.find('#step-target').val(),
+            data: modal.find('#step-data').val(),
+            description: modal.find('#step-description').val(),
+            timeout: parseInt(modal.find('#step-timeout').val()) || 30
         };
         
         console.log('Form data:', formData);
