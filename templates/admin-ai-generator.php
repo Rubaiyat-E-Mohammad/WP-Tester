@@ -567,7 +567,10 @@ jQuery(document).ready(function($) {
                     // Reset button after 1 second
                     setTimeout(function() {
                         button.removeClass('success');
-                        button.html(originalText);
+                        button.html(`
+                            <span class="dashicons dashicons-saved"></span>
+                            Save Configuration
+                        `);
                         button.prop('disabled', false);
                     }, 1000);
                 } else {
@@ -583,7 +586,10 @@ jQuery(document).ready(function($) {
                     // Reset button after delay
                     setTimeout(function() {
                         button.removeClass('error');
-                        button.html(originalText).prop('disabled', false);
+                        button.html(`
+                            <span class="dashicons dashicons-saved"></span>
+                            Save Configuration
+                        `).prop('disabled', false);
                     }, 1000);
                 }
             },
@@ -600,7 +606,10 @@ jQuery(document).ready(function($) {
                 // Reset button after delay
                 setTimeout(function() {
                     button.removeClass('error');
-                    button.html(originalText).prop('disabled', false);
+                    button.html(`
+                        <span class="dashicons dashicons-saved"></span>
+                        Save Configuration
+                    `).prop('disabled', false);
                 }, 1000);
             }
         });

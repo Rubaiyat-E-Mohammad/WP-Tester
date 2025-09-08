@@ -493,9 +493,9 @@ class WP_Tester_Admin {
         
         // Debug: Log screenshot information
         $screenshots = $this->database->get_screenshots($result_id);
-        // Found screenshots for result
+        error_log("WP Tester: Found " . count($screenshots) . " screenshots for result ID: $result_id");
         foreach ($screenshots as $screenshot) {
-            // Processing screenshot
+            error_log("WP Tester: Screenshot - Step: {$screenshot->step_number}, Path: {$screenshot->screenshot_path}, Type: {$screenshot->screenshot_type}");
         }
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-result-view.php';

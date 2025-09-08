@@ -186,15 +186,13 @@ class WP_Tester_Feedback_Reporter {
     private function prepare_visual_evidence($screenshots) {
         $visual_evidence = array();
         
-        // Debug: Log how many screenshots we're processing
-        // Processing screenshots for visual evidence
+        error_log("WP Tester: Preparing visual evidence for " . count($screenshots) . " screenshots");
         
         foreach ($screenshots as $screenshot) {
             $upload_dir = wp_upload_dir();
             $screenshot_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $screenshot->screenshot_path);
             
-            // Debug: Log screenshot details
-            // Processing screenshot
+            error_log("WP Tester: Processing screenshot - Step: {$screenshot->step_number}, Path: {$screenshot->screenshot_path}, URL: $screenshot_url, Exists: " . (file_exists($screenshot->screenshot_path) ? 'Yes' : 'No'));
             
             $visual_evidence[] = array(
                 'step_number' => $screenshot->step_number,
@@ -207,8 +205,7 @@ class WP_Tester_Feedback_Reporter {
             );
         }
         
-        // Debug: Log final visual evidence count
-        // Generated visual evidence items
+        error_log("WP Tester: Generated " . count($visual_evidence) . " visual evidence items");
         
         return $visual_evidence;
     }
