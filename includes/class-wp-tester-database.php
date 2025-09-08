@@ -789,6 +789,8 @@ class WP_Tester_Database {
     public function save_screenshot($test_result_id, $step_number, $screenshot_path, $screenshot_type = 'failure', $caption = '') {
         global $wpdb;
         
+        error_log('WP Tester: Saving screenshot with result ID: ' . $test_result_id . ', Step: ' . $step_number);
+        
         $result = $wpdb->insert(
             $this->screenshots_table,
             array(
@@ -803,6 +805,8 @@ class WP_Tester_Database {
         
         if ($result === false) {
             error_log("WP Tester: Failed to save screenshot to database. Error: " . $wpdb->last_error);
+        } else {
+            error_log('WP Tester: Screenshot saved successfully with ID: ' . $wpdb->insert_id);
         }
         
         return $result;
@@ -825,6 +829,13 @@ class WP_Tester_Database {
         if (!empty($screenshots)) {
             foreach ($screenshots as $screenshot) {
                 error_log('WP Tester: Screenshot - Step: ' . $screenshot->step_number . ', Type: ' . $screenshot->screenshot_type . ', Path: ' . $screenshot->screenshot_path);
+            }
+        } else {
+            // Debug: Check what screenshots exist in database
+            $all_screenshots = $wpdb->get_results("SELECT * FROM {$this->screenshots_table} ORDER BY id DESC LIMIT 10");
+            error_log('WP Tester: Last 10 screenshots in database:');
+            foreach ($all_screenshots as $screenshot) {
+                error_log('WP Tester: DB Screenshot - ID: ' . $screenshot->id . ', Result ID: ' . $screenshot->test_result_id . ', Step: ' . $screenshot->step_number);
             }
         }
         

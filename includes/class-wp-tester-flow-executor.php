@@ -238,6 +238,8 @@ class WP_Tester_Flow_Executor {
                 wp_json_encode($suggestions)
             );
             
+            error_log('WP Tester: Test result saved with ID: ' . $result_id);
+            
             // Save screenshots to database
             if ($result_id && !empty($this->screenshots_to_save)) {
                 error_log('WP Tester: Saving ' . count($this->screenshots_to_save) . ' screenshots to database');

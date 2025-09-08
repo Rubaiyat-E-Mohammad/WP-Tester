@@ -577,6 +577,8 @@ class WP_Tester_Admin {
      * View result page
      */
     private function view_result_page($result_id) {
+        error_log('WP Tester: Viewing result page for result ID: ' . $result_id);
+        
         $report = $this->feedback_reporter->generate_report($result_id);
         if (isset($report['error'])) {
             wp_die(__('Test result not found.', 'wp-tester'));
