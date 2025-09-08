@@ -48,7 +48,7 @@ class WP_Tester_Playwright_Executor {
     /**
      * Execute a flow using Playwright
      */
-    public function execute_flow($flow_id, $test_run_id = null) {
+    public function execute_flow($flow_id, $manual_trigger = false) {
         try {
             $flow = $this->database->get_flow($flow_id);
             if (!$flow) {
@@ -60,10 +60,8 @@ class WP_Tester_Playwright_Executor {
                 throw new Exception('No steps found in flow');
             }
             
-            // Generate test run ID if not provided
-            if (!$test_run_id) {
-                $test_run_id = 'playwright_' . time() . '_' . wp_generate_password(8, false);
-            }
+            // Generate test run ID
+            $test_run_id = 'playwright_' . time() . '_' . wp_generate_password(8, false);
             
             // Create Playwright test script
             $test_script = $this->generate_playwright_script($flow, $steps);
@@ -302,5 +300,19 @@ class WP_Tester_Playwright_Executor {
             'video_path' => $this->config['video_path'],
             'trace_path' => $this->config['trace_path']
         );
+    }
+    
+    /**
+     * Execute multiple flows
+     */
+    public function execute_multiple_flows($flow_ids) {
+        $results = array();
+        
+        foreach ($flow_ids as $flow_id) {
+            $result = $this->execute_flow($flow_id);
+            $results[$flow_id] = $result;
+        }
+        
+        return $results;
     }
 }

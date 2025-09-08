@@ -50,7 +50,7 @@ class WP_Tester_Selenium_Executor {
     /**
      * Execute a flow using Selenium
      */
-    public function execute_flow($flow_id, $test_run_id = null) {
+    public function execute_flow($flow_id, $manual_trigger = false) {
         try {
             $flow = $this->database->get_flow($flow_id);
             if (!$flow) {
@@ -62,10 +62,8 @@ class WP_Tester_Selenium_Executor {
                 throw new Exception('No steps found in flow');
             }
             
-            // Generate test run ID if not provided
-            if (!$test_run_id) {
-                $test_run_id = 'selenium_' . time() . '_' . wp_generate_password(8, false);
-            }
+            // Generate test run ID
+            $test_run_id = 'selenium_' . time() . '_' . wp_generate_password(8, false);
             
             // Create Selenium test script
             $test_script = $this->generate_selenium_script($flow, $steps);
@@ -279,5 +277,19 @@ class WP_Tester_Selenium_Executor {
             'screenshot_path' => $this->config['screenshot_path'],
             'selenium_server_url' => $this->config['selenium_server_url']
         );
+    }
+    
+    /**
+     * Execute multiple flows
+     */
+    public function execute_multiple_flows($flow_ids) {
+        $results = array();
+        
+        foreach ($flow_ids as $flow_id) {
+            $result = $this->execute_flow($flow_id);
+            $results[$flow_id] = $result;
+        }
+        
+        return $results;
     }
 }
