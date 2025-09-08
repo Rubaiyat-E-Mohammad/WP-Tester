@@ -416,8 +416,12 @@ jQuery(document).ready(function($) {
                             
                             <div class="form-group">
                                 <label for="step-target">Target (CSS Selector or URL):</label>
-                                <input type="text" id="step-target" name="target" value="${existingStep.target || ''}" 
+                                <input type="text" id="step-target" name="target" value="${existingStep.target || ''}"
                                        placeholder="e.g., #submit-button, .login-form, https://example.com" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="button" id="debug-action" style="background: #ff6b6b; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Debug Action Value</button>
                             </div>
                             
                             <div class="form-group" id="step-data-group" style="display: none;">
@@ -478,6 +482,15 @@ jQuery(document).ready(function($) {
             saveStep(stepIndex);
         });
         
+        // Handle debug button
+        modal.find('#debug-action').on('click', function(e) {
+            e.preventDefault();
+            const actionSelect = modal.find('#step-action');
+            const action = actionSelect.val();
+            const selectedText = actionSelect.find('option:selected').text();
+            alert('Action value: "' + action + '"\nSelected text: "' + selectedText + '"\nAll options: ' + actionSelect.find('option').map(function() { return $(this).val() + '=' + $(this).text(); }).get().join(', '));
+        });
+        
         // Handle clicking outside modal to close
         modal.on('click', function(e) {
             if (e.target === this) {
@@ -508,7 +521,12 @@ jQuery(document).ready(function($) {
         
         // Use modal-scoped selectors to get the correct values
         const modal = $('#wp-tester-step-editor-modal');
-        const action = modal.find('#step-action').val() || modal.find('#step-action option:first').val();
+        const actionSelect = modal.find('#step-action');
+        const action = actionSelect.val();
+        
+        console.log('Action select element:', actionSelect);
+        console.log('Action select value:', action);
+        console.log('All options:', actionSelect.find('option').map(function() { return $(this).val(); }).get());
         
         const formData = {
             action: action,
@@ -519,9 +537,12 @@ jQuery(document).ready(function($) {
         };
         
         console.log('Form data:', formData);
+        console.log('Action value:', formData.action);
+        console.log('Action type:', typeof formData.action);
         
         // Validate required fields
-        if (!formData.action || formData.action.trim() === '') {
+        if (!formData.action || formData.action === '' || formData.action === 'Select Action') {
+            console.log('Validation failed - action is empty or default');
             showErrorModal('Validation Error', 'Please select an action type.');
             return;
         }
@@ -691,36 +712,34 @@ jQuery(document).ready(function($) {
         $('body').append(modal);
         modal.fadeIn(300);
         
-        // Add proper event handlers
+        // Add proper event handlers - immediate removal
         modal.find('#success-modal-ok, .wp-tester-modal-close').on('click', function(e) {
             e.preventDefault();
-            modal.fadeOut(300, function() {
-                $(this).remove();
-            });
+            e.stopPropagation();
+            $(document).off('keydown.successModal');
+            modal.remove();
         });
         
         // Handle clicking outside modal to close
         modal.on('click', function(e) {
             if (e.target === this) {
-                modal.fadeOut(300, function() {
-                    $(this).remove();
-                });
+                $(document).off('keydown.successModal');
+                modal.remove();
             }
         });
         
         // Handle ESC key to close modal
         $(document).on('keydown.successModal', function(e) {
             if (e.keyCode === 27) { // ESC key
-                modal.fadeOut(300, function() {
-                    $(this).remove();
-                });
                 $(document).off('keydown.successModal');
+                modal.remove();
             }
         });
         
         // Auto close after 3 seconds
         setTimeout(() => {
-            modal.fadeOut(300, function() { $(this).remove(); });
+            $(document).off('keydown.successModal');
+            modal.remove();
         }, 3000);
     }
     
@@ -752,30 +771,27 @@ jQuery(document).ready(function($) {
         $('body').append(modal);
         modal.fadeIn(300);
         
-        // Add proper event handlers
+        // Add proper event handlers - immediate removal
         modal.find('#error-modal-ok, .wp-tester-modal-close').on('click', function(e) {
             e.preventDefault();
-            modal.fadeOut(300, function() {
-                $(this).remove();
-            });
+            e.stopPropagation();
+            $(document).off('keydown.errorModal');
+            modal.remove();
         });
         
         // Handle clicking outside modal to close
         modal.on('click', function(e) {
             if (e.target === this) {
-                modal.fadeOut(300, function() {
-                    $(this).remove();
-                });
+                $(document).off('keydown.errorModal');
+                modal.remove();
             }
         });
         
         // Handle ESC key to close modal
         $(document).on('keydown.errorModal', function(e) {
             if (e.keyCode === 27) { // ESC key
-                modal.fadeOut(300, function() {
-                    $(this).remove();
-                });
                 $(document).off('keydown.errorModal');
+                modal.remove();
             }
         });
     }
