@@ -293,12 +293,21 @@ if (!empty($visual_evidence)) {
                                 <div class="screenshot-image">
                                     <img src="<?php echo esc_url($screenshot['url']); ?>" 
                                          alt="Screenshot for step <?php echo esc_attr($screenshot['step_number']); ?>"
-                                         onclick="openScreenshotModal('<?php echo esc_js($screenshot['url']); ?>', '<?php echo esc_js($screenshot['caption']); ?>')">
+                                         onclick="openScreenshotModal('<?php echo esc_js($screenshot['url']); ?>', '<?php echo esc_js($screenshot['caption']); ?>')"
+                                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;"
+                                         onload="console.log('Image loaded successfully: <?php echo esc_js($screenshot['url']); ?>')"
+                                         onerror="console.log('Image failed to load: <?php echo esc_js($screenshot['url']); ?>')">
+                                    <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                                        URL: <?php echo esc_html($screenshot['url']); ?>
+                                    </p>
                                 </div>
                             <?php else: ?>
                                 <div class="screenshot-placeholder">
                                     <span class="dashicons dashicons-format-image"></span>
                                     <p>Screenshot not available</p>
+                                    <p style="font-size: 12px; color: #666;">
+                                        File exists: <?php echo $screenshot['file_exists'] ? 'yes' : 'no'; ?>
+                                    </p>
                                 </div>
                             <?php endif; ?>
                             
