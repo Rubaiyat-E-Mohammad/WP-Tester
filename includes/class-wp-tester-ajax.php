@@ -1771,21 +1771,134 @@ class WP_Tester_Ajax {
      * Call AI API
      */
     private function call_ai_api($model, $api_key, $messages, $temperature, $max_tokens) {
-        $url = 'https://api.openai.com/v1/chat/completions';
+        // Get model configuration
+        $ai_generator = new WP_Tester_AI_Flow_Generator();
+        $model_config = $ai_generator->get_model_config($model);
         
-        $data = array(
-            'model' => $model,
-            'messages' => $messages,
-            'temperature' => $temperature,
-            'max_tokens' => $max_tokens
+        if (!$model_config) {
+            return array('success' => false, 'error' => 'Invalid model configuration');
+        }
+        
+        // Use the model's configured API URL
+        $url = $model_config['api_url'];
+        
+        if (empty($url)) {
+            return array('success' => false, 'error' => 'No API URL configured for this model');
+        }
+        
+        // Prepare data based on provider
+        $data = array();
+        $headers = array(
+            'Content-Type' => 'application/json'
         );
+        
+        switch ($model_config['provider']) {
+            case 'OpenAI':
+                $data = array(
+                    'model' => $model,
+                    'messages' => $messages,
+                    'temperature' => $temperature,
+                    'max_tokens' => $max_tokens
+                );
+                $headers['Authorization'] = 'Bearer ' . $api_key;
+                break;
+                
+            case 'Google':
+                $data = array(
+                    'contents' => array(
+                        array(
+                            'parts' => array(
+                                array('text' => $messages[count($messages) - 1]['content'])
+                            )
+                        )
+                    ),
+                    'generationConfig' => array(
+                        'temperature' => $temperature,
+                        'maxOutputTokens' => $max_tokens
+                    )
+                );
+                $headers['x-goog-api-key'] = $api_key;
+                break;
+                
+            case 'Anthropic':
+                $data = array(
+                    'model' => $model,
+                    'max_tokens' => $max_tokens,
+                    'temperature' => $temperature,
+                    'messages' => $messages
+                );
+                $headers['x-api-key'] = $api_key;
+                $headers['anthropic-version'] = '2023-06-01';
+                break;
+                
+            case 'X.AI':
+                $data = array(
+                    'model' => $model,
+                    'messages' => $messages,
+                    'temperature' => $temperature,
+                    'max_tokens' => $max_tokens
+                );
+                $headers['Authorization'] = 'Bearer ' . $api_key;
+                break;
+                
+            case 'DeepSeek':
+                $data = array(
+                    'model' => $model,
+                    'messages' => $messages,
+                    'temperature' => $temperature,
+                    'max_tokens' => $max_tokens
+                );
+                $headers['Authorization'] = 'Bearer ' . $api_key;
+                break;
+                
+            case 'Hugging Face':
+                $data = array(
+                    'inputs' => $messages[count($messages) - 1]['content'],
+                    'parameters' => array(
+                        'temperature' => $temperature,
+                        'max_new_tokens' => $max_tokens
+                    )
+                );
+                $headers['Authorization'] = 'Bearer ' . $api_key;
+                break;
+                
+            case 'Mistral AI':
+                $data = array(
+                    'model' => $model,
+                    'messages' => $messages,
+                    'temperature' => $temperature,
+                    'max_tokens' => $max_tokens
+                );
+                $headers['Authorization'] = 'Bearer ' . $api_key;
+                break;
+                
+            case 'Cohere':
+                $data = array(
+                    'model' => $model,
+                    'message' => $messages[count($messages) - 1]['content'],
+                    'temperature' => $temperature,
+                    'max_tokens' => $max_tokens
+                );
+                $headers['Authorization'] = 'Bearer ' . $api_key;
+                break;
+                
+            case 'Perplexity':
+                $data = array(
+                    'model' => $model,
+                    'messages' => $messages,
+                    'temperature' => $temperature,
+                    'max_tokens' => $max_tokens
+                );
+                $headers['Authorization'] = 'Bearer ' . $api_key;
+                break;
+                
+            default:
+                return array('success' => false, 'error' => 'Unsupported API provider: ' . $model_config['provider']);
+        }
         
         $args = array(
             'method' => 'POST',
-            'headers' => array(
-                'Authorization' => 'Bearer ' . $api_key,
-                'Content-Type' => 'application/json'
-            ),
+            'headers' => $headers,
             'body' => json_encode($data),
             'timeout' => 30
         );
@@ -1797,14 +1910,52 @@ class WP_Tester_Ajax {
         }
         
         $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body, true);
+        $response_data = json_decode($body, true);
         
-        if (isset($data['error'])) {
-            return array('success' => false, 'error' => $data['error']['message']);
+        if (isset($response_data['error'])) {
+            return array('success' => false, 'error' => $response_data['error']['message']);
         }
         
-        if (isset($data['choices'][0]['message']['content'])) {
-            return array('success' => true, 'message' => $data['choices'][0]['message']['content']);
+        // Parse response based on provider
+        $content = '';
+        switch ($model_config['provider']) {
+            case 'OpenAI':
+            case 'X.AI':
+            case 'DeepSeek':
+            case 'Mistral AI':
+            case 'Perplexity':
+                if (isset($response_data['choices'][0]['message']['content'])) {
+                    $content = $response_data['choices'][0]['message']['content'];
+                }
+                break;
+                
+            case 'Google':
+                if (isset($response_data['candidates'][0]['content']['parts'][0]['text'])) {
+                    $content = $response_data['candidates'][0]['content']['parts'][0]['text'];
+                }
+                break;
+                
+            case 'Anthropic':
+                if (isset($response_data['content'][0]['text'])) {
+                    $content = $response_data['content'][0]['text'];
+                }
+                break;
+                
+            case 'Hugging Face':
+                if (isset($response_data[0]['generated_text'])) {
+                    $content = $response_data[0]['generated_text'];
+                }
+                break;
+                
+            case 'Cohere':
+                if (isset($response_data['text'])) {
+                    $content = $response_data['text'];
+                }
+                break;
+        }
+        
+        if (!empty($content)) {
+            return array('success' => true, 'message' => $content);
         }
         
         return array('success' => false, 'error' => 'Invalid response from AI API');
