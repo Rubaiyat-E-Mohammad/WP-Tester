@@ -71,6 +71,7 @@ class WP_Tester_Database {
         $sql_flows = "CREATE TABLE {$this->flows_table} (
             id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
             flow_name varchar(255) NOT NULL,
+            flow_description text,
             flow_type varchar(100) NOT NULL,
             start_url varchar(2048) NOT NULL,
             steps longtext NOT NULL,
@@ -616,6 +617,25 @@ class WP_Tester_Database {
      */
     public function update_flows_table_schema() {
         global $wpdb;
+        
+        // Check if flow_description column exists
+        $description_exists = $wpdb->get_results($wpdb->prepare(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+             WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'flow_description'",
+            $wpdb->dbname,
+            $this->flows_table
+        ));
+        
+        if (empty($description_exists)) {
+            // Add flow_description column
+            $result_desc = $wpdb->query("ALTER TABLE {$this->flows_table} ADD COLUMN flow_description text AFTER flow_name");
+            
+            if ($result_desc !== false) {
+                error_log('WP Tester: Successfully added flow_description column to flows table');
+            } else {
+                error_log('WP Tester: Failed to add flow_description column to flows table: ' . $wpdb->last_error);
+            }
+        }
         
         // Check if ai_generated column exists
         $column_exists = $wpdb->get_results($wpdb->prepare(

@@ -240,6 +240,9 @@ class WP_Tester {
         $this->database = new WP_Tester_Database();
         $this->database->create_tables();
         
+        // Update table schemas to ensure all columns exist
+        $this->database->update_flows_table_schema();
+        
         // Note: No automatic crawling scheduled - user must manually trigger crawls
         
         // Set default options
