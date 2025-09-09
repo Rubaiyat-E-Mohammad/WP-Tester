@@ -482,7 +482,6 @@ class WP_Tester_Database {
             'older_than_days' => 30,
             'keep_successful' => true,
             'keep_failed' => false,
-            'keep_partial' => false,
             'max_results_per_flow' => 10
         );
         
@@ -502,9 +501,6 @@ class WP_Tester_Database {
             }
             if (!$options['keep_failed']) {
                 $status_conditions[] = "status = 'failed'";
-            }
-            if (!$options['keep_partial']) {
-                $status_conditions[] = "status = 'partial'";
             }
             
             if (!empty($status_conditions)) {
@@ -573,7 +569,6 @@ class WP_Tester_Database {
         // By status
         $stats['passed'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'passed'");
         $stats['failed'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed'");
-        $stats['partial'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'partial'");
         
         // By age
         $stats['last_7_days'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE started_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)");
@@ -912,7 +907,7 @@ class WP_Tester_Database {
         
         // Additional stats for comprehensive dashboard
         $stats['total_errors'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed'") ?: 0;
-        $stats['failed_tests'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status IN ('failed', 'partial')") ?: 0;
+        $stats['failed_tests'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->test_results_table} WHERE status = 'failed'") ?: 0;
         
         // Performance metrics
         $stats['avg_load_time'] = $avg_execution_time ?: 0;

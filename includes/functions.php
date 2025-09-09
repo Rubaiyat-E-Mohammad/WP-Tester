@@ -117,7 +117,6 @@ function wp_tester_get_status_icon($status) {
     $icons = array(
         'passed' => 'yes-alt',
         'failed' => 'dismiss',
-        'partial' => 'warning',
         'running' => 'update',
         'pending' => 'clock'
     );

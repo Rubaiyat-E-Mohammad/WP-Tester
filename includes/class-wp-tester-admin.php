@@ -750,7 +750,6 @@ class WP_Tester_Admin {
         $badges = array(
             'passed' => '<span class="wp-tester-badge wp-tester-badge-success">Passed</span>',
             'failed' => '<span class="wp-tester-badge wp-tester-badge-danger">Failed</span>',
-            'partial' => '<span class="wp-tester-badge wp-tester-badge-warning">Partial</span>',
             'running' => '<span class="wp-tester-badge wp-tester-badge-info">Running</span>'
         );
         

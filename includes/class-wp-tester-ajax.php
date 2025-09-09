@@ -870,7 +870,6 @@ class WP_Tester_Ajax {
                 'older_than_days' => intval($_POST['older_than_days'] ?? 30),
                 'keep_successful' => isset($_POST['keep_successful']) ? (bool)$_POST['keep_successful'] : true,
                 'keep_failed' => isset($_POST['keep_failed']) ? (bool)$_POST['keep_failed'] : false,
-                'keep_partial' => isset($_POST['keep_partial']) ? (bool)$_POST['keep_partial'] : false,
                 'max_results_per_flow' => intval($_POST['max_results_per_flow'] ?? 10)
             );
             

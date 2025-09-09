@@ -121,7 +121,6 @@ Navigate to **WP Tester → Settings** to configure:
 ### Status Types
 - **Passed**: All steps completed successfully
 - **Failed**: One or more steps failed
-- **Partial**: Some steps passed, others failed
 
 ### Report Components
 - **Execution Summary**: Overall test statistics

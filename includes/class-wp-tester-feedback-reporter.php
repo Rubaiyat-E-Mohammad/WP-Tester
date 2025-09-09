@@ -592,7 +592,6 @@ class WP_Tester_Feedback_Reporter {
         $labels = array(
             'passed' => 'Passed',
             'failed' => 'Failed',
-            'partial' => 'Partially Passed'
         );
         return isset($labels[$status]) ? $labels[$status] : ucfirst($status);
     }
@@ -601,7 +600,6 @@ class WP_Tester_Feedback_Reporter {
         $colors = array(
             'passed' => '#28a745',
             'failed' => '#dc3545',
-            'partial' => '#ffc107'
         );
         return isset($colors[$status]) ? $colors[$status] : '#6c757d';
     }
@@ -686,7 +684,7 @@ class WP_Tester_Feedback_Reporter {
         
         if ($test_result->status === 'failed') {
             $impact_level = 'high';
-        } elseif ($test_result->status === 'partial' && count($failures) > 1) {
+        } elseif ($test_result->status === 'failed' && count($failures) > 1) {
             $impact_level = 'medium';
         }
         

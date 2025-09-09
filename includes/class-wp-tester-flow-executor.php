@@ -188,7 +188,7 @@ class WP_Tester_Flow_Executor {
             }
             
             $execution_time = microtime(true) - $start_time;
-            $overall_status = $steps_failed === 0 ? 'passed' : ($steps_passed > 0 ? 'partial' : 'failed');
+            $overall_status = $steps_failed === 0 ? 'passed' : 'failed';
             
             // Generate suggestions based on failures
             $suggestions = $this->generate_suggestions($step_results, $flow);

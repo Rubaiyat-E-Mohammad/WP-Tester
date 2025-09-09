@@ -93,7 +93,7 @@ if (!defined('ABSPATH')) {
                     if (!empty($results)) {
                         foreach ($results as $result) {
                             $status = $result->status ?? '';
-                            if ($status === 'failed' || $status === 'partial') $failed_count++;
+                            if ($status === 'failed') $failed_count++;
                         }
                     }
                     echo $failed_count;
@@ -192,7 +192,7 @@ if (!defined('ABSPATH')) {
                     if (!empty($results)) {
                         foreach ($results as $result) {
                             $status = $result->status ?? '';
-                            if (in_array($status, ['passed', 'failed', 'partial'])) $executed_count++;
+                            if (in_array($status, ['passed', 'failed'])) $executed_count++;
                         }
                     }
                     echo $executed_count;
@@ -239,7 +239,7 @@ if (!defined('ABSPATH')) {
                     <select id="filter-status" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem;">
                         <option value="">All Status</option>
                         <option value="passed">Passed</option>
-                        <option value="failed">Failed (including Partial)</option>
+                        <option value="failed">Failed</option>
                         <option value="skipped">Skipped</option>
                         <option value="not_executed">Not Executed</option>
                         <option value="running">Running</option>
@@ -287,7 +287,7 @@ if (!defined('ABSPATH')) {
                     <?php foreach ($results as $result) : ?>
                         <div class="modern-list-item" data-status="<?php 
                             $status = $result->status ?? '';
-                            $display_status = ($status === 'partial') ? 'failed' : $status;
+                            $display_status = $status;
                             echo esc_attr($display_status);
                         ?>">
                             <div class="item-checkbox">
@@ -298,7 +298,7 @@ if (!defined('ABSPATH')) {
                                 <div class="item-icon">
                                     <span class="dashicons dashicons-<?php 
                                         $status = $result->status ?? 'unknown';
-                                        $display_status = ($status === 'partial') ? 'failed' : $status;
+                                        $display_status = $status;
                                         echo $display_status === 'passed' ? 'yes-alt' : 
                                             ($display_status === 'failed' ? 'dismiss' : 
                                             ($display_status === 'running' ? 'update' : 'clock'));
@@ -325,12 +325,12 @@ if (!defined('ABSPATH')) {
                             <div class="item-meta">
                                 <div class="status-badge <?php 
                                     $status = $result->status ?? 'pending';
-                                    $display_status = ($status === 'partial') ? 'failed' : $status;
+                                    $display_status = $status;
                                     echo esc_attr($display_status);
                                 ?>">
                                     <?php 
                                     $status = $result->status ?? 'Unknown';
-                                    $display_text = ($status === 'partial') ? 'Failed (Partial)' : ucfirst($status);
+                                    $display_text = ucfirst($status);
                                     echo esc_html($display_text);
                                     ?>
                                 </div>
@@ -344,7 +344,7 @@ if (!defined('ABSPATH')) {
                                     </a>
                                     <?php 
                                     $status = $result->status ?? '';
-                                    if ($status === 'failed' || $status === 'partial') : ?>
+                                    if ($status === 'failed') : ?>
                                         <button class="modern-btn modern-btn-primary modern-btn-small retry-test" 
                                                 data-flow-id="<?php echo esc_attr($result->flow_id ?? ''); ?>">
                                             Retry
@@ -740,7 +740,6 @@ jQuery(document).ready(function($) {
                                         <input type="checkbox" name="keep_failed"> Keep failed tests
                                     </label>
                                     <label>
-                                        <input type="checkbox" name="keep_partial"> Keep partial tests
                                     </label>
                                 </div>
                             </div>
@@ -775,7 +774,6 @@ jQuery(document).ready(function($) {
                 older_than_days: $('#older_than_days').val(),
                 keep_successful: $('#cleanup-form input[name="keep_successful"]').is(':checked'),
                 keep_failed: $('#cleanup-form input[name="keep_failed"]').is(':checked'),
-                keep_partial: $('#cleanup-form input[name="keep_partial"]').is(':checked'),
                 max_results_per_flow: $('#max_results_per_flow').val()
             };
             
