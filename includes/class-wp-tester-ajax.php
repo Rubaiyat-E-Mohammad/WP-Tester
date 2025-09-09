@@ -48,6 +48,13 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_generate_ai_flows', array($this, 'generate_ai_flows'));
         add_action('wp_ajax_wp_tester_set_ai_api_key', array($this, 'set_ai_api_key'));
         add_action('wp_ajax_wp_tester_get_available_plugins', array($this, 'get_available_plugins'));
+        
+        // AI Chat AJAX actions
+        add_action('wp_ajax_wp_tester_ai_chat', array($this, 'ai_chat'));
+        add_action('wp_ajax_wp_tester_save_conversation', array($this, 'save_conversation'));
+        add_action('wp_ajax_wp_tester_create_ai_flow', array($this, 'create_ai_flow'));
+        add_action('wp_ajax_wp_tester_get_ai_flows', array($this, 'get_ai_flows'));
+        add_action('wp_ajax_wp_tester_load_more_results', array($this, 'load_more_results'));
         add_action('wp_ajax_wp_tester_get_available_ai_models', array($this, 'get_available_ai_models'));
         add_action('wp_ajax_wp_tester_load_more_crawl_results', array($this, 'load_more_crawl_results'));
         add_action('wp_ajax_wp_tester_test_connection', array($this, 'test_connection'));
@@ -1651,6 +1658,289 @@ class WP_Tester_Ajax {
             wp_send_json_error(array(
                 'message' => __('Error loading crawl results: ', 'wp-tester') . $e->getMessage()
             ));
+        }
+    }
+    
+    /**
+     * AI Chat handler
+     */
+    public function ai_chat() {
+        try {
+            $message = sanitize_text_field($_POST['message'] ?? '');
+            $model = sanitize_text_field($_POST['model'] ?? 'gpt-3.5-turbo');
+            $api_key = sanitize_text_field($_POST['api_key'] ?? '');
+            $temperature = floatval($_POST['temperature'] ?? 0.7);
+            $max_tokens = intval($_POST['max_tokens'] ?? 2000);
+            $chat_history = $_POST['chat_history'] ?? array();
+            
+            if (empty($message)) {
+                wp_send_json_error('Message is required');
+            }
+            
+            if (empty($api_key)) {
+                wp_send_json_error('API key is required');
+            }
+            
+            // Prepare the AI prompt
+            $system_prompt = "You are a WordPress testing assistant. Help users create test flows for their WordPress sites. When a user describes what they want to test, analyze their request and provide a structured test flow in JSON format. The flow should include steps for testing the described functionality.";
+            
+            $messages = array(
+                array('role' => 'system', 'content' => $system_prompt)
+            );
+            
+            // Add chat history
+            foreach ($chat_history as $msg) {
+                $messages[] = array(
+                    'role' => $msg['type'] === 'user' ? 'user' : 'assistant',
+                    'content' => $msg['content']
+                );
+            }
+            
+            // Add current message
+            $messages[] = array('role' => 'user', 'content' => $message);
+            
+            // Call AI API
+            $response = $this->call_ai_api($model, $api_key, $messages, $temperature, $max_tokens);
+            
+            if ($response['success']) {
+                $ai_response = $response['message'];
+                
+                // Check if AI wants to create a flow
+                $create_flow = false;
+                $flow_data = null;
+                
+                if (strpos($ai_response, '```json') !== false) {
+                    // Extract JSON from response
+                    preg_match('/```json\s*(\{.*?\})\s*```/s', $ai_response, $matches);
+                    if (!empty($matches[1])) {
+                        $flow_json = json_decode($matches[1], true);
+                        if ($flow_json && isset($flow_json['name'])) {
+                            $create_flow = true;
+                            $flow_data = $flow_json;
+                        }
+                    }
+                }
+                
+                wp_send_json_success(array(
+                    'message' => $ai_response,
+                    'create_flow' => $create_flow,
+                    'flow_data' => $flow_data
+                ));
+            } else {
+                wp_send_json_error($response['error']);
+            }
+            
+        } catch (Exception $e) {
+            wp_send_json_error('Error: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Call AI API
+     */
+    private function call_ai_api($model, $api_key, $messages, $temperature, $max_tokens) {
+        $url = 'https://api.openai.com/v1/chat/completions';
+        
+        $data = array(
+            'model' => $model,
+            'messages' => $messages,
+            'temperature' => $temperature,
+            'max_tokens' => $max_tokens
+        );
+        
+        $args = array(
+            'method' => 'POST',
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $api_key,
+                'Content-Type' => 'application/json'
+            ),
+            'body' => json_encode($data),
+            'timeout' => 30
+        );
+        
+        $response = wp_remote_post($url, $args);
+        
+        if (is_wp_error($response)) {
+            return array('success' => false, 'error' => $response->get_error_message());
+        }
+        
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        
+        if (isset($data['error'])) {
+            return array('success' => false, 'error' => $data['error']['message']);
+        }
+        
+        if (isset($data['choices'][0]['message']['content'])) {
+            return array('success' => true, 'message' => $data['choices'][0]['message']['content']);
+        }
+        
+        return array('success' => false, 'error' => 'Invalid response from AI API');
+    }
+    
+    /**
+     * Save conversation
+     */
+    public function save_conversation() {
+        try {
+            $chat_history = $_POST['chat_history'] ?? array();
+            
+            // Save to WordPress options
+            $conversations = get_option('wp_tester_ai_conversations', array());
+            $conversations[] = array(
+                'timestamp' => current_time('mysql'),
+                'chat_history' => $chat_history
+            );
+            
+            // Keep only last 10 conversations
+            if (is_array($conversations) && count($conversations) > 10) {
+                $conversations = array_slice($conversations, -10);
+            }
+            
+            update_option('wp_tester_ai_conversations', $conversations);
+            
+            wp_send_json_success('Conversation saved successfully');
+            
+        } catch (Exception $e) {
+            wp_send_json_error('Error saving conversation: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Create AI flow
+     */
+    public function create_ai_flow() {
+        try {
+            $flow_name = sanitize_text_field($_POST['flow_name'] ?? '');
+            $flow_description = sanitize_text_field($_POST['flow_description'] ?? '');
+            $flow_data = $_POST['flow_data'] ?? array();
+            
+            if (empty($flow_name)) {
+                wp_send_json_error('Flow name is required');
+            }
+            
+            // Create flow in database
+            global $wpdb;
+            $flows_table = $wpdb->prefix . 'wp_tester_flows';
+            
+            $result = $wpdb->insert(
+                $flows_table,
+                array(
+                    'flow_name' => $flow_name,
+                    'flow_description' => $flow_description,
+                    'flow_type' => 'ai_generated',
+                    'steps' => json_encode($flow_data['steps'] ?? array()),
+                    'is_active' => 1,
+                    'priority' => 5,
+                    'created_at' => current_time('mysql'),
+                    'updated_at' => current_time('mysql')
+                ),
+                array('%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s')
+            );
+            
+            if ($result) {
+                $flow_id = $wpdb->insert_id;
+                
+                // Mark as AI generated (using options instead of post meta)
+                update_option('wp_tester_ai_flow_' . $flow_id . '_generated', true);
+                update_option('wp_tester_ai_flow_' . $flow_id . '_model', sanitize_text_field($_POST['model'] ?? ''));
+                
+                wp_send_json_success(array(
+                    'flow_id' => $flow_id,
+                    'message' => 'Flow created successfully'
+                ));
+            } else {
+                wp_send_json_error('Failed to create flow');
+            }
+            
+        } catch (Exception $e) {
+            wp_send_json_error('Error creating flow: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Get AI flows
+     */
+    public function get_ai_flows() {
+        try {
+            global $wpdb;
+            $flows_table = $wpdb->prefix . 'wp_tester_flows';
+            
+            $flows = $wpdb->get_results($wpdb->prepare(
+                "SELECT * FROM {$flows_table} WHERE flow_type = 'ai_generated' ORDER BY created_at DESC LIMIT 5"
+            ));
+            
+            $formatted_flows = array();
+            foreach ($flows as $flow) {
+                $formatted_flows[] = array(
+                    'id' => $flow->id,
+                    'name' => $flow->flow_name,
+                    'description' => $flow->flow_description,
+                    'created_at' => $flow->created_at,
+                    'edit_url' => admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . $flow->id),
+                    'test_url' => admin_url('admin.php?page=wp-tester-flows&action=test&flow_id=' . $flow->id)
+                );
+            }
+            
+            wp_send_json_success($formatted_flows);
+            
+        } catch (Exception $e) {
+            wp_send_json_error('Error loading AI flows: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Load more test results
+     */
+    public function load_more_results() {
+        try {
+            $offset = intval($_POST['offset'] ?? 0);
+            $limit = intval($_POST['limit'] ?? 10);
+            
+            global $wpdb;
+            $results_table = $wpdb->prefix . 'wp_tester_test_results';
+            $flows_table = $wpdb->prefix . 'wp_tester_flows';
+            
+            // Get more results with flow information
+            $results = $wpdb->get_results($wpdb->prepare(
+                "SELECT tr.*, f.flow_name 
+                 FROM {$results_table} tr 
+                 LEFT JOIN {$flows_table} f ON tr.flow_id = f.id 
+                 ORDER BY tr.started_at DESC 
+                 LIMIT %d OFFSET %d",
+                $limit,
+                $offset
+            ));
+            
+            // Check if there are more results
+            $total_count = $wpdb->get_var("SELECT COUNT(*) FROM {$results_table}");
+            $has_more = ($offset + $limit) < $total_count;
+            
+            // Format results for frontend
+            $formatted_results = array();
+            foreach ($results as $result) {
+                $formatted_results[] = array(
+                    'id' => $result->id,
+                    'flow_id' => $result->flow_id,
+                    'flow_name' => $result->flow_name ?: 'Unknown Flow',
+                    'status' => $result->status,
+                    'steps_executed' => $result->steps_executed,
+                    'steps_total' => $result->steps_executed, // Assuming all steps were attempted
+                    'execution_time' => $result->execution_time,
+                    'time_ago' => human_time_diff(strtotime($result->started_at), current_time('timestamp')) . ' ago',
+                    'view_url' => admin_url('admin.php?page=wp-tester-results&action=view&result_id=' . $result->id)
+                );
+            }
+            
+            wp_send_json_success(array(
+                'results' => $formatted_results,
+                'has_more' => $has_more,
+                'total_count' => $total_count,
+                'loaded_count' => count($formatted_results)
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error('Error loading more results: ' . $e->getMessage());
         }
     }
 }

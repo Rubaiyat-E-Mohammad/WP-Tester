@@ -318,7 +318,32 @@ $settings = get_option('wp_tester_settings', array());
                     <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
                         <?php 
                         $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
-                        echo $next_crawl ? date('M j, Y H:i', $next_crawl) : 'Not scheduled';
+                        if ($next_crawl) {
+                            echo date('M j, Y H:i', $next_crawl);
+                        } else {
+                            // Try to schedule if not scheduled
+                            $settings = get_option('wp_tester_settings', array());
+                            $frequency = $settings['crawl_frequency'] ?? 'never';
+                            
+                            if ($frequency !== 'never') {
+                                // Force reschedule
+                                wp_clear_scheduled_hook('wp_tester_daily_crawl');
+                                if ($frequency === 'daily' && isset($settings['crawl_schedule_time']) && isset($settings['crawl_schedule_days'])) {
+                                    // Use custom daily scheduling - schedule for next occurrence
+                                    $scheduler = new WP_Tester_Scheduler();
+                                    $scheduler->ensure_crawl_scheduled();
+                                } else {
+                                    // Use WordPress default frequency scheduling
+                                    wp_schedule_event(time(), $frequency, 'wp_tester_daily_crawl');
+                                }
+                                
+                                // Check again
+                                $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
+                                echo $next_crawl ? date('M j, Y H:i', $next_crawl) : 'Failed to schedule';
+                            } else {
+                                echo 'Not scheduled (Manual Only)';
+                            }
+                        }
                         ?>
                     </p>
                 </div>

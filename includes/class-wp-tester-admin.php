@@ -175,6 +175,15 @@ class WP_Tester_Admin {
             'wp-tester-ai-generator',
             array($this, 'ai_generator_page')
         );
+        
+        add_submenu_page(
+            'wp-tester',
+            __('AI Chat', 'wp-tester'),
+            __('AI Chat', 'wp-tester'),
+            'manage_options',
+            'wp-tester-ai-chat',
+            array($this, 'ai_chat_page')
+        );
     }
     
     /**
@@ -839,5 +848,12 @@ class WP_Tester_Admin {
             'last_updated' => '2 months ago',
             'homepage' => 'https://github.com/Rubaiyat-E-Mohammad/WP-Tester'
         );
+    }
+    
+    /**
+     * AI Chat page
+     */
+    public function ai_chat_page() {
+        include WP_TESTER_PLUGIN_DIR . 'templates/admin-ai-chat.php';
     }
 }

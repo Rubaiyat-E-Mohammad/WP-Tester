@@ -516,8 +516,90 @@ jQuery(document).ready(function($) {
     // Load more results
     $('#load-more').on('click', function(e) {
         e.preventDefault();
-        showErrorModal('Feature Coming Soon', 'Pagination feature will be available in a future update.');
+        loadMoreResults();
     });
+    
+    function loadMoreResults() {
+        const $button = $('#load-more');
+        const $resultsList = $('#results-list');
+        const currentCount = $resultsList.find('.modern-list-item').length;
+        
+        // Show loading state
+        $button.prop('disabled', true).html('<span class="dashicons dashicons-update" style="animation: spin 1s linear infinite;"></span> Loading...');
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_load_more_results',
+                offset: currentCount,
+                limit: 10
+            },
+            success: function(response) {
+                if (response.success && response.data.results.length > 0) {
+                    // Append new results
+                    response.data.results.forEach(function(result) {
+                        const resultHtml = createResultHtml(result);
+                        $resultsList.append(resultHtml);
+                    });
+                    
+                    // Update button state
+                    if (response.data.has_more) {
+                        $button.prop('disabled', false).html('Load More Results');
+                    } else {
+                        $button.hide();
+                    }
+                } else {
+                    $button.hide();
+                }
+            },
+            error: function() {
+                $button.prop('disabled', false).html('Load More Results');
+                showErrorModal('Error', 'Failed to load more results. Please try again.');
+            }
+        });
+    }
+    
+    function createResultHtml(result) {
+        const status = result.status || 'unknown';
+        const statusIcon = status === 'passed' ? 'yes-alt' : (status === 'failed' ? 'dismiss' : 'clock');
+        const statusColor = status === 'passed' ? '#28a745' : (status === 'failed' ? '#dc3545' : '#6c757d');
+        
+        return `
+            <div class="modern-list-item" data-status="${status}">
+                <div class="item-checkbox">
+                    <input type="checkbox" class="result-checkbox" value="${result.id}" id="result-${result.id}">
+                    <label for="result-${result.id}"></label>
+                </div>
+                <div class="item-info">
+                    <div class="item-icon">
+                        <span class="dashicons dashicons-${statusIcon}" style="color: ${statusColor}; font-size: 1.2rem;"></span>
+                    </div>
+                    <div class="item-details">
+                        <h4>${result.flow_name || 'Unknown Flow'}</h4>
+                        <p>
+                            ${result.steps_executed || 0} of ${result.steps_total || 0} steps • 
+                            Executed ${result.time_ago || 'unknown time ago'}
+                        </p>
+                    </div>
+                </div>
+                <div class="item-meta">
+                    <div class="status-badge ${status}">
+                        ${status.charAt(0).toUpperCase() + status.slice(1)}
+                    </div>
+                    <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
+                        ${(result.execution_time || 0).toFixed(3)}s execution time
+                    </div>
+                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                        <a href="${result.view_url}" class="modern-btn modern-btn-secondary modern-btn-small">
+                            View Details
+                        </a>
+                        ${status === 'failed' ? `<button class="modern-btn modern-btn-primary modern-btn-small retry-test" data-flow-id="${result.flow_id}">Retry</button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 
     // Run test
     $('#run-test').on('click', function(e) {
