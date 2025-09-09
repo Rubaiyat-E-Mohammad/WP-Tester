@@ -31,12 +31,8 @@ $ai_api_key = $settings['ai_api_key'] ?? '';
             <div class="header-actions">
                 <div class="ai-model-selector">
                     <label style="font-size: 0.875rem; color: #64748b; margin-right: 0.5rem;">AI Model:</label>
-                    <select id="ai-model-select" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.875rem;">
-                        <option value="gpt-3.5-turbo" <?php selected($ai_model, 'gpt-3.5-turbo'); ?>>GPT-3.5 Turbo</option>
-                        <option value="gpt-4" <?php selected($ai_model, 'gpt-4'); ?>>GPT-4</option>
-                        <option value="gpt-4-turbo" <?php selected($ai_model, 'gpt-4-turbo'); ?>>GPT-4 Turbo</option>
-                        <option value="claude-3-sonnet" <?php selected($ai_model, 'claude-3-sonnet'); ?>>Claude 3 Sonnet</option>
-                        <option value="claude-3-opus" <?php selected($ai_model, 'claude-3-opus'); ?>>Claude 3 Opus</option>
+                    <select id="ai-model-select" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.875rem; min-width: 200px;">
+                        <option value="">Loading models...</option>
                     </select>
                 </div>
             </div>
@@ -128,14 +124,25 @@ $ai_api_key = $settings['ai_api_key'] ?? '';
                         <h3 class="card-title">AI Settings</h3>
                     </div>
                     <div style="padding: 1rem;">
-                        <div style="margin-bottom: 1rem;">
+                        <!-- API Key Section (Hidden by default for free models) -->
+                        <div id="api-key-section" style="margin-bottom: 1rem; display: none;">
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                                API Key
+                                API Key <span style="color: #dc2626;">*</span>
                             </label>
                             <input type="password" id="ai-api-key" 
                                    value="<?php echo esc_attr($ai_api_key); ?>"
-                                   placeholder="Enter your AI API key"
+                                   placeholder="Enter your API key"
                                    style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+                            <p id="api-key-help" style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: #64748b;">
+                                API key is required for paid models.
+                            </p>
+                        </div>
+                        
+                        <!-- Model Description -->
+                        <div id="model-description" style="margin-bottom: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 6px; border-left: 3px solid #00265e;">
+                            <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
+                                Choose your AI model. Free models work without API keys, paid models require API keys.
+                            </p>
                         </div>
                         <div style="margin-bottom: 1rem;">
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
@@ -352,6 +359,7 @@ jQuery(document).ready(function($) {
     // Initialize
     updateTemperatureDisplay();
     loadRecentFlows();
+    loadAvailableModels();
     
     // Send message
     $('#send-message').on('click', sendMessage);
@@ -376,9 +384,142 @@ jQuery(document).ready(function($) {
     $('#export-chat').on('click', exportChat);
     $('#save-conversation').on('click', saveConversation);
     
+    // Model selection change handler
+    $('#ai-model-select').on('change', function() {
+        updateApiKeySection();
+    });
+    
+    // AI Model Management
+    let availableModels = {
+        free_models: {},
+        paid_models: {},
+        models_by_provider: {}
+    };
+    
+    // Load available models
+    function loadAvailableModels() {
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_get_available_ai_models',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    availableModels = response.data;
+                    populateModelDropdown();
+                } else {
+                    console.error('Failed to load models:', response.data);
+                }
+            },
+            error: function() {
+                console.error('Error loading AI models');
+            }
+        });
+    }
+    
+    function populateModelDropdown() {
+        const modelSelect = $('#ai-model-select');
+        const description = $('#model-description p');
+        
+        // Clear existing options except the first one
+        modelSelect.find('option:not(:first)').remove();
+        
+        // Add free models first
+        Object.keys(availableModels.free_models).forEach(modelId => {
+            const model = availableModels.free_models[modelId];
+            const option = $('<option></option>')
+                .attr('value', modelId)
+                .attr('data-provider', model.provider)
+                .attr('data-free', 'true')
+                .text(`${model.name} (${model.provider}) - Free`);
+            modelSelect.append(option);
+        });
+        
+        // Add paid models
+        Object.keys(availableModels.paid_models).forEach(modelId => {
+            const model = availableModels.paid_models[modelId];
+            const option = $('<option></option>')
+                .attr('value', modelId)
+                .attr('data-provider', model.provider)
+                .attr('data-free', 'false')
+                .text(`${model.name} (${model.provider}) - Paid`);
+            modelSelect.append(option);
+        });
+        
+        // Set default to first free model
+        const firstFreeModel = modelSelect.find('option[data-free="true"]:first');
+        if (firstFreeModel.length > 0) {
+            firstFreeModel.prop('selected', true);
+            updateApiKeySection();
+        }
+        
+        // Set current model if available
+        const currentModel = '<?php echo esc_js($ai_model); ?>';
+        if (currentModel && modelSelect.find(`option[value="${currentModel}"]`).length > 0) {
+            modelSelect.val(currentModel);
+            updateApiKeySection();
+        }
+    }
+    
+    function updateApiKeySection() {
+        const selectedOption = $('#ai-model-select option:selected');
+        const isFree = selectedOption.attr('data-free') === 'true';
+        const provider = selectedOption.attr('data-provider');
+        const apiKeySection = $('#api-key-section');
+        const apiKeyHelp = $('#api-key-help');
+        
+        if (isFree) {
+            apiKeySection.hide();
+            apiKeyHelp.text('This model works without an API key.');
+        } else {
+            apiKeySection.show();
+            
+            // Update help text based on provider
+            let helpText = 'Get your API key from the provider.';
+            let apiUrl = '#';
+            
+            switch (provider) {
+                case 'openai':
+                    helpText = 'Get your OpenAI API key';
+                    apiUrl = 'https://platform.openai.com/api-keys';
+                    break;
+                case 'anthropic':
+                    helpText = 'Get your Anthropic API key';
+                    apiUrl = 'https://console.anthropic.com/';
+                    break;
+                case 'google':
+                    helpText = 'Get your Google AI API key';
+                    apiUrl = 'https://makersuite.google.com/app/apikey';
+                    break;
+            }
+            
+            apiKeyHelp.html(`<a href="${apiUrl}" target="_blank" style="color: #00265e; text-decoration: none;">${helpText}</a>`);
+        }
+    }
+    
     function sendMessage() {
         const message = $('#chat-input').val().trim();
         if (!message || isTyping) return;
+        
+        // Validate model and API key
+        const selectedModel = $('#ai-model-select').val();
+        const apiKey = $('#ai-api-key').val();
+        
+        if (!selectedModel) {
+            addMessage('ai', 'Please select an AI model first.');
+            return;
+        }
+        
+        const selectedOption = $('#ai-model-select option:selected');
+        const isFree = selectedOption.attr('data-free') === 'true';
+        
+        // For paid models, check if API key is provided
+        if (!isFree && !apiKey.trim()) {
+            addMessage('ai', 'API key is required for paid models. Please enter your API key in the settings.');
+            return;
+        }
         
         // Add user message
         addMessage('user', message);
@@ -394,11 +535,12 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'wp_tester_ai_chat',
                 message: message,
-                model: $('#ai-model-select').val(),
-                api_key: $('#ai-api-key').val(),
+                model: selectedModel,
+                api_key: apiKey,
                 temperature: $('#ai-temperature').val(),
                 max_tokens: $('#ai-max-tokens').val(),
-                chat_history: chatHistory
+                chat_history: chatHistory,
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
                 hideTypingIndicator();

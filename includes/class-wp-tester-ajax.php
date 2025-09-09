@@ -1674,6 +1674,13 @@ class WP_Tester_Ajax {
      * AI Chat handler
      */
     public function ai_chat() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
         try {
             $message = sanitize_text_field($_POST['message'] ?? '');
             $model = sanitize_text_field($_POST['model'] ?? 'gpt-3.5-turbo');
@@ -1686,8 +1693,21 @@ class WP_Tester_Ajax {
                 wp_send_json_error('Message is required');
             }
             
-            if (empty($api_key)) {
-                wp_send_json_error('API key is required');
+            if (empty($model)) {
+                wp_send_json_error('AI model is required');
+            }
+            
+            // Check if model requires API key
+            $ai_generator = new WP_Tester_AI_Flow_Generator();
+            $model_config = $ai_generator->get_model_config($model);
+            
+            if (!$model_config) {
+                wp_send_json_error('Invalid AI model selected');
+            }
+            
+            // For paid models, API key is required
+            if (!$model_config['free_tier'] && empty($api_key)) {
+                wp_send_json_error('API key is required for paid models');
             }
             
             // Prepare the AI prompt

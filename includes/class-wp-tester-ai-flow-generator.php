@@ -481,6 +481,13 @@ class WP_Tester_AI_Flow_Generator {
     }
     
     /**
+     * Get model configuration by model ID
+     */
+    public function get_model_config($model_id) {
+        return $this->available_models[$model_id] ?? null;
+    }
+    
+    /**
      * Generate AI-powered flows for the entire site
      */
     public function generate_ai_flows($options = array()) {
@@ -671,9 +678,17 @@ class WP_Tester_AI_Flow_Generator {
         $flows = array();
         $site_info = $this->get_site_analysis();
         
-        foreach (($this->frontend_pages ?? []) as $page) {
+        // Filter pages to only include those that need testing
+        $priority_pages = $this->filter_priority_pages($this->frontend_pages ?? []);
+        
+        foreach ($priority_pages as $page) {
             if (count($flows) >= $options['max_flows_per_area']) {
                 break;
+            }
+            
+            // Skip if this page type already has enough flows
+            if ($this->has_sufficient_flows_for_page_type($page, $flows)) {
+                continue;
             }
             
             $flow_data = $this->generate_flow_with_ai($page, 'frontend', $site_info);
@@ -1278,7 +1293,7 @@ class WP_Tester_AI_Flow_Generator {
             $prompt = $this->build_ai_prompt($page, $area, $site_info);
             $ai_response = $this->call_ai_api($prompt);
             
-            if ($ai_response && isset($ai_response['flow'])) {
+            if ($ai_response) {
                 return $this->parse_ai_response($ai_response, $page, $area);
             }
             
@@ -1294,138 +1309,304 @@ class WP_Tester_AI_Flow_Generator {
      * Build AI prompt for flow generation
      */
     private function build_ai_prompt($page, $area, $site_info) {
-        $prompt = "You are a senior WordPress QA automation engineer with 15+ years of experience in web application testing, user experience analysis, and automated test design. You specialize in creating comprehensive, realistic test scenarios that catch real-world bugs and validate critical user journeys.\n\n";
+        // Analyze the page to determine what type of test is most relevant
+        $page_analysis = $this->analyze_page_for_testing($page, $area);
         
-        $prompt .= "## MISSION CRITICAL CONTEXT\n";
-        $prompt .= "**Target Page Analysis:**\n";
-        $prompt .= "- URL: {$page['url']}\n";
-        $prompt .= "- Page Title: {$page['title']}\n";
-        $prompt .= "- Testing Area: {$area}\n";
-        $prompt .= "- Site Type: {$site_info['type']}\n";
-        $prompt .= "- WordPress Version: " . get_bloginfo('version') . "\n";
-        $theme = wp_get_theme();
-        $prompt .= "- Active Theme: " . ($theme ? $theme->get_template() : 'Unknown') . "\n";
+        $prompt = "Create a focused, practical test flow for this WordPress page.\n\n";
         
-        if (!empty($page['content'])) {
-            $content_preview = substr(strip_tags($page['content']), 0, 1000);
-            $prompt .= "- Page Content Analysis: " . $content_preview . "...\n";
-        }
+        $prompt .= "PAGE: {$page['title']} ({$page['url']})\n";
+        $prompt .= "AREA: {$area}\n";
+        $prompt .= "PRIORITY: {$page_analysis['priority']}\n";
+        $prompt .= "FOCUS: {$page_analysis['focus']}\n\n";
         
+        $prompt .= "Create ONLY {$page_analysis['max_steps']} essential steps that test the core functionality.\n";
+        $prompt .= "Use simple, reliable selectors. Avoid unnecessary complexity.\n\n";
         
-        $prompt .= "\n## EXPERT TESTING STRATEGY\n";
-        $prompt .= "Your task is to create a test flow that:\n";
-        $prompt .= "1. **Simulates Real User Behavior** - Think like actual users, not robots\n";
-        $prompt .= "2. **Tests Critical Business Logic** - Focus on functionality that matters to business success\n";
-        $prompt .= "3. **Covers Edge Cases & Error Scenarios** - Test boundary conditions, invalid inputs, and failure modes\n";
-        $prompt .= "4. **Validates Data Integrity** - Ensure data is saved, retrieved, and displayed correctly\n";
-        $prompt .= "5. **Tests User Experience Flow** - Verify smooth navigation, feedback, and user satisfaction\n";
-        $prompt .= "6. **Checks Cross-Browser Compatibility** - Consider different browser behaviors\n";
-        $prompt .= "7. **Tests Performance & Responsiveness** - Ensure fast loading and mobile compatibility\n";
-        $prompt .= "8. **Validates Security & Permissions** - Test access controls and data protection\n";
+        $prompt .= "Available actions: visit, click, fill, select, wait (2-3 seconds max)\n";
+        $prompt .= "Selector priority: [name], #id, .class, text content\n\n";
         
-        $prompt .= "\n## ADVANCED ACTION FRAMEWORK\n";
-        $prompt .= "Use these actions strategically:\n";
-        $prompt .= "- **visit**: Navigate to URLs (always start flows with this)\n";
-        $prompt .= "- **click**: Interact with buttons, links, checkboxes, radio buttons\n";
-        $prompt .= "- **fill**: Enter data in text fields, textareas, search boxes\n";
-        $prompt .= "- **select**: Choose from dropdowns, multi-selects, date pickers\n";
-        $prompt .= "- **wait**: Pause for AJAX calls, page transitions, animations (2-5 seconds)\n";
-        $prompt .= "- **hover**: Trigger tooltips, dropdown menus, preview effects\n";
-        $prompt .= "- **scroll**: Navigate long pages, reveal lazy-loaded content\n";
-        $prompt .= "- **keyboard**: Use Enter, Tab, Escape, arrow keys for accessibility\n";
-        $prompt .= "- **upload**: Test file uploads (images, documents, media)\n";
-        $prompt .= "- **drag**: Drag and drop interactions if applicable\n";
-        
-        $prompt .= "\n## PRECISION CSS SELECTOR STRATEGY\n";
-        $prompt .= "Use the most reliable selectors in this priority order:\n";
-        $prompt .= "1. **Data attributes**: [data-testid='submit-btn'], [data-cy='login-form']\n";
-        $prompt .= "2. **Form elements**: input[name='email'], select[name='country'], textarea[name='message']\n";
-        $prompt .= "3. **IDs**: #login-button, #search-form, #user-menu\n";
-        $prompt .= "4. **Semantic classes**: .btn-primary, .form-control, .nav-link, .card-title\n";
-        $prompt .= "5. **Text-based**: button:contains('Submit'), a:contains('Login'), input[placeholder*='Email']\n";
-        $prompt .= "6. **Role-based**: [role='button'], [role='link'], [role='textbox']\n";
-        $prompt .= "7. **Avoid**: Generic selectors like div, span, p without context\n";
-        
-        $prompt .= "\n## REALISTIC TEST DATA LIBRARY\n";
-        $prompt .= "Use diverse, realistic test data:\n";
-        $prompt .= "- **Names**: John Smith, Maria García, Ahmed Hassan, Li Wei, Priya Patel\n";
-        $prompt .= "- **Emails**: john.smith@example.com, maria.garcia@company.org, test.user+qa@domain.net\n";
-        $prompt .= "- **Phone Numbers**: +1-555-123-4567, +44-20-7946-0958, +91-98765-43210\n";
-        $prompt .= "- **Addresses**: 123 Main St, New York, NY 10001, 456 Oxford St, London W1C 1JN\n";
-        $prompt .= "- **Companies**: Acme Corp, Tech Solutions Inc, Global Enterprises Ltd\n";
-        $prompt .= "- **Content**: Meaningful, realistic text that makes sense in context\n";
-        $prompt .= "- **Passwords**: TestPass123!, SecureP@ssw0rd, MyStr0ng#Pass\n";
-        $prompt .= "- **URLs**: https://example.com, https://test-site.org, https://demo.net\n";
-        
-        $prompt .= "\n## COMPREHENSIVE EXPECTED RESULTS\n";
-        $prompt .= "Define specific, measurable outcomes:\n";
-        $prompt .= "- **Success Indicators**: Page loads, forms submit, data saves, redirects occur\n";
-        $prompt .= "- **Visual Feedback**: Success messages, error alerts, loading states, UI changes\n";
-        $prompt .= "- **Data Validation**: Correct data storage, retrieval, and display\n";
-        $prompt .= "- **Error Handling**: Proper validation messages, graceful error recovery\n";
-        $prompt .= "- **Performance Metrics**: Page load times, response times, resource usage\n";
-        $prompt .= "- **Accessibility**: Keyboard navigation, screen reader compatibility\n";
-        
-        $prompt .= "\n## STRICT JSON RESPONSE FORMAT\n";
-        $prompt .= "Generate ONLY a valid JSON response with this exact structure:\n";
+        $prompt .= "Return ONLY a JSON object with this exact structure:\n";
         $prompt .= "{\n";
-        $prompt .= "  \"flow_name\": \"[Specific, descriptive name that clearly indicates the test scenario]\",\n";
-        $prompt .= "  \"flow_type\": \"[navigation|form|ecommerce|content|admin|user_management|settings|security|api|integration]\",\n";
-        $prompt .= "  \"description\": \"[Detailed explanation of what this flow tests, why it's important, and what bugs it might catch]\",\n";
-        $prompt .= "  \"steps\": [\n";
-        $prompt .= "    {\n";
-        $prompt .= "      \"action\": \"[visit|click|fill|select|wait|hover|scroll|keyboard|upload|drag]\",\n";
-        $prompt .= "      \"target\": \"[Precise CSS selector or URL]\",\n";
-        $prompt .= "      \"value\": \"[Realistic test data for fill/select actions]\",\n";
-        $prompt .= "      \"expected_result\": \"[Specific, measurable outcome with success criteria]\",\n";
-        $prompt .= "      \"wait_time\": [Optional: seconds to wait after this step]\n";
-        $prompt .= "    }\n";
-        $prompt .= "  ],\n";
-        $prompt .= "  \"priority\": \"[high|medium|low based on business impact and user frequency]\",\n";
-        $prompt .= "  \"tags\": [\"[relevant tags for categorization and filtering]\"]\n";
+        $prompt .= '  "name": "Clear, specific test name",' . "\n";
+        $prompt .= '  "description": "What this test validates",' . "\n";
+        $prompt .= '  "steps": [' . "\n";
+        $prompt .= '    {"action": "visit", "target": "url", "description": "Navigate to page"},' . "\n";
+        $prompt .= '    {"action": "click", "target": "selector", "description": "Click element"},' . "\n";
+        $prompt .= '    {"action": "fill", "target": "selector", "value": "test data", "description": "Enter data"},' . "\n";
+        $prompt .= '    {"action": "wait", "target": "2", "description": "Wait for response"}' . "\n";
+        $prompt .= '  ]' . "\n";
         $prompt .= "}\n\n";
         
-        $prompt .= "## EXPERT QUALITY STANDARDS\n";
-        $prompt .= "1. **Flow name must be specific and actionable** - Include the exact functionality being tested\n";
-        $prompt .= "2. **Steps must be logical and sequential** - Each step should build naturally on the previous\n";
-        $prompt .= "3. **Include both positive and negative test cases** - Test success paths AND failure scenarios\n";
-        $prompt .= "4. **Use realistic, varied test data** - No placeholder text, use actual user-like data\n";
-        $prompt .= "5. **Specify measurable outcomes** - Each step should have clear success/failure criteria\n";
-        $prompt .= "6. **Consider different user personas** - Admin users, regular users, guests, etc.\n";
-        $prompt .= "7. **Test accessibility and usability** - Include keyboard navigation and screen reader considerations\n";
-        $prompt .= "8. **Focus on business-critical functionality** - Prioritize features that impact user experience and business goals\n";
-        
-        $prompt .= "\n## EXCELLENT FLOW NAME EXAMPLES\n";
-        $prompt .= "- \"Complete User Registration with Email Verification and Profile Setup\"\n";
-        $prompt .= "- \"E-commerce Product Purchase with Payment Gateway and Order Confirmation\"\n";
-        $prompt .= "- \"Content Creation with Media Upload, SEO Settings, and Publishing Workflow\"\n";
-        $prompt .= "- \"Admin User Management with Role Assignment and Permission Validation\"\n";
-        $prompt .= "- \"Contact Form Submission with Validation, Email Notification, and Success Feedback\"\n";
-        $prompt .= "- \"Search Functionality with Filters, Sorting, and Result Pagination\"\n";
-        $prompt .= "- \"User Login with Remember Me, Password Reset, and Account Lockout Protection\"\n";
-        
-        $prompt .= "\n## CONCRETE TESTING EXAMPLES\n";
-        $prompt .= "**For a Contact Form Page:**\n";
-        $prompt .= "- Test valid form submission with all fields\n";
-        $prompt .= "- Test form validation with missing required fields\n";
-        $prompt .= "- Test email format validation\n";
-        $prompt .= "- Test form submission with special characters\n";
-        $prompt .= "- Test form reset/clear functionality\n";
-        $prompt .= "- Test form submission with very long text\n";
-        
-        $prompt .= "\n**For an E-commerce Product Page:**\n";
-        $prompt .= "- Test product image gallery and zoom functionality\n";
-        $prompt .= "- Test add to cart with different quantities\n";
-        $prompt .= "- Test product reviews and rating system\n";
-        $prompt .= "- Test related products and recommendations\n";
-        $prompt .= "- Test product sharing and wishlist functionality\n";
-        $prompt .= "- Test mobile responsiveness and touch interactions\n";
-        
-        $prompt .= "\n## FINAL INSTRUCTIONS\n";
-        $prompt .= "Create a comprehensive, realistic test flow that thoroughly validates the functionality of this page. Think like a real user who wants to accomplish specific tasks. Focus on scenarios that would actually break in production and cause user frustration. Make every step actionable, specific, and valuable for catching real bugs.\n\n";
-        $prompt .= "Remember: Quality over quantity. Better to have 5 well-thought-out steps than 15 generic ones.";
+        $prompt .= "Focus on: {$page_analysis['testing_goals']}\n";
+        $prompt .= "Avoid: {$page_analysis['avoid_actions']}\n";
         
         return $prompt;
+    }
+    
+    /**
+     * Analyze page to determine the most relevant testing approach
+     */
+    private function analyze_page_for_testing($page, $area) {
+        $url = strtolower($page['url']);
+        $title = strtolower($page['title']);
+        $content = isset($page['content']) ? strtolower($page['content']) : '';
+        
+        // Determine page type and testing priority
+        $analysis = [
+            'priority' => 'medium',
+            'focus' => 'general',
+            'max_steps' => 5,
+            'testing_goals' => 'basic functionality',
+            'avoid_actions' => 'unnecessary complexity'
+        ];
+        
+        // High priority pages that need focused testing
+        if (strpos($url, 'login') !== false || strpos($url, 'signin') !== false) {
+            $analysis = [
+                'priority' => 'high',
+                'focus' => 'authentication',
+                'max_steps' => 4,
+                'testing_goals' => 'login form validation, error handling, success flow',
+                'avoid_actions' => 'complex navigation, unnecessary clicks'
+            ];
+        } elseif (strpos($url, 'register') !== false || strpos($url, 'signup') !== false) {
+            $analysis = [
+                'priority' => 'high',
+                'focus' => 'registration',
+                'max_steps' => 5,
+                'testing_goals' => 'form validation, field requirements, submission success',
+                'avoid_actions' => 'admin features, complex workflows'
+            ];
+        } elseif (strpos($url, 'contact') !== false || strpos($url, 'form') !== false) {
+            $analysis = [
+                'priority' => 'high',
+                'focus' => 'form_submission',
+                'max_steps' => 4,
+                'testing_goals' => 'form validation, required fields, submission confirmation',
+                'avoid_actions' => 'user accounts, complex navigation'
+            ];
+        } elseif (strpos($url, 'checkout') !== false || strpos($url, 'cart') !== false) {
+            $analysis = [
+                'priority' => 'high',
+                'focus' => 'ecommerce',
+                'max_steps' => 6,
+                'testing_goals' => 'add to cart, checkout process, payment flow',
+                'avoid_actions' => 'content creation, admin features'
+            ];
+        } elseif (strpos($url, 'admin') !== false || $area === 'admin') {
+            $analysis = [
+                'priority' => 'medium',
+                'focus' => 'admin_functionality',
+                'max_steps' => 4,
+                'testing_goals' => 'admin navigation, basic admin tasks',
+                'avoid_actions' => 'frontend features, user registration'
+            ];
+        } elseif (strpos($url, 'search') !== false) {
+            $analysis = [
+                'priority' => 'medium',
+                'focus' => 'search_functionality',
+                'max_steps' => 3,
+                'testing_goals' => 'search input, results display, filtering',
+                'avoid_actions' => 'form submissions, user accounts'
+            ];
+        } elseif (strpos($url, 'product') !== false || strpos($url, 'shop') !== false) {
+            $analysis = [
+                'priority' => 'medium',
+                'focus' => 'product_display',
+                'max_steps' => 4,
+                'testing_goals' => 'product viewing, add to cart, product details',
+                'avoid_actions' => 'admin features, user registration'
+            ];
+        } else {
+            // Default for content pages
+            $analysis = [
+                'priority' => 'low',
+                'focus' => 'content_navigation',
+                'max_steps' => 3,
+                'testing_goals' => 'page loading, basic navigation, content display',
+                'avoid_actions' => 'complex forms, user accounts, admin features'
+            ];
+        }
+        
+        return $analysis;
+    }
+    
+    /**
+     * Filter pages to only include those that need testing
+     */
+    private function filter_priority_pages($pages) {
+        $priority_pages = [];
+        
+        foreach ($pages as $page) {
+            $url = strtolower($page['url']);
+            $title = strtolower($page['title']);
+            
+            // High priority pages that definitely need testing
+            if (strpos($url, 'login') !== false || strpos($url, 'signin') !== false ||
+                strpos($url, 'register') !== false || strpos($url, 'signup') !== false ||
+                strpos($url, 'contact') !== false || strpos($url, 'checkout') !== false ||
+                strpos($url, 'cart') !== false || strpos($url, 'search') !== false) {
+                $priority_pages[] = $page;
+            }
+            // Medium priority pages
+            elseif (strpos($url, 'product') !== false || strpos($url, 'shop') !== false ||
+                   strpos($url, 'form') !== false || strpos($url, 'about') !== false) {
+                $priority_pages[] = $page;
+            }
+            // Skip low priority pages like individual blog posts, archives, etc.
+            elseif (!strpos($url, '/20') && !strpos($url, '/category/') && 
+                   !strpos($url, '/tag/') && !strpos($url, '/author/')) {
+                $priority_pages[] = $page;
+            }
+        }
+        
+        return $priority_pages;
+    }
+    
+    /**
+     * Check if we already have sufficient flows for this page type
+     */
+    private function has_sufficient_flows_for_page_type($page, $existing_flows) {
+        $url = strtolower($page['url']);
+        $page_type = $this->get_page_type($url);
+        
+        $count = 0;
+        foreach ($existing_flows as $flow_id) {
+            // This is a simplified check - in practice you'd query the database
+            // to see how many flows already exist for this page type
+            $count++;
+        }
+        
+        // Limit flows per page type
+        $limits = [
+            'login' => 1,
+            'register' => 1,
+            'contact' => 1,
+            'checkout' => 2,
+            'product' => 2,
+            'search' => 1,
+            'default' => 1
+        ];
+        
+        $limit = $limits[$page_type] ?? $limits['default'];
+        return $count >= $limit;
+    }
+    
+    /**
+     * Get page type from URL
+     */
+    private function get_page_type($url) {
+        if (strpos($url, 'login') !== false || strpos($url, 'signin') !== false) {
+            return 'login';
+        } elseif (strpos($url, 'register') !== false || strpos($url, 'signup') !== false) {
+            return 'register';
+        } elseif (strpos($url, 'contact') !== false) {
+            return 'contact';
+        } elseif (strpos($url, 'checkout') !== false || strpos($url, 'cart') !== false) {
+            return 'checkout';
+        } elseif (strpos($url, 'product') !== false || strpos($url, 'shop') !== false) {
+            return 'product';
+        } elseif (strpos($url, 'search') !== false) {
+            return 'search';
+        }
+        return 'default';
+    }
+    
+    /**
+     * Validate and clean up generated flow to ensure quality
+     */
+    private function validate_and_clean_flow($flow) {
+        // Clean up flow name
+        $flow['flow_name'] = $this->clean_flow_name($flow['flow_name']);
+        
+        // Validate and clean steps
+        $flow['steps'] = $this->validate_steps($flow['steps']);
+        
+        // Ensure we have at least one step
+        if (empty($flow['steps'])) {
+            return null; // Reject flows with no steps
+        }
+        
+        // Limit to reasonable number of steps (max 8)
+        if (count($flow['steps']) > 8) {
+            $flow['steps'] = array_slice($flow['steps'], 0, 8);
+        }
+        
+        // Ensure first step is always 'visit'
+        if (empty($flow['steps']) || $flow['steps'][0]['action'] !== 'visit') {
+            array_unshift($flow['steps'], [
+                'action' => 'visit',
+                'target' => $flow['start_url'],
+                'description' => 'Navigate to page'
+            ]);
+        }
+        
+        return $flow;
+    }
+    
+    /**
+     * Clean up flow name
+     */
+    private function clean_flow_name($name) {
+        // Remove common AI prefixes/suffixes
+        $name = preg_replace('/^(Test|Testing|Flow|Flow for|Test Flow for)\s*/i', '', $name);
+        $name = preg_replace('/\s*(Test|Testing|Flow)$/i', '', $name);
+        
+        // Capitalize properly
+        $name = ucwords(strtolower($name));
+        
+        // Limit length
+        if (strlen($name) > 80) {
+            $name = substr($name, 0, 77) . '...';
+        }
+        
+        return $name;
+    }
+    
+    /**
+     * Validate and clean steps
+     */
+    private function validate_steps($steps) {
+        if (!is_array($steps)) {
+            return [];
+        }
+        
+        $valid_actions = ['visit', 'click', 'fill', 'select', 'wait', 'hover', 'scroll'];
+        $cleaned_steps = [];
+        
+        foreach ($steps as $step) {
+            if (!is_array($step) || empty($step['action'])) {
+                continue;
+            }
+            
+            $action = strtolower($step['action']);
+            
+            // Skip invalid actions
+            if (!in_array($action, $valid_actions)) {
+                continue;
+            }
+            
+            // Clean up step
+            $cleaned_step = [
+                'action' => $action,
+                'target' => $step['target'] ?? '',
+                'description' => $step['description'] ?? ucfirst($action) . ' element'
+            ];
+            
+            // Add value for fill/select actions
+            if (in_array($action, ['fill', 'select']) && isset($step['value'])) {
+                $cleaned_step['value'] = $step['value'];
+            }
+            
+            // Add wait time for wait action
+            if ($action === 'wait' && isset($step['target'])) {
+                $cleaned_step['target'] = min(max(intval($step['target']), 1), 10); // Limit to 1-10 seconds
+            }
+            
+            $cleaned_steps[] = $cleaned_step;
+        }
+        
+        return $cleaned_steps;
     }
     
     /**
@@ -1784,10 +1965,11 @@ class WP_Tester_AI_Flow_Generator {
      * Parse AI response and format for database
      */
     private function parse_ai_response($ai_response, $page, $area) {
-        $flow = $ai_response['flow'];
+        // Handle both old and new response formats
+        $flow = isset($ai_response['flow']) ? $ai_response['flow'] : $ai_response;
         
-        return array(
-            'flow_name' => $flow['flow_name'] ?? $this->generate_unique_flow_name($page['title'], $area),
+        $parsed_flow = array(
+            'flow_name' => $flow['name'] ?? $flow['flow_name'] ?? $this->generate_unique_flow_name($page['title'], $area),
             'flow_type' => $flow['flow_type'] ?? 'navigation',
             'start_url' => $page['url'],
             'steps' => $flow['steps'] ?? array(),
@@ -1797,6 +1979,9 @@ class WP_Tester_AI_Flow_Generator {
             'is_active' => true,
             'created_by' => 'ai'
         );
+        
+        // Validate and clean up the flow
+        return $this->validate_and_clean_flow($parsed_flow);
     }
     
     /**
