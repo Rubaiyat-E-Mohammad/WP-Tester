@@ -29,8 +29,8 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                     <span id="current-ai-model" style="padding: 0.5rem 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem; color: #00265e; font-weight: 500;">
                         <?php echo esc_html($ai_model); ?>
                     </span>
-                    <a href="<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>" class="modern-btn modern-btn-secondary modern-btn-small" style="padding: 0.5rem; text-decoration: none;">
-                        <span class="dashicons dashicons-admin-settings"></span>
+                    <a href="<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>" class="modern-btn modern-btn-secondary modern-btn-small" style="padding: 0.375rem 0.75rem; text-decoration: none; font-size: 0.8125rem;">
+                        <span class="dashicons dashicons-admin-settings" style="font-size: 14px;"></span>
                         Change Model
                     </a>
                 </div>
@@ -54,7 +54,7 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                                 <span class="dashicons dashicons-robot" style="color: #00265e; margin-right: 0.5rem;"></span>
                                 <strong style="color: #00265e;">AI Assistant</strong>
                             </div>
-                            <p style="margin: 0; color: #374151;">Hello! I'm your AI assistant. I can help you create custom test flows for your website. Just describe what you want to test, and I'll help you create the appropriate test flow.</p>
+                            <p style="margin: 0; color: #374151;">Hello! I'm your AI assistant. I can help you create custom test flows for your website. What functionality would you like to test today?</p>
                         </div>
                     </div>
                     
@@ -473,7 +473,7 @@ jQuery(document).ready(function($) {
                         <span class="dashicons dashicons-robot" style="color: #00265e; margin-right: 0.5rem;"></span>
                         <strong style="color: #00265e;">AI Assistant</strong>
                     </div>
-                    <p style="margin: 0; color: #374151;">Hello! I'm your AI assistant. I can help you create custom test flows for your website. Just describe what you want to test, and I'll help you create the appropriate test flow.</p>
+                    <p style="margin: 0; color: #374151;">Hello! I'm your AI assistant. I can help you create custom test flows for your website. What functionality would you like to test today?</p>
                 </div>
             `);
             chatHistory = [];
