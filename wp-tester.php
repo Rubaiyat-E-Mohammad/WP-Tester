@@ -65,10 +65,23 @@ class WP_Tester {
         // Initialize AJAX handler early to ensure it's available for all requests
         add_action('init', array($this, 'init_ajax'), 1);
         
+        // Add a simple test AJAX action directly to verify AJAX works
+        add_action('wp_ajax_wp_tester_simple_test', array($this, 'simple_ajax_test'));
+        
         add_action('plugins_loaded', array($this, 'init'));
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
         register_uninstall_hook(__FILE__, array('WP_Tester', 'uninstall'));
+    }
+    
+    /**
+     * Simple AJAX test
+     */
+    public function simple_ajax_test() {
+        wp_send_json_success(array(
+            'message' => 'Simple AJAX test working',
+            'timestamp' => current_time('mysql')
+        ));
     }
     
     /**

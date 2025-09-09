@@ -324,6 +324,11 @@ jQuery(document).ready(function($) {
     // Define ajaxurl for AJAX calls
     var ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
     
+    // Debug: Log plugin loading
+    console.log('WP Tester AI Chat loaded');
+    console.log('AJAX URL:', ajaxurl);
+    console.log('WordPress AJAX URL should be:', '<?php echo admin_url('admin-ajax.php'); ?>');
+    
     let chatHistory = [];
     let isTyping = false;
     
@@ -599,14 +604,13 @@ jQuery(document).ready(function($) {
         console.log('Creating flow with data:', flowData);
         console.log('AJAX URL:', ajaxurl);
         
-        // First test if AJAX actions are registered
+        // First test if basic AJAX works at all
         $.ajax({
             url: ajaxurl,
             type: 'POST',
             dataType: 'json',
             data: {
-                action: 'wp_tester_debug_actions',
-                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                action: 'wp_tester_simple_test'
             },
             success: function(testResponse) {
                 console.log('AJAX test successful:', testResponse);
@@ -614,9 +618,10 @@ jQuery(document).ready(function($) {
                 createFlowActual(flowData);
             },
             error: function(xhr, status, error) {
-                console.error('AJAX debug test failed:', xhr, status, error);
+                console.error('Basic AJAX test failed:', xhr, status, error);
                 console.error('Response text:', xhr.responseText);
-                addMessage('ai', `❌ AJAX actions not registered. This indicates a fundamental WordPress plugin loading issue.`);
+                console.error('Response headers:', xhr.getAllResponseHeaders());
+                addMessage('ai', `❌ Basic AJAX test failed. WordPress AJAX is not working at all. Check console for details.`);
             }
         });
     }
