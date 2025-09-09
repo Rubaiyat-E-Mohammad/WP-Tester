@@ -11,6 +11,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// WordPress function declarations for linting
+if (!function_exists('is_admin')) {
+    function is_admin() { return false; }
+}
+if (!function_exists('get_current_screen')) {
+    function get_current_screen() { return null; }
+}
+
 class WP_Tester_Auto_Setup {
     
     private $setup_complete_file;
