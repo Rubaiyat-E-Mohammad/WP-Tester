@@ -192,13 +192,6 @@ class WP_Tester_Admin {
         );
         
         
-        add_settings_field(
-            'test_engine',
-            __('Test Engine', 'wp-tester'),
-            array($this, 'test_engine_callback'),
-            'wp_tester_settings',
-            'wp_tester_general'
-        );
         
         add_settings_field(
             'crawl_frequency',
@@ -558,66 +551,18 @@ class WP_Tester_Admin {
     }
     
     /**
-     * Get the test executor (Playwright by default, Selenium as alternative)
+     * Get the test executor (basic flow executor)
      */
     public function get_test_executor() {
-        $settings = get_option('wp_tester_settings', array());
-        $test_engine = isset($settings['test_engine']) ? $settings['test_engine'] : 'playwright';
-        
-        // Use Selenium if explicitly selected
-        if ($test_engine === 'selenium' && class_exists('WP_Tester_Selenium_Executor')) {
-            error_log('WP Tester: User selected Selenium, checking availability...');
-            $selenium = new WP_Tester_Selenium_Executor();
-            if ($selenium->is_selenium_available()) {
-                error_log('WP Tester: Using Selenium executor (user preference)');
-                return $selenium;
-            } else {
-                error_log('WP Tester: Selenium selected but not available, falling back to Playwright');
-            }
-        }
-        
-        // Default to Playwright (always try this first)
-        if (class_exists('WP_Tester_Playwright_Executor')) {
-            $playwright = new WP_Tester_Playwright_Executor();
-            if ($playwright->is_playwright_available()) {
-                error_log('WP Tester: Using Playwright executor (default)');
-                return $playwright;
-            }
-        }
-        
-        // If Playwright fails, try Selenium as fallback
-        if (class_exists('WP_Tester_Selenium_Executor')) {
-            $selenium = new WP_Tester_Selenium_Executor();
-            if ($selenium->is_selenium_available()) {
-                error_log('WP Tester: Playwright failed, using Selenium as fallback');
-                return $selenium;
-            }
-        }
-        
-        // Last resort: throw error instead of using basic engine
-        throw new Exception('No browser automation available. Please install Playwright or Selenium.');
+        return new WP_Tester_Flow_Executor();
     }
     
     /**
-     * Execute flow with automatic fallback
+     * Execute flow with basic executor
      */
     public function execute_flow_with_fallback($flow_id, $manual_trigger = false) {
-        try {
-            $executor = $this->get_test_executor();
-            return $executor->execute_flow($flow_id, $manual_trigger);
-        } catch (Exception $e) {
-            error_log('WP Tester: All browser automation failed: ' . $e->getMessage());
-            
-            // Return error instead of falling back to basic engine
-            return array(
-                'success' => false,
-                'error' => 'No browser automation available. Please install Playwright or Selenium: npm i -g @playwright/test && npx playwright install',
-                'steps_executed' => 0,
-                'steps_passed' => 0,
-                'steps_failed' => 0,
-                'execution_time' => 0
-            );
-        }
+        $executor = $this->get_test_executor();
+        return $executor->execute_flow($flow_id, $manual_trigger);
     }
     
     /**
@@ -677,19 +622,6 @@ class WP_Tester_Admin {
         echo '<p>' . __('Configure general settings for WP Tester.', 'wp-tester') . '</p>';
     }
     
-    public function test_engine_callback() {
-        $settings = get_option('wp_tester_settings', array());
-        $test_engine = isset($settings['test_engine']) ? $settings['test_engine'] : 'playwright';
-        
-        echo '<select name="wp_tester_settings[test_engine]" id="test_engine">';
-        echo '<option value="playwright" ' . selected($test_engine, 'playwright', false) . '>Playwright (Default - Real Browser Automation)</option>';
-        echo '<option value="selenium" ' . selected($test_engine, 'selenium', false) . '>Selenium (Alternative)</option>';
-        echo '</select>';
-        
-        echo '<p class="description">';
-        echo __('Playwright is the default engine for real browser automation and screenshots. Selenium is an alternative option. Basic engine has been removed.', 'wp-tester');
-        echo '</p>';
-    }
     
     
     public function crawl_frequency_callback() {

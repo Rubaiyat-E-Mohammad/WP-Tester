@@ -170,43 +170,12 @@ class WP_Tester_Flow_Executor {
                     $steps_passed++;
                     $this->log_step('success', 'Step completed successfully', $step_result);
                     
-                    // Take screenshot on success for debugging (optional)
-                    $screenshot_enabled = isset($this->settings['screenshot_on_failure']) ? $this->settings['screenshot_on_failure'] : true;
-                    if ($screenshot_enabled && isset($this->settings['screenshot_on_success']) && $this->settings['screenshot_on_success']) {
-                        $screenshot_path = $this->take_screenshot($flow_id, $step_number + 1, 'success', 'Step completed successfully');
-                        if ($screenshot_path) {
-                            $this->screenshots_to_save[] = array(
-                                'step_number' => $step_number + 1,
-                                'screenshot_path' => $screenshot_path,
-                                'screenshot_type' => 'success',
-                                'caption' => 'Step completed successfully'
-                            );
-                        }
-                    }
+                    // Screenshot functionality removed
                 } else {
                     $steps_failed++;
                     $this->log_step('error', 'Step failed', $step_result);
                     
-                    // Take screenshot on failure if enabled (default: true)
-                    $screenshot_enabled = isset($this->settings['screenshot_on_failure']) ? $this->settings['screenshot_on_failure'] : true;
-                    
-                    if ($screenshot_enabled) {
-                        $screenshot_path = $this->take_screenshot($flow_id, $step_number + 1, 'failure', $step_result['error']);
-                        if ($screenshot_path) {
-                            // Store screenshot path for later database save
-                            $this->screenshots_to_save[] = array(
-                                'step_number' => $step_number + 1,
-                                'screenshot_path' => $screenshot_path,
-                                'screenshot_type' => 'failure',
-                                'caption' => $step_result['error']
-                            );
-                            error_log('WP Tester: Screenshot added to save array for step ' . ($step_number + 1));
-                        } else {
-                            error_log('WP Tester: Failed to take screenshot for failed step ' . ($step_number + 1));
-                        }
-                    } else {
-                        error_log('WP Tester: Screenshot on failure is disabled in settings');
-                    }
+                    // Screenshot functionality removed
                     
                     // Stop execution on critical failure
                     if ($step_result['critical']) {
@@ -929,115 +898,11 @@ class WP_Tester_Flow_Executor {
     }
     
     /**
-     * Take screenshot
+     * Take screenshot (disabled)
      */
     private function take_screenshot($flow_id, $step_number, $type, $caption) {
-        // In a real implementation, this would use a headless browser to take actual screenshots
-        // For now, we'll create a meaningful placeholder image
-        
-        $filename = sprintf(
-            'flow_%d_step_%d_%s_%s.png',
-            $flow_id,
-            $step_number,
-            $type,
-            date('Y-m-d_H-i-s')
-        );
-        
-        $screenshot_dir = $this->get_screenshot_handler();
-        $screenshot_path = $screenshot_dir . '/' . $filename;
-        
-        // Check if directory is writable before attempting to save
-        if (!is_writable($screenshot_dir)) {
-            error_log('WP Tester: Screenshot directory is not writable: ' . $screenshot_dir);
-            return null;
-        }
-        
-        // Check if GD extension is available
-        if (!extension_loaded('gd')) {
-            error_log('WP Tester: GD extension not available for screenshot creation');
-            return null;
-        }
-        
-        // Create a more meaningful placeholder image (400x300 PNG)
-        $width = 400;
-        $height = 300;
-        
-        // Create image resource
-        $image = imagecreate($width, $height);
-        if (!$image) {
-            error_log('WP Tester: Failed to create image resource for screenshot');
-            return null;
-        }
-        
-        // Define colors
-        $bg_color = imagecolorallocate($image, 248, 250, 252); // Light gray background
-        $text_color = imagecolorallocate($image, 55, 65, 81); // Dark gray text
-        $border_color = imagecolorallocate($image, 31, 192, 154); // Teal border
-        $error_color = imagecolorallocate($image, 220, 53, 69); // Red for errors
-        
-        // Fill background
-        imagefill($image, 0, 0, $bg_color);
-        
-        // Draw border
-        imagerectangle($image, 0, 0, $width-1, $height-1, $border_color);
-        
-        // Add text based on type
-        $text = '';
-        $color = $text_color;
-        
-        if ($type === 'failure') {
-            $text = "Test Failed - Step $step_number";
-            $color = $error_color;
-        } else {
-            $text = "Screenshot - Step $step_number";
-        }
-        
-        // Add main text
-        $font_size = 4;
-        $text_width = imagefontwidth($font_size) * strlen($text);
-        $text_height = imagefontheight($font_size);
-        $x = ($width - $text_width) / 2;
-        $y = ($height - $text_height) / 2 - 20;
-        
-        imagestring($image, $font_size, $x, $y, $text, $color);
-        
-        // Add caption if provided
-        if (!empty($caption)) {
-            $caption_lines = explode("\n", wordwrap($caption, 50));
-            $y_offset = $y + 30;
-            foreach ($caption_lines as $line) {
-                $line_width = imagefontwidth(2) * strlen($line);
-                $line_x = ($width - $line_width) / 2;
-                imagestring($image, 2, $line_x, $y_offset, $line, $text_color);
-                $y_offset += 15;
-            }
-        }
-        
-        // Add timestamp
-        $timestamp = date('Y-m-d H:i:s');
-        $time_width = imagefontwidth(2) * strlen($timestamp);
-        $time_x = ($width - $time_width) / 2;
-        imagestring($image, 2, $time_x, $height - 20, $timestamp, $text_color);
-        
-        // Save image
-        $result = imagepng($image, $screenshot_path);
-        imagedestroy($image);
-        
-        if ($result === false) {
-            error_log('WP Tester: Failed to save screenshot to: ' . $screenshot_path);
-            return null;
-        }
-        
-        // Verify file was created
-        if (!file_exists($screenshot_path)) {
-            error_log('WP Tester: Screenshot file was not created: ' . $screenshot_path);
-            return null;
-        }
-        
-        // Log successful screenshot creation
-        error_log('WP Tester: Screenshot created successfully: ' . $screenshot_path);
-        
-        return $screenshot_path;
+        // Screenshot functionality removed
+        return null;
     }
     
     /**
