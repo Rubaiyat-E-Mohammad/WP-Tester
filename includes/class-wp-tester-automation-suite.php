@@ -361,31 +361,42 @@ IMPORTANT: Each file must be wrapped in ```filename.extension``` code blocks. Be
      * Download automation suite
      */
     public function download_automation_suite() {
+        // Debug logging
+        error_log('WP Tester: download_automation_suite method called');
+        error_log('WP Tester: POST data: ' . print_r($_POST, true));
+        
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
+            error_log('WP Tester: User does not have manage_options permission');
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
         
         try {
             $suite_id = sanitize_text_field($_POST['suite_id'] ?? '');
+            error_log('WP Tester: Suite ID: ' . $suite_id);
             
             if (empty($suite_id)) {
+                error_log('WP Tester: Empty suite ID');
                 wp_send_json_error(array('message' => __('Invalid suite ID', 'wp-tester')));
                 return;
             }
             
             // Get suite data
             $suite_data = get_option('wp_tester_automation_suite_' . $suite_id);
+            error_log('WP Tester: Suite data found: ' . (empty($suite_data) ? 'NO' : 'YES'));
             
             if (!$suite_data) {
+                error_log('WP Tester: Suite not found for ID: ' . $suite_id);
                 wp_send_json_error(array('message' => __('Suite not found or expired', 'wp-tester')));
                 return;
             }
             
             // Create ZIP file
+            error_log('WP Tester: Creating ZIP file...');
             $zip_file = $this->create_zip_file($suite_data);
+            error_log('WP Tester: ZIP file result: ' . ($zip_file ? $zip_file : 'FAILED'));
             
             if ($zip_file) {
                 wp_send_json_success(array(
@@ -393,10 +404,12 @@ IMPORTANT: Each file must be wrapped in ```filename.extension``` code blocks. Be
                     'filename' => basename($zip_file)
                 ));
             } else {
+                error_log('WP Tester: Failed to create ZIP file');
                 wp_send_json_error(array('message' => __('Failed to create ZIP file', 'wp-tester')));
             }
             
         } catch (Exception $e) {
+            error_log('WP Tester: Download exception: ' . $e->getMessage());
             wp_send_json_error(array('message' => __('Error downloading suite: ', 'wp-tester') . $e->getMessage()));
         }
     }
@@ -406,57 +419,82 @@ IMPORTANT: Each file must be wrapped in ```filename.extension``` code blocks. Be
      */
     private function create_zip_file($suite_data) {
         try {
+            error_log('WP Tester: Starting ZIP file creation');
+            error_log('WP Tester: Suite data: ' . print_r($suite_data, true));
+            
             // Create temporary directory
             $upload_dir = wp_upload_dir();
             $temp_dir = $upload_dir['basedir'] . '/wp-tester-temp/' . uniqid();
+            error_log('WP Tester: Temp directory: ' . $temp_dir);
             
             if (!wp_mkdir_p($temp_dir)) {
+                error_log('WP Tester: Failed to create temp directory: ' . $temp_dir);
                 throw new Exception('Failed to create temporary directory');
             }
             
             // Create framework-specific directory structure
             $framework = $suite_data['framework'];
             $project_dir = $temp_dir . '/wp-tester-automation-suite-' . $framework;
+            error_log('WP Tester: Project directory: ' . $project_dir);
             wp_mkdir_p($project_dir);
             
             // Write files
+            error_log('WP Tester: Writing ' . count($suite_data['files']) . ' files');
             foreach ($suite_data['files'] as $filename => $content) {
                 $file_path = $project_dir . '/' . $filename;
                 $file_dir = dirname($file_path);
                 
                 if (!wp_mkdir_p($file_dir)) {
+                    error_log('WP Tester: Failed to create directory for: ' . $filename);
                     throw new Exception('Failed to create directory for ' . $filename);
                 }
                 
                 if (file_put_contents($file_path, $content) === false) {
+                    error_log('WP Tester: Failed to write file: ' . $filename);
                     throw new Exception('Failed to write file ' . $filename);
                 }
+                error_log('WP Tester: Successfully wrote file: ' . $filename);
             }
             
             // Create ZIP file
             $zip_filename = 'wp-tester-automation-suite-' . $framework . '-' . date('Y-m-d-H-i-s') . '.zip';
             $zip_path = $temp_dir . '/' . $zip_filename;
+            error_log('WP Tester: ZIP filename: ' . $zip_filename);
+            error_log('WP Tester: ZIP path: ' . $zip_path);
             
             if (class_exists('ZipArchive')) {
+                error_log('WP Tester: ZipArchive class exists');
                 $zip = new ZipArchive();
-                if ($zip->open($zip_path, ZipArchive::CREATE) === TRUE) {
+                $result = $zip->open($zip_path, ZipArchive::CREATE);
+                error_log('WP Tester: ZipArchive open result: ' . $result);
+                
+                if ($result === TRUE) {
                     $this->add_directory_to_zip($zip, $project_dir, '');
                     $zip->close();
+                    error_log('WP Tester: ZIP file created successfully');
                 } else {
+                    error_log('WP Tester: Failed to open ZIP file for writing');
                     throw new Exception('Failed to create ZIP file');
                 }
             } else {
+                error_log('WP Tester: ZipArchive class not available');
                 throw new Exception('ZIP extension not available');
             }
             
             // Move to uploads directory
             $final_path = $upload_dir['path'] . '/' . $zip_filename;
+            error_log('WP Tester: Final path: ' . $final_path);
+            
             if (rename($zip_path, $final_path)) {
+                error_log('WP Tester: ZIP file moved successfully');
                 // Clean up temp directory
                 $this->delete_directory($temp_dir);
                 
-                return $upload_dir['url'] . '/' . $zip_filename;
+                $download_url = $upload_dir['url'] . '/' . $zip_filename;
+                error_log('WP Tester: Download URL: ' . $download_url);
+                return $download_url;
             } else {
+                error_log('WP Tester: Failed to move ZIP file from ' . $zip_path . ' to ' . $final_path);
                 throw new Exception('Failed to move ZIP file');
             }
             

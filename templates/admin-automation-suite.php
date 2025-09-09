@@ -383,12 +383,30 @@ jQuery(document).ready(function($) {
                     link.click();
                     document.body.removeChild(link);
                 } else {
-                    alert('Error: ' + response.data);
+                    const errorMessage = typeof response.data === 'object' ? 
+                        (response.data.message || JSON.stringify(response.data)) : 
+                        response.data;
+                    alert('Error: ' + errorMessage);
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Download error:', xhr, status, error);
-                alert('Network error: ' + error);
+                let errorMessage = 'Network error: ' + error;
+                
+                // Try to parse error response
+                if (xhr.responseText) {
+                    try {
+                        const errorData = JSON.parse(xhr.responseText);
+                        if (errorData.data && errorData.data.message) {
+                            errorMessage = errorData.data.message;
+                        }
+                    } catch (e) {
+                        // If not JSON, use the response text
+                        errorMessage = xhr.responseText;
+                    }
+                }
+                
+                alert('Error: ' + errorMessage);
             },
             complete: function() {
                 downloadBtn.html(originalText);
