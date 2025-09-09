@@ -1792,6 +1792,12 @@ class WP_Tester_Ajax {
             'Content-Type' => 'application/json'
         );
         
+        // For Mistral AI, try to use a more standard model name if mistral-7b fails
+        $actual_model = $model;
+        if ($model_config['provider'] === 'Mistral AI' && $model === 'mistral-7b') {
+            $actual_model = 'mistral-small'; // Try with a more standard name
+        }
+        
         switch ($model_config['provider']) {
             case 'OpenAI':
                 $data = array(
@@ -1864,7 +1870,7 @@ class WP_Tester_Ajax {
                 
             case 'Mistral AI':
                 $data = array(
-                    'model' => $model,
+                    'model' => $actual_model,
                     'messages' => $messages,
                     'temperature' => $temperature,
                     'max_tokens' => $max_tokens
@@ -1912,6 +1918,12 @@ class WP_Tester_Ajax {
         $body = wp_remote_retrieve_body($response);
         $response_data = json_decode($body, true);
         
+        // Debug logging for API responses
+        error_log('WP Tester AI API Debug - Original Model: ' . $model . ', Actual Model: ' . $actual_model . ', Provider: ' . $model_config['provider']);
+        error_log('WP Tester AI API Debug - Request Data: ' . json_encode($data));
+        error_log('WP Tester AI API Debug - Response Body: ' . $body);
+        error_log('WP Tester AI API Debug - Response Data: ' . print_r($response_data, true));
+        
         if (isset($response_data['error'])) {
             return array('success' => false, 'error' => $response_data['error']['message']);
         }
@@ -1958,7 +1970,10 @@ class WP_Tester_Ajax {
             return array('success' => true, 'message' => $content);
         }
         
-        return array('success' => false, 'error' => 'Invalid response from AI API');
+        // If no content found, log the response structure for debugging
+        error_log('WP Tester AI API Debug - No content found in response. Response structure: ' . print_r($response_data, true));
+        
+        return array('success' => false, 'error' => 'Invalid response from AI API. Response structure: ' . json_encode($response_data));
     }
     
     /**

@@ -179,6 +179,39 @@ class WP_Tester_AI_Flow_Generator {
                 'temperature' => 0.7,
                 'description' => 'Efficient open-source model'
             ),
+            'mistral-small' => array(
+                'name' => 'Mistral Small',
+                'provider' => 'Mistral AI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'requires_api_key' => true,
+                'api_url' => 'https://api.mistral.ai/v1/chat/completions',
+                'max_tokens' => 2000,
+                'temperature' => 0.7,
+                'description' => 'Balanced performance and cost'
+            ),
+            'mistral-medium' => array(
+                'name' => 'Mistral Medium',
+                'provider' => 'Mistral AI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'requires_api_key' => true,
+                'api_url' => 'https://api.mistral.ai/v1/chat/completions',
+                'max_tokens' => 4000,
+                'temperature' => 0.7,
+                'description' => 'High-performance model'
+            ),
+            'mistral-large' => array(
+                'name' => 'Mistral Large',
+                'provider' => 'Mistral AI',
+                'type' => 'chat',
+                'free_tier' => false,
+                'requires_api_key' => true,
+                'api_url' => 'https://api.mistral.ai/v1/chat/completions',
+                'max_tokens' => 8000,
+                'temperature' => 0.7,
+                'description' => 'Most capable Mistral model'
+            ),
             'codemistral' => array(
                 'name' => 'CodeMistral',
                 'provider' => 'Mistral AI',

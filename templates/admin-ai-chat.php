@@ -69,6 +69,19 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- AI Generated Flows -->
+                    <div style="padding: 1rem; border-top: 1px solid #e2e8f0; background: #f8fafc;">
+                        <h4 style="margin: 0 0 1rem 0; font-size: 0.875rem; color: #374151; font-weight: 600; display: flex; align-items: center;">
+                            <span class="dashicons dashicons-admin-generic" style="color: #00265e; margin-right: 0.5rem;"></span>
+                            AI Generated Flows
+                        </h4>
+                        <div id="ai-generated-flows" style="max-height: 200px; overflow-y: auto;">
+                            <p style="margin: 0; font-size: 0.875rem; color: #64748b; text-align: center; padding: 1rem;">
+                                No flows generated yet. Start chatting with AI to create flows!
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -156,19 +169,6 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                     </div>
                 </div>
 
-                <!-- Recent AI Flows -->
-                <div class="modern-card">
-                    <div class="card-header">
-                        <h3 class="card-title">Recent AI Flows</h3>
-                    </div>
-                    <div style="padding: 1rem;">
-                        <div id="recent-flows" style="max-height: 200px; overflow-y: auto;">
-                            <p style="margin: 0; font-size: 0.875rem; color: #64748b; text-align: center;">
-                                No recent flows yet
-                            </p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -326,7 +326,7 @@ jQuery(document).ready(function($) {
     
     // Initialize
     updateTemperatureDisplay();
-    loadRecentFlows();
+    loadAIGeneratedFlows();
     
     // Send message
     $('#send-message').on('click', sendMessage);
@@ -531,7 +531,7 @@ jQuery(document).ready(function($) {
         });
     }
     
-    function loadRecentFlows() {
+    function loadAIGeneratedFlows() {
         $.ajax({
             url: ajaxurl,
             type: 'POST',
@@ -542,22 +542,84 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success && response.data.length > 0) {
                     const flowsHtml = response.data.slice(0, 5).map(flow => `
-                        <div style="padding: 0.5rem; border-bottom: 1px solid #e2e8f0; font-size: 0.875rem;">
-                            <div style="font-weight: 500; color: #00265e;">${flow.name}</div>
-                            <div style="color: #64748b; font-size: 0.75rem;">${flow.steps_count} steps</div>
+                        <div style="padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 0.5rem; background: white;">
+                            <div style="display: flex; justify-content: between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; color: #00265e; font-size: 0.875rem; margin-bottom: 0.25rem;">${flow.name}</div>
+                                    <div style="color: #64748b; font-size: 0.75rem; margin-bottom: 0.5rem;">${flow.description || 'AI Generated Flow'}</div>
+                                    <div style="color: #64748b; font-size: 0.75rem;">Created: ${new Date(flow.created_at).toLocaleDateString()}</div>
+                                </div>
+                                <div style="display: flex; gap: 0.25rem; margin-left: 0.5rem;">
+                                    <a href="${flow.edit_url}" class="modern-btn modern-btn-secondary modern-btn-small" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                                        <span class="dashicons dashicons-edit" style="font-size: 12px;"></span>
+                                        Edit
+                                    </a>
+                                    <a href="${flow.test_url}" class="modern-btn modern-btn-primary modern-btn-small" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">
+                                        <span class="dashicons dashicons-play" style="font-size: 12px;"></span>
+                                        Test
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     `).join('');
                     
-                    $('#recent-flows').html(flowsHtml);
+                    $('#ai-generated-flows').html(flowsHtml);
+                } else {
+                    $('#ai-generated-flows').html(`
+                        <p style="margin: 0; font-size: 0.875rem; color: #64748b; text-align: center; padding: 1rem;">
+                            No flows generated yet. Start chatting with AI to create flows!
+                        </p>
+                    `);
                 }
+            },
+            error: function() {
+                $('#ai-generated-flows').html(`
+                    <p style="margin: 0; font-size: 0.875rem; color: #dc2626; text-align: center; padding: 1rem;">
+                        Error loading AI generated flows.
+                    </p>
+                `);
             }
         });
     }
     
     function showFlowCreationDialog(flowData) {
-        // This would show a dialog to create a flow from AI suggestions
-        // Implementation depends on your flow creation system
-        console.log('Flow creation dialog:', flowData);
+        if (!flowData || !flowData.name) {
+            console.log('Invalid flow data:', flowData);
+            return;
+        }
+        
+        // Show confirmation dialog
+        const confirmMessage = `AI has generated a flow: "${flowData.name}"\n\nWould you like to create this flow?`;
+        
+        if (confirm(confirmMessage)) {
+            // Create the flow
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_create_ai_flow',
+                    flow_name: flowData.name,
+                    flow_description: flowData.description || 'Generated by AI Chat Assistant',
+                    flow_data: flowData,
+                    model: currentAiModel,
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Show success message
+                        addMessage('ai', `✅ Flow "${flowData.name}" created successfully! You can find it in the AI Generated Flows section below.`);
+                        
+                        // Refresh the AI generated flows list
+                        loadAIGeneratedFlows();
+                    } else {
+                        addMessage('ai', `❌ Failed to create flow: ${response.data}`);
+                    }
+                },
+                error: function() {
+                    addMessage('ai', '❌ Network error while creating flow. Please try again.');
+                }
+            });
+        }
     }
 });
 </script>
