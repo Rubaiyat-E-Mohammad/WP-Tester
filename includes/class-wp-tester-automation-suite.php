@@ -67,9 +67,14 @@ class WP_Tester_Automation_Suite {
      * Generate automation suite
      */
     public function generate_automation_suite() {
+        // Debug logging
+        error_log('WP Tester: generate_automation_suite method called');
+        error_log('WP Tester: POST data: ' . print_r($_POST, true));
+        
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
+            error_log('WP Tester: User does not have manage_options permission');
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
@@ -80,12 +85,19 @@ class WP_Tester_Automation_Suite {
             $include_setup = isset($_POST['include_setup']) ? (bool)$_POST['include_setup'] : true;
             $include_config = isset($_POST['include_config']) ? (bool)$_POST['include_config'] : true;
             
+            error_log('WP Tester: Framework: ' . $framework);
+            error_log('WP Tester: Flow IDs: ' . print_r($flow_ids, true));
+            error_log('WP Tester: Include setup: ' . ($include_setup ? 'YES' : 'NO'));
+            error_log('WP Tester: Include config: ' . ($include_config ? 'YES' : 'NO'));
+            
             if (empty($framework) || !array_key_exists($framework, $this->supported_frameworks)) {
+                error_log('WP Tester: Invalid framework: ' . $framework);
                 wp_send_json_error(array('message' => __('Invalid framework selected', 'wp-tester')));
                 return;
             }
             
             if (empty($flow_ids)) {
+                error_log('WP Tester: No flow IDs provided');
                 wp_send_json_error(array('message' => __('No flows selected', 'wp-tester')));
                 return;
             }
@@ -97,16 +109,24 @@ class WP_Tester_Automation_Suite {
                 $flow = $database->get_flow($flow_id);
                 if ($flow) {
                     $flows[] = $flow;
+                    error_log('WP Tester: Found flow: ' . $flow->flow_name . ' (ID: ' . $flow_id . ')');
+                } else {
+                    error_log('WP Tester: Flow not found for ID: ' . $flow_id);
                 }
             }
             
+            error_log('WP Tester: Total flows found: ' . count($flows));
+            
             if (empty($flows)) {
+                error_log('WP Tester: No valid flows found');
                 wp_send_json_error(array('message' => __('No valid flows found', 'wp-tester')));
                 return;
             }
             
             // Generate test suite using AI
+            error_log('WP Tester: Starting AI generation...');
             $suite_data = $this->generate_test_suite_with_ai($framework, $flows, $include_setup, $include_config);
+            error_log('WP Tester: AI generation result: ' . print_r($suite_data, true));
             
             if ($suite_data['success']) {
                 // Store the generated suite temporarily
@@ -133,11 +153,19 @@ class WP_Tester_Automation_Suite {
      */
     private function generate_test_suite_with_ai($framework, $flows, $include_setup, $include_config) {
         try {
+            error_log('WP Tester: generate_test_suite_with_ai called');
+            error_log('WP Tester: Framework: ' . $framework);
+            error_log('WP Tester: Flows count: ' . count($flows));
+            
             // Get AI model configuration
             $model = get_option('wp_tester_ai_model', 'fallback-generator');
             $api_key = get_option('wp_tester_ai_api_key', '');
             
+            error_log('WP Tester: AI Model: ' . $model);
+            error_log('WP Tester: API Key present: ' . (empty($api_key) ? 'NO' : 'YES'));
+            
             if (empty($model)) {
+                error_log('WP Tester: No AI model configured');
                 return array('success' => false, 'error' => 'No AI model configured');
             }
             
@@ -156,6 +184,15 @@ class WP_Tester_Automation_Suite {
             $framework_info = $this->supported_frameworks[$framework];
             $prompt = $this->create_code_generation_prompt($framework, $framework_info, $flows_data, $include_setup, $include_config);
             
+            // For now, let's use fallback files directly to test the system
+            error_log('WP Tester: Using fallback files for testing');
+            $files = $this->create_fallback_files($framework, $flows_data);
+            error_log('WP Tester: Fallback files created: ' . count($files) . ' files');
+            
+            return array('success' => true, 'files' => $files);
+            
+            // TODO: Re-enable AI generation once we confirm the system works
+            /*
             // Call AI API
             $ai_response = $this->call_ai_for_code_generation($model, $api_key, $prompt);
             
@@ -173,6 +210,7 @@ class WP_Tester_Automation_Suite {
             } else {
                 return array('success' => false, 'error' => $ai_response['error']);
             }
+            */
             
         } catch (Exception $e) {
             return array('success' => false, 'error' => $e->getMessage());
