@@ -81,7 +81,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                         <!-- Models will be loaded here -->
                     </select>
                     <p id="ai-model-description" style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
-                        Choose your AI model. Free models work without API keys, paid models require API keys.
+                        Choose your AI model. Some models require API keys regardless of free/paid status.
                     </p>
                 </div>
                 
@@ -534,11 +534,12 @@ jQuery(document).ready(function($) {
         
         const selectedOption = $('#ai-model-select option:selected');
         const isFree = selectedOption.attr('data-free') === 'true';
+        const requiresApiKey = selectedOption.attr('data-requires-api-key') === 'true';
         const provider = selectedOption.attr('data-provider');
         
-        // For paid models, check if API key is provided
-        if (!isFree && !apiKey.trim()) {
-            showErrorModal('API Key Required', 'API key is required for paid models. Please enter your API key.');
+        // For models that require API key, check if API key is provided
+        if (requiresApiKey && !apiKey.trim()) {
+            showErrorModal('API Key Required', 'API key is required for this model. Please enter your API key.');
             button.html(originalText).prop('disabled', false);
             return;
         }
@@ -740,6 +741,7 @@ jQuery(document).ready(function($) {
                 .attr('value', modelId)
                 .attr('data-provider', model.provider)
                 .attr('data-free', 'true')
+                .attr('data-requires-api-key', model.requires_api_key ? 'true' : 'false')
                 .text(`${model.name} (${model.provider}) - Free`);
             modelSelect.append(option);
         });
@@ -751,6 +753,7 @@ jQuery(document).ready(function($) {
                 .attr('value', modelId)
                 .attr('data-provider', model.provider)
                 .attr('data-free', 'false')
+                .attr('data-requires-api-key', model.requires_api_key ? 'true' : 'false')
                 .text(`${model.name} (${model.provider}) - Paid`);
             modelSelect.append(option);
         });
@@ -766,16 +769,21 @@ jQuery(document).ready(function($) {
     function updateApiKeySection() {
         const selectedOption = $('#ai-model-select option:selected');
         const isFree = selectedOption.attr('data-free') === 'true';
+        const requiresApiKey = selectedOption.attr('data-requires-api-key') === 'true';
         const provider = selectedOption.attr('data-provider');
         const apiKeySection = $('#api-key-section');
         const apiKeyHelp = $('#api-key-help');
         
-        if (isFree) {
+        if (!requiresApiKey) {
             apiKeySection.hide();
-            $('#ai-model-description').text('Free models work without API keys and are recommended for testing.');
+            $('#ai-model-description').text('This model works without API keys and is recommended for testing.');
         } else {
             apiKeySection.show();
-            $('#ai-model-description').text('Paid models require API keys and offer enhanced capabilities.');
+            if (isFree) {
+                $('#ai-model-description').text('Free model that requires API key for enhanced capabilities.');
+            } else {
+                $('#ai-model-description').text('Paid model that requires API key for enhanced capabilities.');
+            }
             
             // Update API key help text based on provider
             let helpText = '';

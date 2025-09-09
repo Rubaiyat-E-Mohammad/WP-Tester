@@ -1708,8 +1708,8 @@ class WP_Tester_Ajax {
                 wp_send_json_error('Invalid AI model configured. Please check your AI Flow Generator settings.');
             }
             
-            // For paid models, API key is required
-            if (!$model_config['free_tier'] && empty($api_key)) {
+            // For models that require API key, check if API key is provided
+            if ($model_config['requires_api_key'] && empty($api_key)) {
                 wp_send_json_error('API key is required for the configured model. Please add your API key in the AI Flow Generator settings.');
             }
             
