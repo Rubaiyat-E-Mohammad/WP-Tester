@@ -605,6 +605,7 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
+                console.log('Flow creation response:', response);
                 if (response.success) {
                     // Show success message
                     addMessage('ai', `✅ Flow "${flowData.name}" created successfully! You can find it in the AI Generated Flows section below.`);
@@ -612,11 +613,14 @@ jQuery(document).ready(function($) {
                     // Refresh the AI generated flows list
                     loadAIGeneratedFlows();
                 } else {
+                    console.error('Flow creation failed:', response);
                     addMessage('ai', `❌ Failed to create flow: ${response.data}`);
                 }
             },
-            error: function() {
-                addMessage('ai', '❌ Network error while creating flow. Please try again.');
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', xhr, status, error);
+                console.error('Response text:', xhr.responseText);
+                addMessage('ai', `❌ Network error while creating flow. Please try again. (Error: ${error})`);
             }
         });
     }

@@ -2058,6 +2058,13 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
      * Create AI flow
      */
     public function create_ai_flow() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
         try {
             $flow_name = sanitize_text_field($_POST['flow_name'] ?? '');
             $flow_description = sanitize_text_field($_POST['flow_description'] ?? '');
@@ -2098,7 +2105,8 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                     'message' => 'Flow created successfully'
                 ));
             } else {
-                wp_send_json_error('Failed to create flow');
+                error_log('WP Tester: Failed to create flow. Database error: ' . $wpdb->last_error);
+                wp_send_json_error('Failed to create flow. Database error: ' . $wpdb->last_error);
             }
             
         } catch (Exception $e) {
