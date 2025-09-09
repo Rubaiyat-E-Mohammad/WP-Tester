@@ -64,13 +64,20 @@ class WP_Tester_Ajax {
      * Test AJAX connection
      */
     public function test_connection() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
         global $current_user;
         $user_id = isset($current_user->ID) ? $current_user->ID : 0;
         
         wp_send_json_success(array(
             'message' => 'AJAX connection working',
             'timestamp' => current_time('mysql'),
-            'user_id' => $user_id
+            'user_id' => $user_id,
+            'debug_info' => array(
+                'ajax_action' => 'wp_tester_test_connection',
+                'nonce_verified' => true,
+                'user_can_manage_options' => current_user_can('manage_options')
+            )
         ));
     }
     
@@ -2076,12 +2083,19 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
      * Create AI flow
      */
     public function create_ai_flow() {
+        // Debug logging
+        error_log('WP Tester: create_ai_flow method called');
+        error_log('WP Tester: POST data: ' . print_r($_POST, true));
+        
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
+            error_log('WP Tester: User does not have manage_options permission');
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
+        
+        error_log('WP Tester: Starting flow creation process');
         
         try {
             $flow_name = sanitize_text_field($_POST['flow_name'] ?? '');

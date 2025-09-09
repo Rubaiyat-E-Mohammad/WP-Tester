@@ -599,6 +599,29 @@ jQuery(document).ready(function($) {
         console.log('Creating flow with data:', flowData);
         console.log('AJAX URL:', ajaxurl);
         
+        // First test if AJAX is working at all
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'wp_tester_test_connection',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(testResponse) {
+                console.log('AJAX test successful:', testResponse);
+                // Now try to create the flow
+                createFlowActual(flowData);
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX test failed:', xhr, status, error);
+                console.error('Response text:', xhr.responseText);
+                addMessage('ai', `❌ AJAX connection test failed. Please check your WordPress installation.`);
+            }
+        });
+    }
+    
+    function createFlowActual(flowData) {
         // Create the flow automatically
         $.ajax({
             url: ajaxurl,
@@ -626,9 +649,17 @@ jQuery(document).ready(function($) {
                 }
             },
             error: function(xhr, status, error) {
-                console.error('AJAX error:', xhr, status, error);
+                console.error('Flow creation AJAX error:', xhr, status, error);
                 console.error('Response text:', xhr.responseText);
-                addMessage('ai', `❌ Network error while creating flow. Please try again. (Error: ${error})`);
+                console.error('Response headers:', xhr.getAllResponseHeaders());
+                
+                // Try to parse the response to see what we got
+                let responseText = xhr.responseText;
+                if (responseText.startsWith('<')) {
+                    addMessage('ai', `❌ Server returned HTML instead of JSON. This usually means the AJAX endpoint wasn't found. Check console for details.`);
+                } else {
+                    addMessage('ai', `❌ Network error while creating flow. Please try again. (Error: ${error})`);
+                }
             }
         });
     }
