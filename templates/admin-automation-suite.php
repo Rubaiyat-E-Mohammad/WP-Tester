@@ -127,6 +127,11 @@ $flows = $database->get_flows();
         <!-- Generate Button -->
         <div class="modern-card">
             <div class="card-content" style="text-align: center;">
+                <button type="button" id="test-suite" class="modern-btn modern-btn-secondary modern-btn-large" 
+                        style="padding: 1rem 2rem; font-size: 1.1rem; margin-right: 1rem;">
+                    <span class="dashicons dashicons-admin-tools" style="margin-right: 0.5rem;"></span>
+                    Test System
+                </button>
                 <button type="button" id="generate-suite" class="modern-btn modern-btn-primary modern-btn-large" 
                         style="padding: 1rem 2rem; font-size: 1.1rem;" disabled>
                     <span class="dashicons dashicons-download" style="margin-right: 0.5rem;"></span>
@@ -263,6 +268,11 @@ jQuery(document).ready(function($) {
         updateGenerateButton();
     });
     
+    // Test system
+    $('#test-suite').on('click', function() {
+        testAutomationSuite();
+    });
+    
     // Generate suite
     $('#generate-suite').on('click', function() {
         if (!selectedFramework || selectedFlows.length === 0) {
@@ -291,6 +301,29 @@ jQuery(document).ready(function($) {
         const hasFramework = selectedFramework !== '';
         const hasFlows = selectedFlows.length > 0;
         $('#generate-suite').prop('disabled', !(hasFramework && hasFlows));
+    }
+    
+    function testAutomationSuite() {
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'wp_tester_test_automation_suite',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Test successful! Created ' + response.data.files_created + ' files: ' + response.data.file_names.join(', '));
+                } else {
+                    alert('Test failed: ' + response.data);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Test error:', xhr, status, error);
+                alert('Test error: ' + error);
+            }
+        });
     }
     
     function generateAutomationSuite() {

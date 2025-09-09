@@ -54,6 +54,7 @@ class WP_Tester_Automation_Suite {
         // Add AJAX actions
         add_action('wp_ajax_wp_tester_generate_automation_suite', array($this, 'generate_automation_suite'));
         add_action('wp_ajax_wp_tester_download_automation_suite', array($this, 'download_automation_suite'));
+        add_action('wp_ajax_wp_tester_test_automation_suite', array($this, 'test_automation_suite'));
     }
     
     /**
@@ -61,6 +62,38 @@ class WP_Tester_Automation_Suite {
      */
     public function get_supported_frameworks() {
         return $this->supported_frameworks;
+    }
+    
+    /**
+     * Test automation suite endpoint
+     */
+    public function test_automation_suite() {
+        error_log('WP Tester: test_automation_suite called');
+        
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        // Test creating a simple fallback file
+        $test_flow = array(
+            'name' => 'Test Flow',
+            'description' => 'Test flow for automation suite',
+            'steps' => array(
+                array('action' => 'navigate', 'target' => 'https://example.com', 'description' => 'Navigate to example'),
+                array('action' => 'click', 'target' => '#button', 'description' => 'Click button')
+            )
+        );
+        
+        $files = $this->create_fallback_files('playwright', array($test_flow));
+        
+        wp_send_json_success(array(
+            'message' => 'Test successful',
+            'files_created' => count($files),
+            'file_names' => array_keys($files)
+        ));
     }
     
     /**
