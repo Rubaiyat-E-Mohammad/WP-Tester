@@ -29,11 +29,14 @@ $ai_api_key = $settings['ai_api_key'] ?? '';
                 </div>
             </div>
             <div class="header-actions">
-                <div class="ai-model-selector">
-                    <label style="font-size: 0.875rem; color: #64748b; margin-right: 0.5rem;">AI Model:</label>
+                <div class="ai-model-selector" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <label style="font-size: 0.875rem; color: #64748b;">AI Model:</label>
                     <select id="ai-model-select" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.875rem; min-width: 200px;">
                         <option value="">Loading models...</option>
                     </select>
+                    <button id="refresh-models" class="modern-btn modern-btn-secondary modern-btn-small" style="padding: 0.5rem;">
+                        <span class="dashicons dashicons-update"></span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -389,6 +392,11 @@ jQuery(document).ready(function($) {
         updateApiKeySection();
     });
     
+    // Refresh models button
+    $('#refresh-models').on('click', function() {
+        loadAvailableModels();
+    });
+    
     // AI Model Management
     let availableModels = {
         free_models: {},
@@ -398,55 +406,109 @@ jQuery(document).ready(function($) {
     
     // Load available models
     function loadAvailableModels() {
+        const modelSelect = $('#ai-model-select');
+        const refreshBtn = $('#refresh-models');
+        
+        // Show loading state
+        modelSelect.html('<option value="">Loading models...</option>');
+        refreshBtn.prop('disabled', true);
+        
         $.ajax({
             url: ajaxurl,
             type: 'POST',
+            timeout: 10000, // 10 second timeout
             data: {
                 action: 'wp_tester_get_available_ai_models',
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
+                refreshBtn.prop('disabled', false);
                 if (response.success) {
                     availableModels = response.data;
                     populateModelDropdown();
                 } else {
                     console.error('Failed to load models:', response.data);
+                    addFallbackModels();
                 }
             },
-            error: function() {
-                console.error('Error loading AI models');
+            error: function(xhr, status, error) {
+                console.error('Error loading AI models:', error);
+                console.error('XHR:', xhr);
+                console.error('Status:', status);
+                refreshBtn.prop('disabled', false);
+                // Fallback: add some basic models
+                addFallbackModels();
+            },
+            timeout: function() {
+                console.error('Timeout loading AI models');
+                refreshBtn.prop('disabled', false);
+                addFallbackModels();
             }
         });
+    }
+    
+    function addFallbackModels() {
+        const modelSelect = $('#ai-model-select');
+        modelSelect.empty();
+        
+        // Add some basic fallback models
+        const fallbackModels = [
+            { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'OpenAI', free: true },
+            { id: 'gpt-4', name: 'GPT-4', provider: 'OpenAI', free: false },
+            { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'OpenAI', free: false },
+            { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet', provider: 'Anthropic', free: false },
+            { id: 'claude-3-opus', name: 'Claude 3 Opus', provider: 'Anthropic', free: false }
+        ];
+        
+        fallbackModels.forEach(model => {
+            const option = $('<option></option>')
+                .attr('value', model.id)
+                .attr('data-provider', model.provider)
+                .attr('data-free', model.free.toString())
+                .text(`${model.name} (${model.provider}) - ${model.free ? 'Free' : 'Paid'}`);
+            modelSelect.append(option);
+        });
+        
+        // Set default to first free model
+        const firstFreeModel = modelSelect.find('option[data-free="true"]:first');
+        if (firstFreeModel.length > 0) {
+            firstFreeModel.prop('selected', true);
+            updateApiKeySection();
+        }
     }
     
     function populateModelDropdown() {
         const modelSelect = $('#ai-model-select');
         const description = $('#model-description p');
         
-        // Clear existing options except the first one
-        modelSelect.find('option:not(:first)').remove();
+        // Clear all existing options
+        modelSelect.empty();
         
         // Add free models first
-        Object.keys(availableModels.free_models).forEach(modelId => {
-            const model = availableModels.free_models[modelId];
-            const option = $('<option></option>')
-                .attr('value', modelId)
-                .attr('data-provider', model.provider)
-                .attr('data-free', 'true')
-                .text(`${model.name} (${model.provider}) - Free`);
-            modelSelect.append(option);
-        });
+        if (availableModels.free_models && Object.keys(availableModels.free_models).length > 0) {
+            Object.keys(availableModels.free_models).forEach(modelId => {
+                const model = availableModels.free_models[modelId];
+                const option = $('<option></option>')
+                    .attr('value', modelId)
+                    .attr('data-provider', model.provider)
+                    .attr('data-free', 'true')
+                    .text(`${model.name} (${model.provider}) - Free`);
+                modelSelect.append(option);
+            });
+        }
         
         // Add paid models
-        Object.keys(availableModels.paid_models).forEach(modelId => {
-            const model = availableModels.paid_models[modelId];
-            const option = $('<option></option>')
-                .attr('value', modelId)
-                .attr('data-provider', model.provider)
-                .attr('data-free', 'false')
-                .text(`${model.name} (${model.provider}) - Paid`);
-            modelSelect.append(option);
-        });
+        if (availableModels.paid_models && Object.keys(availableModels.paid_models).length > 0) {
+            Object.keys(availableModels.paid_models).forEach(modelId => {
+                const model = availableModels.paid_models[modelId];
+                const option = $('<option></option>')
+                    .attr('value', modelId)
+                    .attr('data-provider', model.provider)
+                    .attr('data-free', 'false')
+                    .text(`${model.name} (${model.provider}) - Paid`);
+                modelSelect.append(option);
+            });
+        }
         
         // Set default to first free model
         const firstFreeModel = modelSelect.find('option[data-free="true"]:first');
