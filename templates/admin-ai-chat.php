@@ -599,13 +599,13 @@ jQuery(document).ready(function($) {
         console.log('Creating flow with data:', flowData);
         console.log('AJAX URL:', ajaxurl);
         
-        // First test if AJAX is working at all
+        // First test if AJAX actions are registered
         $.ajax({
             url: ajaxurl,
             type: 'POST',
             dataType: 'json',
             data: {
-                action: 'wp_tester_test_connection',
+                action: 'wp_tester_debug_actions',
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(testResponse) {
@@ -614,9 +614,9 @@ jQuery(document).ready(function($) {
                 createFlowActual(flowData);
             },
             error: function(xhr, status, error) {
-                console.error('AJAX test failed:', xhr, status, error);
+                console.error('AJAX debug test failed:', xhr, status, error);
                 console.error('Response text:', xhr.responseText);
-                addMessage('ai', `❌ AJAX connection test failed. Please check your WordPress installation.`);
+                addMessage('ai', `❌ AJAX actions not registered. This indicates a fundamental WordPress plugin loading issue.`);
             }
         });
     }

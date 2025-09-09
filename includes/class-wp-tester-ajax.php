@@ -58,6 +58,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_get_available_ai_models', array($this, 'get_available_ai_models'));
         add_action('wp_ajax_wp_tester_load_more_crawl_results', array($this, 'load_more_crawl_results'));
         add_action('wp_ajax_wp_tester_test_connection', array($this, 'test_connection'));
+        add_action('wp_ajax_wp_tester_debug_actions', array($this, 'debug_actions'));
     }
     
     /**
@@ -77,6 +78,33 @@ class WP_Tester_Ajax {
                 'ajax_action' => 'wp_tester_test_connection',
                 'nonce_verified' => true,
                 'user_can_manage_options' => current_user_can('manage_options')
+            )
+        ));
+    }
+    
+    /**
+     * Debug AJAX actions
+     */
+    public function debug_actions() {
+        global $wp_filter;
+        
+        $ajax_actions = array();
+        foreach ($wp_filter as $hook => $filters) {
+            if (strpos($hook, 'wp_ajax_wp_tester_') === 0) {
+                $ajax_actions[] = $hook;
+            }
+        }
+        
+        wp_send_json_success(array(
+            'message' => 'AJAX actions debug',
+            'registered_actions' => $ajax_actions,
+            'wp_tester_actions' => array(
+                'wp_ajax_wp_tester_test_connection' => !empty($wp_filter['wp_ajax_wp_tester_test_connection']),
+                'wp_ajax_wp_tester_create_ai_flow' => !empty($wp_filter['wp_ajax_wp_tester_create_ai_flow']),
+                'wp_ajax_wp_tester_ai_chat' => !empty($wp_filter['wp_ajax_wp_tester_ai_chat'])
+            ),
+            'debug_info' => array(
+                'current_user_can_manage_options' => current_user_can('manage_options')
             )
         ));
     }

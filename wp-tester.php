@@ -62,10 +62,26 @@ class WP_Tester {
      * Constructor
      */
     private function __construct() {
+        // Initialize AJAX handler early to ensure it's available for all requests
+        add_action('init', array($this, 'init_ajax'), 1);
+        
         add_action('plugins_loaded', array($this, 'init'));
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
         register_uninstall_hook(__FILE__, array('WP_Tester', 'uninstall'));
+    }
+    
+    /**
+     * Initialize AJAX handler
+     */
+    public function init_ajax() {
+        // Include AJAX class if not already included
+        if (!class_exists('WP_Tester_Ajax')) {
+            require_once plugin_dir_path(WP_TESTER_PLUGIN_FILE) . 'includes/class-wp-tester-ajax.php';
+        }
+        
+        // Initialize AJAX handler
+        new WP_Tester_Ajax();
     }
     
     /**
@@ -126,8 +142,7 @@ class WP_Tester {
         $this->scheduler = new WP_Tester_Scheduler();
         $this->admin = new WP_Tester_Admin();
         
-        // Initialize AJAX handler
-        new WP_Tester_Ajax();
+        // AJAX handler is initialized in init_ajax method
         
         // Initialize WooCommerce integration if active
         if (class_exists('WooCommerce')) {
