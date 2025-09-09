@@ -64,6 +64,19 @@ if (!defined('ABSPATH')) {
                         </p>
                     </div>
 
+                    <!-- Test Engine -->
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                            Test Engine
+                        </label>
+                        <select name="wp_tester_settings[test_engine]" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                            <option value="playwright" <?php selected(($settings['test_engine'] ?? 'playwright'), 'playwright'); ?>>Playwright (Default - Real Browser Automation)</option>
+                            <option value="selenium" <?php selected(($settings['test_engine'] ?? 'playwright'), 'selenium'); ?>>Selenium (Alternative)</option>
+                        </select>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                            Playwright is the default engine for real browser automation and screenshots. Selenium is an alternative option. Basic engine has been removed.
+                        </p>
+                    </div>
 
                     <!-- Max Pages per Crawl -->
                     <div>
