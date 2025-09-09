@@ -228,115 +228,104 @@ if (!empty($visual_evidence)) {
 
                 <div class="modern-list">
                     <?php foreach ($step_details as $index => $step): ?>
-                        <div class="modern-list-item">
-                            <div class="item-info">
+                        <div class="modern-list-item" style="border-left: 4px solid <?php echo esc_attr($step['summary']['status_color'] ?? '#6c757d'); ?>; margin-bottom: 1rem;">
+                            <div class="item-info" style="width: 100%;">
                                 <div class="item-icon">
-                                    <span class="dashicons dashicons-<?php 
-                                        echo ($step['status'] ?? '') === 'passed' ? 'yes-alt' : 
-                                            (($step['status'] ?? '') === 'failed' ? 'dismiss' : 'clock'); 
-                                    ?>"></span>
+                                    <span style="color: <?php echo esc_attr($step['summary']['status_color'] ?? '#6c757d'); ?>; font-size: 1.2rem;">
+                                        <?php echo esc_html($step['summary']['status_icon'] ?? '⏳'); ?>
+                                    </span>
                                 </div>
-                                <div class="item-details">
-                                    <h4>Step <?php echo esc_html($index + 1); ?>: <?php echo esc_html($step['action'] ?? 'Unknown Action'); ?></h4>
-                                    <p>
-                                        <?php if (!empty($step['target'])): ?>
-                                            Target: <?php echo esc_html($step['target']); ?> • 
+                                <div class="item-details" style="flex: 1;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                        <h4 style="margin: 0; flex: 1;">Step <?php echo esc_html($index + 1); ?>: <?php echo esc_html($step['summary']['action_description'] ?? 'Unknown Action'); ?></h4>
+                                        <span class="status-badge <?php echo esc_attr($step['status'] ?? 'pending'); ?>" style="margin-left: 1rem;">
+                                            <?php echo esc_html(ucfirst($step['status'] ?? 'pending')); ?>
+                                        </span>
+                                    </div>
+                                    
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+                                        <div>
+                                            <strong>Execution Time:</strong> <?php echo esc_html($step['summary']['execution_time_formatted'] ?? '0ms'); ?>
+                                        </div>
+                                        <?php if (!empty($step['start_time'])): ?>
+                                        <div>
+                                            <strong>Started:</strong> <?php echo esc_html(date('H:i:s', strtotime($step['start_time']))); ?>
+                                        </div>
                                         <?php endif; ?>
-                                        Duration: <?php echo esc_html(number_format($step['execution_time'] ?? 0, 3)); ?>s
-                                    </p>
-                                    <?php if (!empty($step['error_message'])): ?>
-                                        <p style="color: #ef4444; font-weight: 500; margin-top: 0.5rem;">
-                                            Error: <?php echo esc_html($step['error_message']); ?>
-                                        </p>
+                                        <?php if (!empty($step['end_time'])): ?>
+                                        <div>
+                                            <strong>Completed:</strong> <?php echo esc_html(date('H:i:s', strtotime($step['end_time']))); ?>
+                                        </div>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <?php if (!empty($step['error'])): ?>
+                                        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem;">
+                                            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                                                <span style="color: #dc2626; margin-right: 0.5rem;">⚠️</span>
+                                                <strong style="color: #dc2626;">Error Details:</strong>
+                                            </div>
+                                            <p style="margin: 0; color: #dc2626; font-size: 0.875rem;">
+                                                <?php echo esc_html($step['error']); ?>
+                                            </p>
+                                            <?php if (!empty($step['error_details'])): ?>
+                                                <details style="margin-top: 0.5rem;">
+                                                    <summary style="cursor: pointer; color: #dc2626; font-size: 0.8125rem;">Show technical details</summary>
+                                                    <pre style="background: #f9fafb; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; font-size: 0.75rem; overflow-x: auto;"><?php echo esc_html(is_array($step['error_details']) ? json_encode($step['error_details'], JSON_PRETTY_PRINT) : $step['error_details']); ?></pre>
+                                                </details>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($step['warnings'])): ?>
+                                        <div style="background: #fffbeb; border: 1px solid #fed7aa; border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem;">
+                                            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                                                <span style="color: #d97706; margin-right: 0.5rem;">⚠️</span>
+                                                <strong style="color: #d97706;">Warnings (<?php echo count($step['warnings']); ?>):</strong>
+                                            </div>
+                                            <?php foreach ($step['warnings'] as $warning): ?>
+                                                <p style="margin: 0.25rem 0; color: #d97706; font-size: 0.875rem;">
+                                                    • <?php echo esc_html($warning['message']); ?>
+                                                </p>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($step['success_indicators'])): ?>
+                                        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem;">
+                                            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                                                <span style="color: #16a34a; margin-right: 0.5rem;">✓</span>
+                                                <strong style="color: #16a34a;">Success Indicators:</strong>
+                                            </div>
+                                            <?php foreach ($step['success_indicators'] as $indicator): ?>
+                                                <p style="margin: 0.25rem 0; color: #16a34a; font-size: 0.875rem;">
+                                                    • <?php echo esc_html($indicator); ?>
+                                                </p>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    
+                                    <?php if (!empty($step['suggestions'])): ?>
+                                        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 0.75rem; margin-top: 0.5rem;">
+                                            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                                                <span style="color: #2563eb; margin-right: 0.5rem;">💡</span>
+                                                <strong style="color: #2563eb;">Suggestions:</strong>
+                                            </div>
+                                            <?php foreach ($step['suggestions'] as $suggestion): ?>
+                                                <p style="margin: 0.25rem 0; color: #2563eb; font-size: 0.875rem;">
+                                                    • <?php echo esc_html($suggestion); ?>
+                                                </p>
+                                            <?php endforeach; ?>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                             </div>
-                            <div class="item-meta">
-                                <div class="status-badge <?php echo esc_attr($step['status'] ?? 'pending'); ?>">
-                                    <?php echo esc_html(ucfirst($step['status'] ?? 'Unknown')); ?>
-                                </div>
-                                <?php if (isset($step['error']) && !empty($step['error'])): ?>
-                                    <div class="step-error" style="margin-top: 0.5rem; padding: 0.5rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; color: #dc2626; font-size: 0.875rem;">
-                                        <strong>Error:</strong> <?php echo esc_html($step['error']); ?>
-                                        <?php if (isset($step['error_details']) && !empty($step['error_details'])): ?>
-                                            <br><strong>Details:</strong> <?php echo esc_html($step['error_details']); ?>
-                                        <?php endif; ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
             </div>
             <?php endif; ?>
 
-            <!-- Screenshots -->
-            <?php if (!empty($visual_evidence)): ?>
-            <div class="modern-card">
-                <div class="card-header">
-                    <h2 class="card-title">Screenshots</h2>
-                    <div class="status-badge info"><?php echo count($visual_evidence); ?> images</div>
-                </div>
-                
-
-                <div class="screenshots-grid">
-                    <?php foreach ($visual_evidence as $screenshot): ?>
-                        <div class="screenshot-item">
-                            <div class="screenshot-header">
-                                <h4>Step <?php echo esc_html($screenshot['step_number']); ?> - <?php echo esc_html(ucfirst($screenshot['type'])); ?></h4>
-                                <span class="status-badge <?php echo esc_attr($screenshot['type']); ?>">
-                                    <?php echo esc_html(ucfirst($screenshot['type'])); ?>
-                                </span>
-                            </div>
-                            
-                            <?php if ($screenshot['file_exists']): ?>
-                                <div class="screenshot-image">
-                                    <img src="<?php echo esc_url($screenshot['url']); ?>" 
-                                         alt="Screenshot for step <?php echo esc_attr($screenshot['step_number']); ?>"
-                                         onclick="openScreenshotModal('<?php echo esc_js($screenshot['url']); ?>', '<?php echo esc_js($screenshot['caption']); ?>')"
-                                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;"
-                                         onload="console.log('Image loaded successfully: <?php echo esc_js($screenshot['url']); ?>')"
-                                         onerror="console.log('Image failed to load: <?php echo esc_js($screenshot['url']); ?>')">
-                                    <p style="font-size: 12px; color: #666; margin-top: 5px;">
-                                        URL: <?php echo esc_html($screenshot['url']); ?>
-                                    </p>
-                                </div>
-                            <?php else: ?>
-                                <div class="screenshot-placeholder">
-                                    <span class="dashicons dashicons-format-image"></span>
-                                    <p>Screenshot not available</p>
-                                    <p style="font-size: 12px; color: #666;">
-                                        File exists: <?php echo $screenshot['file_exists'] ? 'yes' : 'no'; ?>
-                                    </p>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <?php if (!empty($screenshot['caption'])): ?>
-                                <div class="screenshot-caption">
-                                    <p><?php echo esc_html($screenshot['caption']); ?></p>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <?php else: ?>
-            <!-- No Screenshots Message -->
-            <div class="modern-card">
-                <div class="card-header">
-                    <h2 class="card-title">Screenshots</h2>
-                    <div class="status-badge warning">No screenshots available</div>
-                </div>
-                <div class="card-body">
-                    <p>No screenshots were captured for this test result. This could be because:</p>
-                    <ul>
-                        <li>Screenshot on failure is disabled in settings</li>
-                        <li>No steps failed during this test</li>
-                        <li>Screenshots were not saved properly</li>
-                    </ul>
-                </div>
-            </div>
-            <?php endif; ?>
 
             <!-- Failure Analysis -->
             <?php if (!empty($failure_analysis) && !empty($failure_analysis['failure_details'])): ?>
@@ -368,9 +357,6 @@ if (!empty($visual_evidence)) {
                                     <?php endif; ?>
                                 </div>
                             </div>
-                            <div class="item-meta">
-                                <span class="status-badge error">Error</span>
-                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -394,313 +380,3 @@ if (!empty($visual_evidence)) {
     </div>
 </div>
 
-<script>
-function openScreenshotModal(imageUrl, caption) {
-    // Remove any existing modal
-    const existingModal = document.getElementById('screenshot-modal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-    
-    // Create modal HTML
-    const modalHTML = `
-        <div id="screenshot-modal" class="screenshot-modal-overlay">
-            <div class="screenshot-modal">
-                <div class="screenshot-modal-header">
-                    <h3>Screenshot</h3>
-                    <button class="screenshot-modal-close">&times;</button>
-                </div>
-                <div class="screenshot-modal-body">
-                    <img src="${imageUrl}" alt="Screenshot" class="screenshot-modal-image">
-                    ${caption ? `<p class="screenshot-modal-caption">${caption}</p>` : ''}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Add modal to body
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    const modal = document.getElementById('screenshot-modal');
-    
-    // Show modal with fade effect
-    modal.style.display = 'block';
-    modal.style.opacity = '0';
-    setTimeout(() => {
-        modal.style.opacity = '1';
-    }, 10);
-    
-    // Close modal handlers
-    const closeBtn = modal.querySelector('.screenshot-modal-close');
-    closeBtn.addEventListener('click', function() {
-        modal.style.opacity = '0';
-        setTimeout(() => {
-            modal.remove();
-        }, 300);
-    });
-    
-    modal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.remove();
-            }, 300);
-        }
-    });
-    
-    // Close on Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && modal) {
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.remove();
-            }, 300);
-        }
-    });
-}
-</script>
-
-<style>
-/* Screenshot Modal */
-.screenshot-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 9999;
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.screenshot-modal {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    border-radius: 8px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.screenshot-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
-}
-
-.screenshot-modal-header h3 {
-    margin: 0;
-    font-size: 1.25rem;
-    color: #1e293b;
-}
-
-.screenshot-modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #64748b;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-
-.screenshot-modal-close:hover {
-    background-color: #e2e8f0;
-    color: #1e293b;
-}
-
-.screenshot-modal-body {
-    padding: 1rem;
-    text-align: center;
-}
-
-.screenshot-modal-image {
-    max-width: 100%;
-    max-height: 70vh;
-    border-radius: 4px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.screenshot-modal-caption {
-    margin-top: 1rem;
-    color: #64748b;
-    font-size: 0.875rem;
-}
-
-/* Screenshots Grid */
-.screenshots-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1rem;
-}
-
-.screenshot-item {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: all 0.2s ease;
-}
-
-.screenshot-item:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-}
-
-.screenshot-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.screenshot-header h4 {
-    margin: 0;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #374151;
-}
-
-.screenshot-image {
-    padding: 1rem;
-    text-align: center;
-    background: white;
-}
-
-.screenshot-image img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.screenshot-image img:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-.screenshot-placeholder {
-    padding: 2rem;
-    text-align: center;
-    color: #64748b;
-    background: #f1f5f9;
-}
-
-.screenshot-placeholder .dashicons {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.screenshot-caption {
-    padding: 1rem;
-    background: #f8fafc;
-    border-top: 1px solid #e2e8f0;
-}
-
-.screenshot-caption p {
-    margin: 0;
-    font-size: 0.875rem;
-    color: #64748b;
-    font-style: italic;
-}
-
-/* Screenshot Modal */
-.screenshot-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999999;
-}
-
-.screenshot-modal {
-    background: white;
-    border-radius: 12px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow: hidden;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.screenshot-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #e5e7eb;
-    background: #f9fafb;
-}
-
-.screenshot-modal-header h3 {
-    margin: 0;
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: #1f2937;
-}
-
-.screenshot-modal-close {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #6b7280;
-    cursor: pointer;
-    padding: 0;
-    width: 2rem;
-    height: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    transition: all 0.2s ease;
-}
-
-.screenshot-modal-close:hover {
-    background: #e5e7eb;
-    color: #374151;
-}
-
-.screenshot-modal-body {
-    padding: 1.5rem;
-    text-align: center;
-}
-
-.screenshot-modal-image {
-    max-width: 100%;
-    max-height: 70vh;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.screenshot-modal-caption {
-    margin: 1rem 0 0 0;
-    font-size: 0.875rem;
-    color: #6b7280;
-    font-style: italic;
-}
-</style>

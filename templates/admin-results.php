@@ -990,12 +990,6 @@ jQuery(document).ready(function($) {
                                 <input type="date" id="export-date-to" style="padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;">
                             </div>
                         </div>
-                        <div>
-                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-                                <input type="checkbox" id="export-include-screenshots" style="accent-color: #00265e;">
-                                <span style="font-size: 0.875rem; color: #374151;">Include screenshots in export</span>
-                            </label>
-                        </div>
                     </div>
                     <div style="display: flex; gap: 1rem; justify-content: center;">
                         <button class="modal-close-btn" style="background: #6b7280; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
@@ -1027,7 +1021,6 @@ jQuery(document).ready(function($) {
             const format = modal.find('#export-format').val();
             const dateFrom = modal.find('#export-date-from').val();
             const dateTo = modal.find('#export-date-to').val();
-            const includeScreenshots = modal.find('#export-include-screenshots').is(':checked');
             
             // Call export AJAX
             $.ajax({
@@ -1038,7 +1031,6 @@ jQuery(document).ready(function($) {
                     format: format,
                     date_from: dateFrom,
                     date_to: dateTo,
-                    include_screenshots: includeScreenshots,
                     nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
                 },
                 success: function(response) {

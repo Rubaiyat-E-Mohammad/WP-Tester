@@ -80,40 +80,116 @@ class WP_Tester_Feedback_Reporter {
     private function generate_step_details($execution_log, $screenshots) {
         $step_details = array();
         $current_step = 0;
+        $step_start_time = null;
         
         foreach ($execution_log as $log_entry) {
             if ($log_entry['level'] === 'info' && strpos($log_entry['message'], 'Executing step') !== false) {
                 $current_step++;
+                $step_start_time = strtotime($log_entry['timestamp']);
+                
+                // Extract step information from log data
+                $action = 'unknown';
+                $target = 'unknown';
+                $value = null;
+                $selector = null;
+                
+                if (isset($log_entry['data'])) {
+                    $action = isset($log_entry['data']['action']) ? $log_entry['data']['action'] : 'unknown';
+                    $target = isset($log_entry['data']['target']) ? $log_entry['data']['target'] : 'unknown';
+                    $value = isset($log_entry['data']['value']) ? $log_entry['data']['value'] : null;
+                    $selector = isset($log_entry['data']['selector']) ? $log_entry['data']['selector'] : null;
+                }
+                
                 $step_details[$current_step] = array(
                     'step_number' => $current_step,
-                    'action' => isset($log_entry['data']['action']) ? $log_entry['data']['action'] : 'unknown',
-                    'target' => isset($log_entry['data']['target']) ? $log_entry['data']['target'] : 'unknown',
+                    'action' => $action,
+                    'target' => $target,
+                    'value' => $value,
+                    'selector' => $selector,
                     'status' => 'pending',
                     'timestamp' => $log_entry['timestamp'],
+                    'start_time' => $log_entry['timestamp'],
+                    'end_time' => null,
+                    'execution_time' => 0,
                     'details' => array(),
-                    'screenshot' => null
+                    'logs' => array(),
+                    'error' => null,
+                    'error_details' => null,
+                    'warnings' => array(),
+                    'success_indicators' => array(),
+                    'screenshot' => null,
+                    'performance_metrics' => array(
+                        'dom_ready_time' => null,
+                        'network_requests' => 0,
+                        'memory_usage' => null
+                    )
                 );
             } elseif (isset($step_details[$current_step])) {
-                // Add details to current step
+                // Add log entry to step details
+                $step_details[$current_step]['logs'][] = $log_entry;
                 $step_details[$current_step]['details'][] = $log_entry;
                 
+                // Update step status and extract detailed information
                 if ($log_entry['level'] === 'success') {
                     $step_details[$current_step]['status'] = 'passed';
-                    // Extract execution time from step result data
-                    if (isset($log_entry['data']['execution_time'])) {
-                        $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
+                    $step_details[$current_step]['end_time'] = $log_entry['timestamp'];
+                    
+                    // Calculate execution time
+                    if ($step_start_time) {
+                        $step_details[$current_step]['execution_time'] = strtotime($log_entry['timestamp']) - $step_start_time;
                     }
+                    
+                    // Extract success indicators
+                    if (isset($log_entry['data'])) {
+                        if (isset($log_entry['data']['execution_time'])) {
+                            $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
+                        }
+                        if (isset($log_entry['data']['success_indicators'])) {
+                            $step_details[$current_step]['success_indicators'] = $log_entry['data']['success_indicators'];
+                        }
+                        if (isset($log_entry['data']['performance'])) {
+                            $step_details[$current_step]['performance_metrics'] = array_merge(
+                                $step_details[$current_step]['performance_metrics'],
+                                $log_entry['data']['performance']
+                            );
+                        }
+                    }
+                    
                 } elseif ($log_entry['level'] === 'error') {
                     $step_details[$current_step]['status'] = 'failed';
+                    $step_details[$current_step]['end_time'] = $log_entry['timestamp'];
                     $step_details[$current_step]['error'] = $log_entry['message'];
-                    // Extract execution time from failed step result data
-                    if (isset($log_entry['data']['execution_time'])) {
-                        $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
+                    
+                    // Calculate execution time
+                    if ($step_start_time) {
+                        $step_details[$current_step]['execution_time'] = strtotime($log_entry['timestamp']) - $step_start_time;
                     }
-                    // Extract error details from step result data
-                    if (isset($log_entry['data']['error'])) {
-                        $step_details[$current_step]['error_details'] = $log_entry['data']['error'];
+                    
+                    // Extract detailed error information
+                    if (isset($log_entry['data'])) {
+                        if (isset($log_entry['data']['execution_time'])) {
+                            $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
+                        }
+                        if (isset($log_entry['data']['error'])) {
+                            $step_details[$current_step]['error_details'] = $log_entry['data']['error'];
+                        }
+                        if (isset($log_entry['data']['error_type'])) {
+                            $step_details[$current_step]['error_type'] = $log_entry['data']['error_type'];
+                        }
+                        if (isset($log_entry['data']['suggestions'])) {
+                            $step_details[$current_step]['suggestions'] = $log_entry['data']['suggestions'];
+                        }
+                        if (isset($log_entry['data']['context'])) {
+                            $step_details[$current_step]['context'] = $log_entry['data']['context'];
+                        }
                     }
+                    
+                } elseif ($log_entry['level'] === 'warning') {
+                    $step_details[$current_step]['warnings'][] = array(
+                        'message' => $log_entry['message'],
+                        'timestamp' => $log_entry['timestamp'],
+                        'data' => isset($log_entry['data']) ? $log_entry['data'] : null
+                    );
                 }
             }
         }
@@ -127,9 +203,12 @@ class WP_Tester_Feedback_Reporter {
         
         // Ensure all steps have execution_time (fallback to 0 if not set)
         foreach ($step_details as &$step) {
-            if (!isset($step['execution_time'])) {
+            if (!isset($step['execution_time']) || $step['execution_time'] === 0) {
                 $step['execution_time'] = 0;
             }
+            
+            // Add step summary
+            $step['summary'] = $this->generate_step_summary($step);
         }
         
         return array_values($step_details);
@@ -145,38 +224,89 @@ class WP_Tester_Feedback_Reporter {
         
         $failures = array();
         $error_patterns = array();
+        $step_failures = array();
+        $critical_failures = array();
+        $warnings = array();
         
         foreach ($execution_log as $log_entry) {
             if ($log_entry['level'] === 'error') {
                 $failure_data = array(
                     'timestamp' => $log_entry['timestamp'],
                     'message' => $log_entry['message'],
-                    'data' => $log_entry['data']
+                    'data' => $log_entry['data'],
+                    'step_number' => $this->extract_step_number($log_entry),
+                    'error_type' => $this->categorize_error($log_entry['message']),
+                    'severity' => $this->assess_error_severity($log_entry),
+                    'context' => $this->extract_error_context($log_entry),
+                    'suggestions' => $this->generate_error_suggestions($log_entry)
                 );
                 
                 // Add detailed error information if available
                 if (isset($log_entry['data']['error'])) {
                     $failure_data['error_details'] = $log_entry['data']['error'];
                 }
+                if (isset($log_entry['data']['error_type'])) {
+                    $failure_data['error_type'] = $log_entry['data']['error_type'];
+                }
+                if (isset($log_entry['data']['context'])) {
+                    $failure_data['context'] = array_merge($failure_data['context'], $log_entry['data']['context']);
+                }
+                if (isset($log_entry['data']['suggestions'])) {
+                    $failure_data['suggestions'] = array_merge($failure_data['suggestions'], $log_entry['data']['suggestions']);
+                }
                 
                 $failures[] = $failure_data;
                 
-                // Categorize error patterns
-                $error_type = $this->categorize_error($log_entry['message']);
-                if (!isset($error_patterns[$error_type])) {
-                    $error_patterns[$error_type] = 0;
+                // Categorize by step
+                if ($failure_data['step_number']) {
+                    $step_failures[$failure_data['step_number']][] = $failure_data;
                 }
-                $error_patterns[$error_type]++;
+                
+                // Identify critical failures
+                if ($failure_data['severity'] === 'critical') {
+                    $critical_failures[] = $failure_data;
+                }
+                
+                // Categorize error patterns
+                $error_type = $failure_data['error_type'];
+                if (!isset($error_patterns[$error_type])) {
+                    $error_patterns[$error_type] = array(
+                        'count' => 0,
+                        'examples' => array(),
+                        'common_causes' => array(),
+                        'prevention_tips' => array()
+                    );
+                }
+                $error_patterns[$error_type]['count']++;
+                if (count($error_patterns[$error_type]['examples']) < 3) {
+                    $error_patterns[$error_type]['examples'][] = $failure_data['message'];
+                }
+                
+            } elseif ($log_entry['level'] === 'warning') {
+                $warnings[] = array(
+                    'timestamp' => $log_entry['timestamp'],
+                    'message' => $log_entry['message'],
+                    'data' => $log_entry['data'],
+                    'step_number' => $this->extract_step_number($log_entry)
+                );
             }
         }
         
         return array(
             'primary_error' => $test_result->error_message,
             'failure_count' => count($failures),
+            'critical_failure_count' => count($critical_failures),
+            'warning_count' => count($warnings),
             'failure_details' => $failures,
+            'step_failures' => $step_failures,
+            'critical_failures' => $critical_failures,
+            'warnings' => $warnings,
             'error_patterns' => $error_patterns,
             'root_cause_analysis' => $this->analyze_root_cause($failures, $error_patterns),
-            'impact_assessment' => $this->assess_impact($test_result, $failures)
+            'impact_assessment' => $this->assess_impact($test_result, $failures),
+            'failure_timeline' => $this->generate_failure_timeline($failures),
+            'recovery_suggestions' => $this->generate_recovery_suggestions($failures, $error_patterns),
+            'prevention_recommendations' => $this->generate_prevention_recommendations($error_patterns)
         );
     }
     
@@ -787,5 +917,251 @@ class WP_Tester_Feedback_Reporter {
         // This would require a PDF library like TCPDF or DOMPDF
         // For now, return a placeholder
         return 'PDF export functionality would be implemented here';
+    }
+    
+    /**
+     * Generate step summary
+     */
+    private function generate_step_summary($step) {
+        $summary = array();
+        
+        if ($step['status'] === 'passed') {
+            $summary['status_text'] = 'Step completed successfully';
+            $summary['status_icon'] = '✓';
+            $summary['status_color'] = '#28a745';
+        } elseif ($step['status'] === 'failed') {
+            $summary['status_text'] = 'Step failed';
+            $summary['status_icon'] = '✗';
+            $summary['status_color'] = '#dc3545';
+        } else {
+            $summary['status_text'] = 'Step pending';
+            $summary['status_icon'] = '⏳';
+            $summary['status_color'] = '#6c757d';
+        }
+        
+        $summary['action_description'] = $this->format_action_description($step);
+        $summary['execution_time_formatted'] = $this->format_execution_time($step['execution_time']);
+        $summary['has_warnings'] = !empty($step['warnings']);
+        $summary['warning_count'] = count($step['warnings']);
+        
+        return $summary;
+    }
+    
+    /**
+     * Format action description
+     */
+    private function format_action_description($step) {
+        $action = $step['action'];
+        $target = $step['target'];
+        $value = $step['value'];
+        
+        switch ($action) {
+            case 'click':
+                return "Click on element: {$target}";
+            case 'type':
+                return "Type '{$value}' into: {$target}";
+            case 'select':
+                return "Select '{$value}' from: {$target}";
+            case 'navigate':
+                return "Navigate to: {$target}";
+            case 'wait':
+                return "Wait for: {$target}";
+            case 'verify':
+                return "Verify: {$target}";
+            default:
+                return "Execute {$action} on: {$target}";
+        }
+    }
+    
+    /**
+     * Format execution time
+     */
+    private function format_execution_time($time) {
+        if ($time < 1) {
+            return round($time * 1000) . 'ms';
+        } else {
+            return round($time, 2) . 's';
+        }
+    }
+    
+    /**
+     * Extract step number from log entry
+     */
+    private function extract_step_number($log_entry) {
+        if (isset($log_entry['data']['step_number'])) {
+            return $log_entry['data']['step_number'];
+        }
+        
+        // Try to extract from message
+        if (preg_match('/step (\d+)/i', $log_entry['message'], $matches)) {
+            return (int)$matches[1];
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Assess error severity
+     */
+    private function assess_error_severity($log_entry) {
+        $message = strtolower($log_entry['message']);
+        
+        // Critical errors
+        if (strpos($message, 'critical') !== false || 
+            strpos($message, 'fatal') !== false ||
+            strpos($message, 'timeout') !== false) {
+            return 'critical';
+        }
+        
+        // High severity errors
+        if (strpos($message, 'not found') !== false ||
+            strpos($message, 'element not found') !== false ||
+            strpos($message, 'page not found') !== false) {
+            return 'high';
+        }
+        
+        // Medium severity errors
+        if (strpos($message, 'failed') !== false ||
+            strpos($message, 'error') !== false) {
+            return 'medium';
+        }
+        
+        return 'low';
+    }
+    
+    /**
+     * Extract error context
+     */
+    private function extract_error_context($log_entry) {
+        $context = array();
+        
+        if (isset($log_entry['data']['url'])) {
+            $context['url'] = $log_entry['data']['url'];
+        }
+        if (isset($log_entry['data']['selector'])) {
+            $context['selector'] = $log_entry['data']['selector'];
+        }
+        if (isset($log_entry['data']['action'])) {
+            $context['action'] = $log_entry['data']['action'];
+        }
+        if (isset($log_entry['data']['target'])) {
+            $context['target'] = $log_entry['data']['target'];
+        }
+        
+        return $context;
+    }
+    
+    /**
+     * Generate error suggestions
+     */
+    private function generate_error_suggestions($log_entry) {
+        $suggestions = array();
+        $message = strtolower($log_entry['message']);
+        
+        if (strpos($message, 'element not found') !== false) {
+            $suggestions[] = 'Check if the element selector is correct';
+            $suggestions[] = 'Verify the element exists on the page';
+            $suggestions[] = 'Consider adding a wait condition before interacting with the element';
+        }
+        
+        if (strpos($message, 'timeout') !== false) {
+            $suggestions[] = 'Increase the timeout duration';
+            $suggestions[] = 'Check if the page is loading slowly';
+            $suggestions[] = 'Verify the network connection';
+        }
+        
+        if (strpos($message, 'page not found') !== false) {
+            $suggestions[] = 'Verify the URL is correct';
+            $suggestions[] = 'Check if the page is accessible';
+            $suggestions[] = 'Ensure the server is running';
+        }
+        
+        return $suggestions;
+    }
+    
+    /**
+     * Generate failure timeline
+     */
+    private function generate_failure_timeline($failures) {
+        $timeline = array();
+        
+        foreach ($failures as $failure) {
+            $timeline[] = array(
+                'timestamp' => $failure['timestamp'],
+                'step' => $failure['step_number'],
+                'error_type' => $failure['error_type'],
+                'severity' => $failure['severity'],
+                'message' => $failure['message']
+            );
+        }
+        
+        // Sort by timestamp
+        usort($timeline, function($a, $b) {
+            return strtotime($a['timestamp']) - strtotime($b['timestamp']);
+        });
+        
+        return $timeline;
+    }
+    
+    /**
+     * Generate recovery suggestions
+     */
+    private function generate_recovery_suggestions($failures, $error_patterns) {
+        $suggestions = array();
+        
+        // Analyze most common error types
+        $most_common_error = null;
+        $max_count = 0;
+        foreach ($error_patterns as $type => $pattern) {
+            if ($pattern['count'] > $max_count) {
+                $max_count = $pattern['count'];
+                $most_common_error = $type;
+            }
+        }
+        
+        if ($most_common_error) {
+            switch ($most_common_error) {
+                case 'element_not_found':
+                    $suggestions[] = 'Review and update element selectors';
+                    $suggestions[] = 'Add explicit waits for dynamic content';
+                    break;
+                case 'timeout':
+                    $suggestions[] = 'Increase timeout values for slow operations';
+                    $suggestions[] = 'Optimize page loading performance';
+                    break;
+                case 'navigation':
+                    $suggestions[] = 'Verify all URLs are accessible';
+                    $suggestions[] = 'Check for redirect issues';
+                    break;
+            }
+        }
+        
+        return $suggestions;
+    }
+    
+    /**
+     * Generate prevention recommendations
+     */
+    private function generate_prevention_recommendations($error_patterns) {
+        $recommendations = array();
+        
+        foreach ($error_patterns as $type => $pattern) {
+            switch ($type) {
+                case 'element_not_found':
+                    $recommendations[] = 'Use more robust element selectors';
+                    $recommendations[] = 'Implement proper wait strategies';
+                    break;
+                case 'timeout':
+                    $recommendations[] = 'Set appropriate timeout values';
+                    $recommendations[] = 'Monitor page performance';
+                    break;
+                case 'navigation':
+                    $recommendations[] = 'Validate URLs before navigation';
+                    $recommendations[] = 'Handle redirect scenarios';
+                    break;
+            }
+        }
+        
+        return array_unique($recommendations);
     }
 }
