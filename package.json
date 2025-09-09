@@ -5,8 +5,12 @@
   "main": "index.js",
   "scripts": {
     "dev": "webpack --mode development --watch",
-    "build": "webpack --mode production",
-    "build:dev": "webpack --mode development"
+    "build": "npm run postinstall && webpack --mode production",
+    "build:dev": "npm run postinstall && webpack --mode development",
+    "postinstall": "node scripts/setup-testing.js",
+    "install-browsers": "node scripts/setup-testing.js",
+    "setup-testing": "node scripts/setup-testing.js",
+    "start-selenium": "selenium-standalone start --detach || echo 'Selenium server not available'"
   },
   "keywords": ["wordpress", "react", "modern-ui", "testing"],
   "author": "Rubaiyat E Mohammad",
@@ -32,6 +36,8 @@
     "framer-motion": "^10.16.4",
     "lucide-react": "^0.292.0",
     "recharts": "^2.8.0",
-    "clsx": "^2.0.0"
+    "clsx": "^2.0.0",
+    "@playwright/test": "^1.55.0",
+    "selenium-standalone": "^8.0.0"
   }
 }

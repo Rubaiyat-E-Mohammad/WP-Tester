@@ -566,10 +566,13 @@ class WP_Tester_Admin {
         
         // Use Selenium if explicitly selected
         if ($test_engine === 'selenium' && class_exists('WP_Tester_Selenium_Executor')) {
+            error_log('WP Tester: User selected Selenium, checking availability...');
             $selenium = new WP_Tester_Selenium_Executor();
             if ($selenium->is_selenium_available()) {
                 error_log('WP Tester: Using Selenium executor (user preference)');
                 return $selenium;
+            } else {
+                error_log('WP Tester: Selenium selected but not available, falling back to Playwright');
             }
         }
         

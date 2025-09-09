@@ -76,6 +76,18 @@ if (!defined('ABSPATH')) {
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
                             Playwright is the default engine for real browser automation and screenshots. Selenium is an alternative option. Basic engine has been removed.
                         </p>
+                        
+                        <!-- Auto Setup Button -->
+                        <div style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #0c4a6e; font-size: 0.875rem;">🚀 Browser Automation Setup</h4>
+                            <p style="margin: 0 0 1rem 0; color: #0c4a6e; font-size: 0.8125rem;">
+                                Automatically install Playwright browsers and Selenium drivers for real browser automation.
+                            </p>
+                            <button type="button" id="setup-browsers" style="background: #0ea5e9; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.8125rem; cursor: pointer;">
+                                Setup Browser Automation
+                            </button>
+                            <div id="setup-status" style="margin-top: 0.5rem; font-size: 0.8125rem;"></div>
+                        </div>
                     </div>
 
                     <!-- Max Pages per Crawl -->
@@ -324,6 +336,48 @@ if (!defined('ABSPATH')) {
 
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const setupButton = document.getElementById('setup-browsers');
+    const statusDiv = document.getElementById('setup-status');
+    
+    if (setupButton) {
+        setupButton.addEventListener('click', function() {
+            setupButton.disabled = true;
+            setupButton.textContent = 'Setting up...';
+            statusDiv.innerHTML = '<span style="color: #0ea5e9;">⏳ Installing browser automation...</span>';
+            
+            fetch(ajaxurl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    action: 'wp_tester_setup_browsers',
+                    nonce: '<?php echo wp_create_nonce('wp_tester_setup'); ?>'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.innerHTML = '<span style="color: #16a34a;">✅ ' + data.data + '</span>';
+                    setupButton.textContent = 'Setup Complete';
+                } else {
+                    statusDiv.innerHTML = '<span style="color: #dc2626;">❌ ' + data.data + '</span>';
+                    setupButton.disabled = false;
+                    setupButton.textContent = 'Setup Browser Automation';
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = '<span style="color: #dc2626;">❌ Setup failed: ' + error.message + '</span>';
+                setupButton.disabled = false;
+                setupButton.textContent = 'Setup Browser Automation';
+            });
+        });
+    }
+});
+</script>
 
 <script>
 jQuery(document).ready(function($) {

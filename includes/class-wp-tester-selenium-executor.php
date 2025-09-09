@@ -51,6 +51,11 @@ class WP_Tester_Selenium_Executor {
      * Execute a flow using Selenium
      */
     public function execute_flow($flow_id, $manual_trigger = false) {
+        // First check if Selenium is actually available
+        if (!$this->is_selenium_available()) {
+            throw new Exception('Selenium not available - please install and start Selenium server');
+        }
+        
         try {
             $flow = $this->database->get_flow($flow_id);
             if (!$flow) {
@@ -78,14 +83,8 @@ class WP_Tester_Selenium_Executor {
             
         } catch (Exception $e) {
             error_log('WP Tester Selenium Execution Error: ' . $e->getMessage());
-            return array(
-                'success' => false,
-                'error' => $e->getMessage(),
-                'steps_executed' => 0,
-                'steps_passed' => 0,
-                'steps_failed' => 0,
-                'execution_time' => 0
-            );
+            // Re-throw the exception to trigger fallback
+            throw $e;
         }
     }
     
@@ -262,9 +261,22 @@ class WP_Tester_Selenium_Executor {
      * Check if Selenium is available
      */
     public function is_selenium_available() {
+        // Check if selenium-standalone is installed
+        $selenium_check = shell_exec('selenium-standalone --version 2>&1');
+        if (strpos($selenium_check, 'selenium-standalone') === false) {
+            error_log('WP Tester: selenium-standalone not installed');
+            return false;
+        }
+        
         // Check if Selenium server is running
-        $response = wp_remote_get($this->config['selenium_server_url'] . '/status');
-        return !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200;
+        $response = wp_remote_get($this->config['selenium_server_url'] . '/status', array('timeout' => 5));
+        $is_running = !is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200;
+        
+        if (!$is_running) {
+            error_log('WP Tester: Selenium server not running at ' . $this->config['selenium_server_url']);
+        }
+        
+        return $is_running;
     }
     
     /**
