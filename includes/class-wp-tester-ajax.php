@@ -1683,8 +1683,8 @@ class WP_Tester_Ajax {
         
         try {
             $message = sanitize_text_field($_POST['message'] ?? '');
-            $temperature = floatval($_POST['temperature'] ?? 0.7);
-            $max_tokens = intval($_POST['max_tokens'] ?? 2000);
+            $temperature = floatval($_POST['temperature'] ?? 0);
+            $max_tokens = !empty($_POST['max_tokens']) ? intval($_POST['max_tokens']) : null;
             $chat_history = $_POST['chat_history'] ?? array();
             
             if (empty($message)) {
@@ -1853,9 +1853,11 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                 $data = array(
                     'model' => $model,
                     'messages' => $messages,
-                    'temperature' => $temperature,
-                    'max_tokens' => $max_tokens
+                    'temperature' => $temperature
                 );
+                if ($max_tokens !== null) {
+                    $data['max_tokens'] = $max_tokens;
+                }
                 $headers['Authorization'] = 'Bearer ' . $api_key;
                 break;
                 
@@ -1869,20 +1871,24 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                         )
                     ),
                     'generationConfig' => array(
-                        'temperature' => $temperature,
-                        'maxOutputTokens' => $max_tokens
+                        'temperature' => $temperature
                     )
                 );
+                if ($max_tokens !== null) {
+                    $data['generationConfig']['maxOutputTokens'] = $max_tokens;
+                }
                 $headers['x-goog-api-key'] = $api_key;
                 break;
                 
             case 'Anthropic':
                 $data = array(
                     'model' => $model,
-                    'max_tokens' => $max_tokens,
                     'temperature' => $temperature,
                     'messages' => $messages
                 );
+                if ($max_tokens !== null) {
+                    $data['max_tokens'] = $max_tokens;
+                }
                 $headers['x-api-key'] = $api_key;
                 $headers['anthropic-version'] = '2023-06-01';
                 break;
@@ -1891,9 +1897,11 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                 $data = array(
                     'model' => $model,
                     'messages' => $messages,
-                    'temperature' => $temperature,
-                    'max_tokens' => $max_tokens
+                    'temperature' => $temperature
                 );
+                if ($max_tokens !== null) {
+                    $data['max_tokens'] = $max_tokens;
+                }
                 $headers['Authorization'] = 'Bearer ' . $api_key;
                 break;
                 
@@ -1901,9 +1909,11 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                 $data = array(
                     'model' => $model,
                     'messages' => $messages,
-                    'temperature' => $temperature,
-                    'max_tokens' => $max_tokens
+                    'temperature' => $temperature
                 );
+                if ($max_tokens !== null) {
+                    $data['max_tokens'] = $max_tokens;
+                }
                 $headers['Authorization'] = 'Bearer ' . $api_key;
                 break;
                 
@@ -1911,10 +1921,12 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                 $data = array(
                     'inputs' => $messages[count($messages) - 1]['content'],
                     'parameters' => array(
-                        'temperature' => $temperature,
-                        'max_new_tokens' => $max_tokens
+                        'temperature' => $temperature
                     )
                 );
+                if ($max_tokens !== null) {
+                    $data['parameters']['max_new_tokens'] = $max_tokens;
+                }
                 $headers['Authorization'] = 'Bearer ' . $api_key;
                 break;
                 
@@ -1922,9 +1934,11 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                 $data = array(
                     'model' => $actual_model,
                     'messages' => $messages,
-                    'temperature' => $temperature,
-                    'max_tokens' => $max_tokens
+                    'temperature' => $temperature
                 );
+                if ($max_tokens !== null) {
+                    $data['max_tokens'] = $max_tokens;
+                }
                 $headers['Authorization'] = 'Bearer ' . $api_key;
                 break;
                 
@@ -1932,9 +1946,11 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                 $data = array(
                     'model' => $model,
                     'message' => $messages[count($messages) - 1]['content'],
-                    'temperature' => $temperature,
-                    'max_tokens' => $max_tokens
+                    'temperature' => $temperature
                 );
+                if ($max_tokens !== null) {
+                    $data['max_tokens'] = $max_tokens;
+                }
                 $headers['Authorization'] = 'Bearer ' . $api_key;
                 break;
                 
@@ -1942,9 +1958,11 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                 $data = array(
                     'model' => $model,
                     'messages' => $messages,
-                    'temperature' => $temperature,
-                    'max_tokens' => $max_tokens
+                    'temperature' => $temperature
                 );
+                if ($max_tokens !== null) {
+                    $data['max_tokens'] = $max_tokens;
+                }
                 $headers['Authorization'] = 'Bearer ' . $api_key;
                 break;
                 

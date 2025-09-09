@@ -123,9 +123,9 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                         <!-- Temperature -->
                         <div style="margin-bottom: 1rem;">
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                                Temperature: <span id="temperature-value">0.7</span>
+                                Temperature: <span id="temperature-value">0</span>
                             </label>
-                            <input type="range" id="ai-temperature" min="0" max="1" step="0.1" value="0.7"
+                            <input type="range" id="ai-temperature" min="0" max="1" step="0.1" value="0"
                                 style="width: 100%; margin-bottom: 0.5rem;">
                             <p style="margin: 0; font-size: 0.75rem; color: #64748b;">
                                 Controls randomness. Lower = more focused, Higher = more creative.
@@ -137,10 +137,10 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
                                 Max Tokens
                             </label>
-                            <input type="number" id="ai-max-tokens" min="100" max="4000" value="1000"
-                                style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+                            <input type="number" id="ai-max-tokens" min="100" value=""
+                                placeholder="No limit" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
                             <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: #64748b;">
-                                Maximum length of AI response.
+                                Maximum length of AI response. Leave empty for no limit.
                             </p>
                         </div>
                     </div>
@@ -321,6 +321,9 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
 
 <script>
 jQuery(document).ready(function($) {
+    // Define ajaxurl for AJAX calls
+    var ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
+    
     let chatHistory = [];
     let isTyping = false;
     
@@ -386,7 +389,7 @@ jQuery(document).ready(function($) {
                 model: selectedModel,
                 api_key: apiKey,
                 temperature: $('#ai-temperature').val(),
-                max_tokens: $('#ai-max-tokens').val(),
+                max_tokens: $('#ai-max-tokens').val() || null,
                 chat_history: chatHistory,
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
@@ -592,10 +595,15 @@ jQuery(document).ready(function($) {
         // Show creating message
         addMessage('ai', `🔄 Creating flow: "${flowData.name}"...`);
         
+        // Debug: Log the flow data being sent
+        console.log('Creating flow with data:', flowData);
+        console.log('AJAX URL:', ajaxurl);
+        
         // Create the flow automatically
         $.ajax({
             url: ajaxurl,
             type: 'POST',
+            dataType: 'json',
             data: {
                 action: 'wp_tester_create_ai_flow',
                 flow_name: flowData.name,
