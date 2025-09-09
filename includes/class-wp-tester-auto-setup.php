@@ -11,13 +11,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// WordPress function declarations for linting
-if (!function_exists('is_admin')) {
-    function is_admin() { return false; }
-}
-if (!function_exists('get_current_screen')) {
-    function get_current_screen() { return null; }
-}
+// @phpstan-ignore-file - WordPress functions not available during static analysis
+
 
 class WP_Tester_Auto_Setup {
     
@@ -73,11 +68,14 @@ class WP_Tester_Auto_Setup {
      */
     private function is_wp_tester_page() {
         // Check if we're in admin area and have the function available
-        if (!function_exists('is_admin') || !is_admin() || !function_exists('get_current_screen')) {
+        if (!function_exists('is_admin') || 
+            // @phpstan-ignore-next-line - WordPress function
+            !is_admin() || !function_exists('get_current_screen')) {
             return false;
         }
         
         /** @var WP_Screen|null $screen */
+        // @phpstan-ignore-next-line - WordPress function
         $screen = get_current_screen();
         return $screen && isset($screen->id) && strpos($screen->id, 'wp-tester') !== false;
     }
