@@ -288,8 +288,8 @@ class WP_Tester_Flow_Executor {
      */
     private function execute_step($step, $step_number, $flow) {
         $step_start_time = microtime(true);
-        $max_retries = isset($this->settings['retry_attempts']) ? (int)$this->settings['retry_attempts'] : 2;
-        $timeout = isset($this->settings['test_timeout']) ? (int)$this->settings['test_timeout'] : 30;
+        $max_retries = isset($this->settings['retry_attempts']) ? (int)$this->settings['retry_attempts'] : 0;
+        $timeout = isset($this->settings['test_timeout']) ? (int)$this->settings['test_timeout'] : 10;
         
         $last_error = '';
         

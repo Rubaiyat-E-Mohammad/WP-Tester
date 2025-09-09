@@ -51,7 +51,13 @@ $error_message = $result['error_message'] ?? '';
                     <div class="stat-header">
                         <h3 class="stat-label">Status</h3>
                         <div class="stat-icon">
-                            <span class="dashicons dashicons-<?php echo $status === 'passed' ? 'yes-alt' : ($status === 'failed' ? 'dismiss' : 'clock'); ?>"></span>
+                            <?php if ($status === 'passed'): ?>
+                                <span class="dashicons dashicons-yes-alt" style="color: #28a745; font-size: 1.5rem;"></span>
+                            <?php elseif ($status === 'failed'): ?>
+                                <span class="dashicons dashicons-dismiss" style="color: #dc3545; font-size: 1.5rem;"></span>
+                            <?php else: ?>
+                                <span class="dashicons dashicons-clock" style="color: #6c757d; font-size: 1.5rem;"></span>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="stat-value" style="font-size: 1.5rem;">

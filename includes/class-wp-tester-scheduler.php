@@ -27,6 +27,9 @@ class WP_Tester_Scheduler {
         if (!wp_next_scheduled('wp_tester_cleanup')) {
             wp_schedule_event(time(), 'weekly', 'wp_tester_cleanup');
         }
+        
+        // Ensure crawl is scheduled based on current settings
+        $this->ensure_crawl_scheduled();
     }
     
     /**
@@ -339,6 +342,25 @@ class WP_Tester_Scheduler {
         }
         
         return empty($issues) ? true : $issues;
+    }
+    
+    /**
+     * Ensure crawl is scheduled based on current settings
+     */
+    public function ensure_crawl_scheduled() {
+        $settings = get_option('wp_tester_settings', array());
+        $frequency = $settings['crawl_frequency'] ?? 'never';
+        
+        // Only schedule if frequency is not 'never' and not already scheduled
+        if ($frequency !== 'never' && !wp_next_scheduled('wp_tester_daily_crawl')) {
+            if ($frequency === 'daily' && isset($settings['crawl_schedule_time']) && isset($settings['crawl_schedule_days'])) {
+                // Use custom daily scheduling with specific time and days
+                $this->schedule_custom_daily_crawl($settings['crawl_schedule_time'], $settings['crawl_schedule_days']);
+            } else {
+                // Use WordPress default frequency scheduling
+                wp_schedule_event(time(), $frequency, 'wp_tester_daily_crawl');
+            }
+        }
     }
     
     /**

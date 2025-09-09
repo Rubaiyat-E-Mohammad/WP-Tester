@@ -296,13 +296,18 @@ if (!defined('ABSPATH')) {
                             </div>
                             <div class="item-info">
                                 <div class="item-icon">
-                                    <span class="dashicons dashicons-<?php 
-                                        $status = $result->status ?? 'unknown';
-                                        $display_status = $status;
-                                        echo $display_status === 'passed' ? 'yes-alt' : 
-                                            ($display_status === 'failed' ? 'dismiss' : 
-                                            ($display_status === 'running' ? 'update' : 'clock'));
-                                    ?>"></span>
+                                    <?php 
+                                    $status = $result->status ?? 'unknown';
+                                    $display_status = $status;
+                                    if ($display_status === 'passed'): ?>
+                                        <span class="dashicons dashicons-yes-alt" style="color: #28a745; font-size: 1.2rem;"></span>
+                                    <?php elseif ($display_status === 'failed'): ?>
+                                        <span class="dashicons dashicons-dismiss" style="color: #dc3545; font-size: 1.2rem;"></span>
+                                    <?php elseif ($display_status === 'running'): ?>
+                                        <span class="dashicons dashicons-update" style="color: #ffc107; font-size: 1.2rem; animation: spin 1s linear infinite;"></span>
+                                    <?php else: ?>
+                                        <span class="dashicons dashicons-clock" style="color: #6c757d; font-size: 1.2rem;"></span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="item-details">
                                     <h4><?php echo esc_html($result->flow_name ?? 'Unknown Flow'); ?></h4>
@@ -386,6 +391,13 @@ if (!defined('ABSPATH')) {
 
     </div>
 </div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
 
 <script>
 jQuery(document).ready(function($) {

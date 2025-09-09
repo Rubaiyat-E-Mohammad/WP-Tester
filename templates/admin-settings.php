@@ -137,8 +137,8 @@ if (!defined('ABSPATH')) {
                             Test Timeout (seconds)
                         </label>
                         <input type="number" name="wp_tester_settings[test_timeout]" 
-                               value="<?php echo esc_attr($settings['test_timeout'] ?? 30); ?>" 
-                               min="10" max="300"
+                               value="<?php echo esc_attr($settings['test_timeout'] ?? 10); ?>" 
+                               min="5" max="300"
                                style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
                             Maximum time to wait for each test step to complete
@@ -151,7 +151,7 @@ if (!defined('ABSPATH')) {
                             Retry Attempts
                         </label>
                         <input type="number" name="wp_tester_settings[retry_attempts]" 
-                               value="<?php echo esc_attr($settings['retry_attempts'] ?? 2); ?>" 
+                               value="<?php echo esc_attr($settings['retry_attempts'] ?? 0); ?>" 
                                min="0" max="5"
                                style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">

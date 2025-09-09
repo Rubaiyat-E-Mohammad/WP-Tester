@@ -639,15 +639,15 @@ class WP_Tester_Admin {
     
     public function test_timeout_callback() {
         $settings = get_option('wp_tester_settings', array());
-        $value = isset($settings['test_timeout']) ? $settings['test_timeout'] : 30;
+        $value = isset($settings['test_timeout']) ? $settings['test_timeout'] : 10;
         
-        echo '<input type="number" name="wp_tester_settings[test_timeout]" value="' . esc_attr($value) . '" min="10" max="300" />';
+        echo '<input type="number" name="wp_tester_settings[test_timeout]" value="' . esc_attr($value) . '" min="5" max="300" />';
         echo '<p class="description">' . __('Maximum time to wait for each test step to complete.', 'wp-tester') . '</p>';
     }
     
     public function retry_attempts_callback() {
         $settings = get_option('wp_tester_settings', array());
-        $value = isset($settings['retry_attempts']) ? $settings['retry_attempts'] : 2;
+        $value = isset($settings['retry_attempts']) ? $settings['retry_attempts'] : 0;
         
         echo '<input type="number" name="wp_tester_settings[retry_attempts]" value="' . esc_attr($value) . '" min="0" max="5" />';
         echo '<p class="description">' . __('Number of times to retry a failed step before marking it as failed.', 'wp-tester') . '</p>';
@@ -691,7 +691,7 @@ class WP_Tester_Admin {
         }
         
         if (isset($input['test_timeout'])) {
-            $sanitized['test_timeout'] = max(10, min(300, intval($input['test_timeout'])));
+            $sanitized['test_timeout'] = max(5, min(300, intval($input['test_timeout'])));
         }
         
         if (isset($input['retry_attempts'])) {
