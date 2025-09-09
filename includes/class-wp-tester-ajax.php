@@ -1714,7 +1714,27 @@ class WP_Tester_Ajax {
             }
             
             // Prepare the AI prompt
-            $system_prompt = "You are a WordPress testing assistant. Help users create test flows for their WordPress sites. When a user describes what they want to test, analyze their request and provide a structured test flow in JSON format. The flow should include steps for testing the described functionality.";
+            $system_prompt = "You are a WordPress testing assistant. Help users create test flows for their WordPress sites. 
+
+When a user describes what they want to test, analyze their request and provide a structured test flow in JSON format. The flow should include steps for testing the described functionality.
+
+IMPORTANT: When you generate a test flow, ALWAYS wrap it in ```json``` code blocks. The JSON should have this structure:
+{
+  \"name\": \"Flow Name\",
+  \"description\": \"Brief description of what this flow tests\",
+  \"steps\": [
+    {
+      \"action\": \"navigate\",
+      \"target\": \"URL or selector\",
+      \"value\": \"optional value\",
+      \"description\": \"What this step does\"
+    }
+  ]
+}
+
+Available actions: navigate, click, fill, select, wait, assert, scroll, hover, double_click, right_click, drag_drop, upload_file, take_screenshot, custom_script
+
+If the user is just asking questions or having a conversation, respond normally. Only generate JSON flows when they specifically ask for test flows or describe functionality they want to test.";
             
             $messages = array(
                 array('role' => 'system', 'content' => $system_prompt)
@@ -1741,14 +1761,21 @@ class WP_Tester_Ajax {
                 $create_flow = false;
                 $flow_data = null;
                 
-                if (strpos($ai_response, '```json') !== false) {
-                    // Extract JSON from response
-                    preg_match('/```json\s*(\{.*?\})\s*```/s', $ai_response, $matches);
-                    if (!empty($matches[1])) {
-                        $flow_json = json_decode($matches[1], true);
-                        if ($flow_json && isset($flow_json['name'])) {
+                // Try multiple JSON extraction patterns
+                $json_patterns = [
+                    '/```json\s*(\{.*?\})\s*```/s',  // ```json { ... } ```
+                    '/```\s*(\{.*?\})\s*```/s',      // ``` { ... } ```
+                ];
+                
+                foreach ($json_patterns as $pattern) {
+                    if (preg_match($pattern, $ai_response, $matches)) {
+                        $json_string = $matches[1];
+                        $flow_json = json_decode($json_string, true);
+                        
+                        if ($flow_json && isset($flow_json['name']) && isset($flow_json['steps'])) {
                             $create_flow = true;
                             $flow_data = $flow_json;
+                            break;
                         }
                     }
                 }
