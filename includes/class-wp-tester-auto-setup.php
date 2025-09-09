@@ -142,16 +142,45 @@ class WP_Tester_Auto_Setup {
             );
         }
         
-        // Check if Node.js is available
-        $node_check = array();
-        $node_return = 0;
-        exec('node --version 2>&1', $node_check, $node_return);
+        // Check if Node.js is available (try multiple paths)
+        $node_paths = array(
+            'node',
+            '/usr/local/bin/node',
+            '/usr/bin/node',
+            '/opt/homebrew/bin/node',
+            getenv('HOME') . '/.nvm/versions/node/*/bin/node'
+        );
         
-        if ($node_return !== 0) {
-            error_log('WP Tester: Node.js not available');
+        $node_found = false;
+        $node_path = '';
+        
+        foreach ($node_paths as $path) {
+            if (strpos($path, '*') !== false) {
+                // Handle glob patterns
+                $glob_paths = glob($path);
+                if (!empty($glob_paths)) {
+                    $node_path = $glob_paths[0];
+                    $node_found = true;
+                    break;
+                }
+            } else {
+                $node_check = array();
+                $node_return = 0;
+                exec($path . ' --version 2>&1', $node_check, $node_return);
+                
+                if ($node_return === 0) {
+                    $node_path = $path;
+                    $node_found = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!$node_found) {
+            error_log('WP Tester: Node.js not found in any common paths');
             return array(
                 'success' => false,
-                'message' => 'Node.js is not installed or not available in PATH'
+                'message' => 'Node.js is not installed or not available in PATH. Please install Node.js or add it to your system PATH.'
             );
         }
         
@@ -176,13 +205,77 @@ class WP_Tester_Auto_Setup {
         $output = array();
         $return_code = 0;
         
-        // Use timeout to prevent hanging
-        $command = 'timeout 300 node scripts/setup-testing.js 2>&1';
+        // Try to run the setup script, but if that fails, run npm commands directly
+        $command = 'timeout 300 ' . escapeshellarg($node_path) . ' scripts/setup-testing.js 2>&1';
         if (PHP_OS_FAMILY === 'Windows') {
-            $command = 'node scripts/setup-testing.js 2>&1';
+            $command = escapeshellarg($node_path) . ' scripts/setup-testing.js 2>&1';
         }
         
         exec($command, $output, $return_code);
+        
+        // If the script failed, try running npm commands directly
+        if ($return_code !== 0) {
+            error_log('WP Tester: Setup script failed, trying direct npm commands');
+            
+            // Try to find npm
+            $npm_paths = array(
+                'npm',
+                '/usr/local/bin/npm',
+                '/usr/bin/npm',
+                '/opt/homebrew/bin/npm',
+                getenv('HOME') . '/.nvm/versions/node/*/bin/npm'
+            );
+            
+            $npm_found = false;
+            $npm_path = '';
+            
+            foreach ($npm_paths as $path) {
+                if (strpos($path, '*') !== false) {
+                    $glob_paths = glob($path);
+                    if (!empty($glob_paths)) {
+                        $npm_path = $glob_paths[0];
+                        $npm_found = true;
+                        break;
+                    }
+                } else {
+                    $npm_check = array();
+                    $npm_return = 0;
+                    exec($path . ' --version 2>&1', $npm_check, $npm_return);
+                    
+                    if ($npm_return === 0) {
+                        $npm_path = $path;
+                        $npm_found = true;
+                        break;
+                    }
+                }
+            }
+            
+            if ($npm_found) {
+                // Run npm install and playwright install directly
+                $commands = array(
+                    escapeshellarg($npm_path) . ' install 2>&1',
+                    escapeshellarg($node_path) . ' node_modules/.bin/playwright install 2>&1'
+                );
+                
+                $all_output = array();
+                $all_success = true;
+                
+                foreach ($commands as $cmd) {
+                    $cmd_output = array();
+                    $cmd_return = 0;
+                    exec($cmd, $cmd_output, $cmd_return);
+                    
+                    $all_output = array_merge($all_output, $cmd_output);
+                    
+                    if ($cmd_return !== 0) {
+                        $all_success = false;
+                    }
+                }
+                
+                $output = $all_output;
+                $return_code = $all_success ? 0 : 1;
+            }
+        }
         
         // Restore original directory
         chdir($old_cwd);
