@@ -1348,7 +1348,6 @@ class WP_Tester_Ajax {
                 'focus_areas' => array_filter(explode(',', $_POST['focus_areas'] ?? 'ecommerce,content,user_management,settings')),
                 'ai_provider' => isset($_POST['ai_provider']) ? sanitize_text_field($_POST['ai_provider']) : 'free',
                 'ai_model' => isset($_POST['ai_model']) ? sanitize_text_field($_POST['ai_model']) : 'gpt-3.5-turbo',
-                'custom_prompt' => isset($_POST['custom_prompt']) ? sanitize_text_field($_POST['custom_prompt']) : ''
             );
             
             // Set the selected AI model
@@ -1587,6 +1586,15 @@ class WP_Tester_Ajax {
             $total_count = $database->get_crawl_results_count();
             $has_more = ($offset + $per_page) < $total_count;
             
+            // Ensure we don't return more results than actually exist
+            $actual_loaded = count($crawl_results);
+            
+            // Safety check: ensure total_loaded_so_far never exceeds total_count
+            $total_loaded_so_far = min($offset + $actual_loaded, $total_count);
+            
+            // Debug logging for pagination issues
+            error_log("WP Tester Crawl Pagination Debug: page={$page}, per_page={$per_page}, offset={$offset}, actual_loaded={$actual_loaded}, total_count={$total_count}, total_loaded_so_far={$total_loaded_so_far}");
+            
             // Generate HTML for the new results
             $html = '';
             if (!empty($crawl_results)) {
@@ -1651,7 +1659,8 @@ class WP_Tester_Ajax {
                 'has_more' => $has_more,
                 'current_page' => $page,
                 'total_count' => $total_count,
-                'loaded_count' => count($crawl_results)
+                'loaded_count' => $actual_loaded,
+                'total_loaded_so_far' => $total_loaded_so_far
             ));
             
         } catch (Exception $e) {

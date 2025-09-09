@@ -511,7 +511,8 @@ jQuery(document).ready(function($) {
                         // Update pagination info silently (no modal needed)
                         const paginationInfo = button.siblings('p');
                         if (paginationInfo.length) {
-                            paginationInfo.text(`Showing ${response.data.current_page * perPage} of ${response.data.total_count} pages`);
+                            const totalLoaded = response.data.total_loaded_so_far || Math.min(response.data.current_page * perPage, response.data.total_count);
+                            paginationInfo.text(`Showing ${totalLoaded} of ${response.data.total_count} pages`);
                         }
                     } else {
                         button.html('<span class="dashicons dashicons-yes-alt"></span> No More Pages').prop('disabled', true);

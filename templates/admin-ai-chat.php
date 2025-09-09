@@ -44,18 +44,18 @@ $ai_api_key = $settings['ai_api_key'] ?? '';
     </div>
 
     <!-- Main Content -->
-    <div class="wp-tester-content">
-        <div style="display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; height: calc(100vh - 200px);">
+    <div class="wp-tester-content" style="min-height: calc(100vh - 200px);">
+        <div style="display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; min-height: 600px;">
             
             <!-- Chat Interface -->
-            <div class="modern-card" style="display: flex; flex-direction: column; height: 100%;">
+            <div class="modern-card" style="display: flex; flex-direction: column; min-height: 600px;">
                 <div class="card-header">
                     <h2 class="card-title">AI Assistant</h2>
                     <div class="status-badge info" id="connection-status">Ready</div>
                 </div>
                 
                 <!-- Chat Messages -->
-                <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 8px; margin: 1rem; max-height: calc(100vh - 400px);">
+                <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 8px; margin: 1rem; min-height: 400px; max-height: 500px;">
                     <div class="chat-message ai-message">
                         <div class="message-avatar">
                             <span class="dashicons dashicons-robot" style="color: #00265e;"></span>
@@ -97,7 +97,7 @@ $ai_api_key = $settings['ai_api_key'] ?? '';
             </div>
             
             <!-- Sidebar -->
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; flex-direction: column; gap: 1rem; max-height: 600px; overflow-y: auto;">
                 
                 <!-- Quick Actions -->
                 <div class="modern-card">
@@ -176,6 +176,9 @@ $ai_api_key = $settings['ai_api_key'] ?? '';
                 
             </div>
         </div>
+        
+        <!-- Footer spacing -->
+        <div style="height: 2rem;"></div>
     </div>
 </div>
 
@@ -311,6 +314,33 @@ $ai_api_key = $settings['ai_api_key'] ?? '';
 
 #chat-messages::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+}
+
+/* Fix layout issues */
+.wp-tester-content {
+    padding-bottom: 2rem;
+}
+
+.modern-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+/* Ensure proper spacing */
+.ai-model-selector select {
+    min-width: 150px;
+}
+
+/* Fix textarea resizing */
+#chat-input {
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+/* Improve button styling */
+#send-message {
+    white-space: nowrap;
+    min-width: 80px;
 }
 </style>
 

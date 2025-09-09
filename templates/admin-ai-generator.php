@@ -99,18 +99,6 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                     </p>
                 </div>
                 
-                <!-- Custom Prompt -->
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; font-weight: 600; color: #00265e; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                        Custom Testing Prompt (Optional)
-                    </label>
-                    <textarea id="custom-prompt" name="custom_prompt" rows="4" 
-                              placeholder="Enter specific testing requirements, focus areas, or scenarios you want the AI to prioritize when generating flows. For example: 'Focus on testing form validation, error handling, and mobile responsiveness. Include edge cases like empty fields and special characters.'"
-                              style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem; resize: vertical; min-height: 100px;"></textarea>
-                    <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
-                        Provide specific testing requirements to guide AI flow generation. This helps create more targeted and relevant test scenarios.
-                    </p>
-                </div>
                 
                 <!-- Save Button -->
                 <button id="save-ai-config" class="modern-btn modern-btn-primary">
@@ -874,7 +862,6 @@ jQuery(document).ready(function($) {
         const maxFlowsPerPlugin = $('#max-flows-per-plugin').val() || 5;
         const aiProvider = $('#ai-provider').val() || 'free';
         const aiModel = $('#ai-model').val() || 'gpt-3.5-turbo';
-        const customPrompt = $('#custom-prompt').val() || '';
         const focusAreas = [];
         const selectedPlugins = [];
         
@@ -934,7 +921,6 @@ jQuery(document).ready(function($) {
                 focus_areas: focusAreas.join(','),
                 ai_provider: aiProvider,
                 ai_model: aiModel,
-                custom_prompt: customPrompt,
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             timeout: 300000, // 5 minutes
