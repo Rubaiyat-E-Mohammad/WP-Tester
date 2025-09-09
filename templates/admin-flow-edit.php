@@ -462,7 +462,9 @@ jQuery(document).ready(function($) {
     });
     
     // Cancel step
-    $('#cancel-step, .modal-close').on('click', function() {
+    $(document).on('click', '#cancel-step, .modal-close', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         $('#step-editor-modal').hide();
         currentStepIndex = null; // Reset currentStepIndex
     });
@@ -635,7 +637,9 @@ jQuery(document).ready(function($) {
         
         $('body').append(modalHtml);
         
-        $('.modal-close').on('click', function() {
+        $(document).on('click', '.modal-close', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             $('#error-modal').remove();
         });
     }

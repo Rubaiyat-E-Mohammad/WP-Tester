@@ -1683,8 +1683,6 @@ class WP_Tester_Ajax {
         
         try {
             $message = sanitize_text_field($_POST['message'] ?? '');
-            $model = sanitize_text_field($_POST['model'] ?? 'gpt-3.5-turbo');
-            $api_key = sanitize_text_field($_POST['api_key'] ?? '');
             $temperature = floatval($_POST['temperature'] ?? 0.7);
             $max_tokens = intval($_POST['max_tokens'] ?? 2000);
             $chat_history = $_POST['chat_history'] ?? array();
@@ -1693,8 +1691,13 @@ class WP_Tester_Ajax {
                 wp_send_json_error('Message is required');
             }
             
+            // Get model and API key from AI flow generator settings
+            $model = get_option('wp_tester_ai_model', 'fallback-generator');
+            $api_key = get_option('wp_tester_ai_api_key', '');
+            $api_provider = get_option('wp_tester_ai_api_provider', 'openai');
+            
             if (empty($model)) {
-                wp_send_json_error('AI model is required');
+                wp_send_json_error('No AI model configured. Please configure your AI model in the AI Flow Generator settings.');
             }
             
             // Check if model requires API key
@@ -1702,12 +1705,12 @@ class WP_Tester_Ajax {
             $model_config = $ai_generator->get_model_config($model);
             
             if (!$model_config) {
-                wp_send_json_error('Invalid AI model selected');
+                wp_send_json_error('Invalid AI model configured. Please check your AI Flow Generator settings.');
             }
             
             // For paid models, API key is required
             if (!$model_config['free_tier'] && empty($api_key)) {
-                wp_send_json_error('API key is required for paid models');
+                wp_send_json_error('API key is required for the configured model. Please add your API key in the AI Flow Generator settings.');
             }
             
             // Prepare the AI prompt

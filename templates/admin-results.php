@@ -1103,7 +1103,14 @@ jQuery(document).ready(function($) {
         modal.find('#export-date-to').val(today);
         modal.find('#export-date-from').val(lastMonth);
         
-        modal.find('.modal-close-btn, .modern-modal').on('click', function(e) {
+        modal.find('.modal-close-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            modal.remove();
+        });
+        
+        // Close modal when clicking on overlay
+        modal.on('click', function(e) {
             if (e.target === this) {
                 modal.remove();
             }

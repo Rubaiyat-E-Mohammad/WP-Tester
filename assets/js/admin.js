@@ -49,6 +49,9 @@ jQuery(document).ready(function($) {
         // Refresh buttons
         $(document).on('click', '.wp-tester-refresh', handleRefresh);
         
+        // Universal modal close handlers
+        initModalHandlers();
+        
         // Auto-refresh for running tests
         setInterval(checkTestStatus, 5000);
     }
@@ -591,6 +594,44 @@ jQuery(document).ready(function($) {
         var i = Math.floor(Math.log(bytes) / Math.log(k));
         
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    /**
+     * Initialize universal modal close handlers
+     */
+    function initModalHandlers() {
+        // Handle all modal close buttons
+        $(document).on('click', '.modal-close, .modal-close-btn, .wp-tester-modal-close, .wp-tester-popup-close', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const $button = $(this);
+            const $modal = $button.closest('.modal-overlay, .wp-tester-modal, .wp-tester-popup-overlay, .modern-modal');
+            
+            if ($modal.length) {
+                $modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Handle modal overlay clicks
+        $(document).on('click', '.modal-overlay, .wp-tester-modal, .wp-tester-popup-overlay, .modern-modal', function(e) {
+            if (e.target === this) {
+                $(this).fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Handle escape key
+        $(document).on('keydown', function(e) {
+            if (e.keyCode === 27) { // Escape key
+                $('.modal-overlay:visible, .wp-tester-modal:visible, .wp-tester-popup-overlay:visible, .modern-modal:visible').fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
     }
     
     // Initialize when document is ready

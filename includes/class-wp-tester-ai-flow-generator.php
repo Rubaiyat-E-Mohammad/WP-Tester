@@ -22,7 +22,7 @@ class WP_Tester_AI_Flow_Generator {
      */
     public function __construct() {
         $this->database = new WP_Tester_Database();
-        $this->ai_model = 'gpt-3.5-turbo'; // Default model
+        $this->ai_model = 'fallback-generator'; // Default model (truly free)
         $this->admin_pages = array();
         $this->frontend_pages = array();
         $this->available_models = $this->get_available_models();
@@ -33,12 +33,24 @@ class WP_Tester_AI_Flow_Generator {
      */
     private function get_available_models() {
         return array(
-            // FREE MODELS (No API Key Required)
+            // FREE MODELS (No API Key Required) - These are truly free models
+            'fallback-generator' => array(
+                'name' => 'Fallback Generator',
+                'provider' => 'WP Tester',
+                'type' => 'local',
+                'free_tier' => true,
+                'api_url' => '',
+                'max_tokens' => 1000,
+                'temperature' => 0.5,
+                'description' => 'Built-in fallback generator for basic flow creation without external API dependencies'
+            ),
+            
+            // PAID MODELS (API Key Required) - Including models with free tiers that still need API keys
             'gpt-3.5-turbo' => array(
                 'name' => 'GPT-3.5 Turbo',
                 'provider' => 'OpenAI',
                 'type' => 'chat',
-                'free_tier' => true,
+                'free_tier' => false, // Requires OpenAI API key
                 'api_url' => 'https://api.openai.com/v1/chat/completions',
                 'max_tokens' => 3000,
                 'temperature' => 0.2,
@@ -48,17 +60,17 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'Gemini Pro',
                 'provider' => 'Google',
                 'type' => 'chat',
-                'free_tier' => true,
+                'free_tier' => false, // Requires Google API key
                 'api_url' => 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
                 'max_tokens' => 3000,
                 'temperature' => 0.2,
-                'description' => 'Google\'s advanced AI model with free tier - excellent for detailed flow generation'
+                'description' => 'Google\'s advanced AI model - excellent for detailed flow generation'
             ),
             'gemini-pro-vision' => array(
                 'name' => 'Gemini Pro Vision',
                 'provider' => 'Google',
                 'type' => 'multimodal',
-                'free_tier' => true,
+                'free_tier' => false, // Requires Google API key
                 'api_url' => 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent',
                 'max_tokens' => 1000,
                 'temperature' => 0.7,
@@ -68,7 +80,7 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'Grok Beta',
                 'provider' => 'X.AI',
                 'type' => 'chat',
-                'free_tier' => true,
+                'free_tier' => false, // Requires X.AI API key
                 'api_url' => 'https://api.x.ai/v1/chat/completions',
                 'max_tokens' => 1000,
                 'temperature' => 0.7,
@@ -78,7 +90,7 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'DeepSeek Chat',
                 'provider' => 'DeepSeek',
                 'type' => 'chat',
-                'free_tier' => true,
+                'free_tier' => false, // Requires DeepSeek API key
                 'api_url' => 'https://api.deepseek.com/v1/chat/completions',
                 'max_tokens' => 2500,
                 'temperature' => 0.2,
@@ -88,7 +100,7 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'DeepSeek Coder',
                 'provider' => 'DeepSeek',
                 'type' => 'code',
-                'free_tier' => true,
+                'free_tier' => false, // Requires DeepSeek API key
                 'api_url' => 'https://api.deepseek.com/v1/chat/completions',
                 'max_tokens' => 2500,
                 'temperature' => 0.1,
@@ -98,7 +110,7 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'StarCoder',
                 'provider' => 'Hugging Face',
                 'type' => 'code',
-                'free_tier' => true,
+                'free_tier' => false, // Requires Hugging Face API key
                 'api_url' => 'https://api-inference.huggingface.co/models/bigcode/starcoder',
                 'max_tokens' => 1000,
                 'temperature' => 0.3,
@@ -108,7 +120,7 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'StarCoder2',
                 'provider' => 'Hugging Face',
                 'type' => 'code',
-                'free_tier' => true,
+                'free_tier' => false, // Requires Hugging Face API key
                 'api_url' => 'https://api-inference.huggingface.co/models/bigcode/starcoder2-15b',
                 'max_tokens' => 1000,
                 'temperature' => 0.3,
@@ -118,7 +130,7 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'SantaCoder',
                 'provider' => 'Hugging Face',
                 'type' => 'code',
-                'free_tier' => true,
+                'free_tier' => false, // Requires Hugging Face API key
                 'api_url' => 'https://api-inference.huggingface.co/models/bigcode/santacoder',
                 'max_tokens' => 1000,
                 'temperature' => 0.3,
@@ -128,7 +140,7 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'Code LLaMA',
                 'provider' => 'Meta',
                 'type' => 'code',
-                'free_tier' => true,
+                'free_tier' => false, // Requires Hugging Face API key
                 'api_url' => 'https://api-inference.huggingface.co/models/codellama/CodeLlama-7b-hf',
                 'max_tokens' => 1000,
                 'temperature' => 0.3,
@@ -138,7 +150,7 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'Claude 3 Haiku',
                 'provider' => 'Anthropic',
                 'type' => 'chat',
-                'free_tier' => true,
+                'free_tier' => false, // Requires Anthropic API key
                 'api_url' => 'https://api.anthropic.com/v1/messages',
                 'max_tokens' => 2500,
                 'temperature' => 0.2,
@@ -148,7 +160,7 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'Mistral 7B',
                 'provider' => 'Mistral AI',
                 'type' => 'chat',
-                'free_tier' => true,
+                'free_tier' => false, // Requires Mistral AI API key
                 'api_url' => 'https://api.mistral.ai/v1/chat/completions',
                 'max_tokens' => 1000,
                 'temperature' => 0.7,
@@ -158,7 +170,7 @@ class WP_Tester_AI_Flow_Generator {
                 'name' => 'CodeMistral',
                 'provider' => 'Mistral AI',
                 'type' => 'code',
-                'free_tier' => true,
+                'free_tier' => false, // Requires Mistral AI API key
                 'api_url' => 'https://api.mistral.ai/v1/chat/completions',
                 'max_tokens' => 1000,
                 'temperature' => 0.3,

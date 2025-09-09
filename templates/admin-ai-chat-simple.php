@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Get AI settings from AI flow generator
-$ai_model = get_option('wp_tester_ai_model', 'fallback-generator');
+$ai_model = get_option('wp_tester_ai_model', 'gpt-3.5-turbo');
 $ai_api_key = get_option('wp_tester_ai_api_key', '');
 $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
 ?>

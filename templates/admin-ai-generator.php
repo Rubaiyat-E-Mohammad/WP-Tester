@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 // Get current AI settings
 $ai_api_key = get_option('wp_tester_ai_api_key', '');
 $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
-$ai_model = get_option('wp_tester_ai_model', '');
+$ai_model = get_option('wp_tester_ai_model', 'fallback-generator');
 $has_api_key = !empty($ai_api_key);
 
 // Get site analysis

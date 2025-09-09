@@ -22,7 +22,14 @@
         });
         
         // Handle popup close
-        $(document).on('click', '.wp-tester-popup-overlay, .wp-tester-popup-close', function(e) {
+        $(document).on('click', '.wp-tester-popup-close', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closePluginDetailsPopup();
+        });
+        
+        // Handle overlay click
+        $(document).on('click', '.wp-tester-popup-overlay', function(e) {
             if (e.target === this) {
                 closePluginDetailsPopup();
             }

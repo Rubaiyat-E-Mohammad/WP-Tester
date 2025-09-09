@@ -451,7 +451,14 @@ jQuery(document).ready(function($) {
         
         $('body').append(modal);
         
-        modal.find('.modal-close-btn, .modern-modal').on('click', function(e) {
+        modal.find('.modal-close-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            modal.remove();
+        });
+        
+        // Close modal when clicking on overlay
+        modal.on('click', function(e) {
             if (e.target === this) {
                 modal.remove();
             }
@@ -483,7 +490,14 @@ jQuery(document).ready(function($) {
         
         $('body').append(modal);
         
-        modal.find('.modal-close-btn, .modern-modal').on('click', function(e) {
+        modal.find('.modal-close-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            modal.remove();
+        });
+        
+        // Close modal when clicking on overlay
+        modal.on('click', function(e) {
             if (e.target === this) {
                 modal.remove();
             }
@@ -538,7 +552,14 @@ jQuery(document).ready(function($) {
         
         $('body').append(modal);
         
-        modal.find('.modal-close-btn, .modern-modal').on('click', function(e) {
+        modal.find('.modal-close-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            modal.remove();
+        });
+        
+        // Close modal when clicking on overlay
+        modal.on('click', function(e) {
             if (e.target === this) {
                 modal.remove();
             }
