@@ -184,6 +184,15 @@ class WP_Tester_Admin {
             'wp-tester-ai-chat',
             array($this, 'ai_chat_page')
         );
+        
+        add_submenu_page(
+            'wp-tester',
+            __('Automation Suite', 'wp-tester'),
+            __('Automation Suite', 'wp-tester'),
+            'manage_options',
+            'wp-tester-automation-suite',
+            array($this, 'automation_suite_page')
+        );
     }
     
     /**
@@ -855,5 +864,12 @@ class WP_Tester_Admin {
      */
     public function ai_chat_page() {
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-ai-chat.php';
+    }
+    
+    /**
+     * Automation Suite page
+     */
+    public function automation_suite_page() {
+        include WP_TESTER_PLUGIN_DIR . 'templates/admin-automation-suite.php';
     }
 }

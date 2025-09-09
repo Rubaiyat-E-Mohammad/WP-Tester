@@ -134,6 +134,7 @@ class WP_Tester {
         require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-ajax.php';
         require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-woocommerce.php';
         require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-ai-flow-generator.php';
+        require_once WP_TESTER_PLUGIN_DIR . 'includes/class-wp-tester-automation-suite.php';
         require_once WP_TESTER_PLUGIN_DIR . 'includes/functions.php';
     }
     
@@ -156,6 +157,9 @@ class WP_Tester {
         $this->admin = new WP_Tester_Admin();
         
         // AJAX handler is initialized in init_ajax method
+        
+        // Initialize Automation Suite
+        new WP_Tester_Automation_Suite();
         
         // Initialize WooCommerce integration if active
         if (class_exists('WooCommerce')) {

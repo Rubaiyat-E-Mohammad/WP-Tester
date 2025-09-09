@@ -1855,7 +1855,7 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
     /**
      * Call AI API
      */
-    private function call_ai_api($model, $api_key, $messages, $temperature, $max_tokens) {
+    public function call_ai_api($model, $api_key, $messages, $temperature, $max_tokens) {
         // Get model configuration
         $ai_generator = new WP_Tester_AI_Flow_Generator();
         $model_config = $ai_generator->get_model_config($model);
