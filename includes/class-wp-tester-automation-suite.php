@@ -162,6 +162,13 @@ class WP_Tester_Automation_Suite {
             if ($ai_response['success']) {
                 // Parse AI response to extract files
                 $files = $this->parse_ai_generated_code($ai_response['content'], $framework);
+                
+                // If no files were parsed, create a basic fallback
+                if (empty($files)) {
+                    error_log('WP Tester: No files parsed from AI response, creating fallback files');
+                    $files = $this->create_fallback_files($framework, $flows_data);
+                }
+                
                 return array('success' => true, 'files' => $files);
             } else {
                 return array('success' => false, 'error' => $ai_response['error']);
@@ -315,6 +322,488 @@ IMPORTANT: Each file must be wrapped in ```filename.extension``` code blocks. Be
     }
     
     /**
+     * Create fallback files when AI parsing fails
+     */
+    private function create_fallback_files($framework, $flows_data) {
+        $files = array();
+        $framework_info = $this->supported_frameworks[$framework];
+        
+        // Create a basic test file for each flow
+        foreach ($flows_data as $index => $flow) {
+            $test_filename = 'test_' . ($index + 1) . '.' . $framework_info['extension'];
+            
+            switch ($framework) {
+                case 'playwright':
+                    $files[$test_filename] = $this->create_playwright_fallback($flow);
+                    break;
+                case 'selenium':
+                    $files[$test_filename] = $this->create_selenium_fallback($flow);
+                    break;
+                case 'cypress':
+                    $files[$test_filename] = $this->create_cypress_fallback($flow);
+                    break;
+                case 'puppeteer':
+                    $files[$test_filename] = $this->create_puppeteer_fallback($flow);
+                    break;
+                case 'vitest':
+                    $files[$test_filename] = $this->create_vitest_fallback($flow);
+                    break;
+            }
+        }
+        
+        // Add configuration files
+        switch ($framework) {
+            case 'playwright':
+                $files['playwright.config.ts'] = $this->get_playwright_config();
+                $files['package.json'] = $this->get_playwright_package_json();
+                break;
+            case 'selenium':
+                $files['pom.xml'] = $this->get_selenium_pom_xml();
+                break;
+            case 'cypress':
+                $files['cypress.config.js'] = $this->get_cypress_config();
+                $files['package.json'] = $this->get_cypress_package_json();
+                break;
+            case 'puppeteer':
+                $files['package.json'] = $this->get_puppeteer_package_json();
+                break;
+            case 'vitest':
+                $files['vitest.config.ts'] = $this->get_vitest_config();
+                $files['package.json'] = $this->get_vitest_package_json();
+                break;
+        }
+        
+        // Add README
+        $files['README.md'] = $this->get_readme_content($framework);
+        
+        return $files;
+    }
+    
+    /**
+     * Create Playwright fallback test
+     */
+    private function create_playwright_fallback($flow) {
+        $steps = $flow['steps'] ?? array();
+        $test_steps = '';
+        
+        foreach ($steps as $step) {
+            $action = $step['action'] ?? 'navigate';
+            $target = $step['target'] ?? '';
+            $value = $step['value'] ?? '';
+            
+            switch ($action) {
+                case 'navigate':
+                    $test_steps .= "  await page.goto('{$target}');\n";
+                    break;
+                case 'click':
+                    $test_steps .= "  await page.click('{$target}');\n";
+                    break;
+                case 'fill':
+                    $test_steps .= "  await page.fill('{$target}', '{$value}');\n";
+                    break;
+                case 'wait':
+                    $test_steps .= "  await page.waitForSelector('{$target}');\n";
+                    break;
+                case 'assert':
+                    $test_steps .= "  await expect(page.locator('{$target}')).toContainText('{$value}');\n";
+                    break;
+            }
+        }
+        
+        return "import { test, expect } from '@playwright/test';
+
+test('{$flow['name']}', async ({ page }) => {
+{$test_steps}
+});";
+    }
+    
+    /**
+     * Create Selenium fallback test
+     */
+    private function create_selenium_fallback($flow) {
+        $steps = $flow['steps'] ?? array();
+        $test_steps = '';
+        
+        foreach ($steps as $step) {
+            $action = $step['action'] ?? 'navigate';
+            $target = $step['target'] ?? '';
+            $value = $step['value'] ?? '';
+            
+            switch ($action) {
+                case 'navigate':
+                    $test_steps .= "        driver.get(\"{$target}\");\n";
+                    break;
+                case 'click':
+                    $test_steps .= "        driver.findElement(By.css(\"{$target}\")).click();\n";
+                    break;
+                case 'fill':
+                    $test_steps .= "        driver.findElement(By.css(\"{$target}\")).sendKeys(\"{$value}\");\n";
+                    break;
+                case 'wait':
+                    $test_steps .= "        WebDriverWait wait = new WebDriverWait(driver, 10);\n";
+                    $test_steps .= "        wait.until(ExpectedConditions.presenceOfElementLocated(By.css(\"{$target}\")));\n";
+                    break;
+                case 'assert':
+                    $test_steps .= "        assert driver.findElement(By.css(\"{$target}\")).getText().contains(\"{$value}\");\n";
+                    break;
+            }
+        }
+        
+        return "import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.By;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.testng.annotations.Test;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.AfterMethod;
+import static org.testng.Assert.*;
+
+public class {$this->sanitize_class_name($flow['name'])} {
+    private WebDriver driver;
+    
+    @BeforeMethod
+    public void setUp() {
+        driver = new ChromeDriver();
+    }
+    
+    @Test
+    public void test{$this->sanitize_class_name($flow['name'])}() {
+{$test_steps}
+    }
+    
+    @AfterMethod
+    public void tearDown() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+}";
+    }
+    
+    /**
+     * Create Cypress fallback test
+     */
+    private function create_cypress_fallback($flow) {
+        $steps = $flow['steps'] ?? array();
+        $test_steps = '';
+        
+        foreach ($steps as $step) {
+            $action = $step['action'] ?? 'navigate';
+            $target = $step['target'] ?? '';
+            $value = $step['value'] ?? '';
+            
+            switch ($action) {
+                case 'navigate':
+                    $test_steps .= "    cy.visit('{$target}');\n";
+                    break;
+                case 'click':
+                    $test_steps .= "    cy.get('{$target}').click();\n";
+                    break;
+                case 'fill':
+                    $test_steps .= "    cy.get('{$target}').type('{$value}');\n";
+                    break;
+                case 'wait':
+                    $test_steps .= "    cy.get('{$target}').should('be.visible');\n";
+                    break;
+                case 'assert':
+                    $test_steps .= "    cy.get('{$target}').should('contain', '{$value}');\n";
+                    break;
+            }
+        }
+        
+        return "describe('{$flow['name']}', () => {
+  it('should complete the test flow', () => {
+{$test_steps}
+  });
+});";
+    }
+    
+    /**
+     * Create Puppeteer fallback test
+     */
+    private function create_puppeteer_fallback($flow) {
+        $steps = $flow['steps'] ?? array();
+        $test_steps = '';
+        
+        foreach ($steps as $step) {
+            $action = $step['action'] ?? 'navigate';
+            $target = $step['target'] ?? '';
+            $value = $step['value'] ?? '';
+            
+            switch ($action) {
+                case 'navigate':
+                    $test_steps .= "  await page.goto('{$target}');\n";
+                    break;
+                case 'click':
+                    $test_steps .= "  await page.click('{$target}');\n";
+                    break;
+                case 'fill':
+                    $test_steps .= "  await page.type('{$target}', '{$value}');\n";
+                    break;
+                case 'wait':
+                    $test_steps .= "  await page.waitForSelector('{$target}');\n";
+                    break;
+                case 'assert':
+                    $test_steps .= "  const text = await page.\$eval('{$target}', el => el.textContent);\n";
+                    $test_steps .= "  expect(text).toContain('{$value}');\n";
+                    break;
+            }
+        }
+        
+        return "const puppeteer = require('puppeteer');
+
+describe('{$flow['name']}', () => {
+  let browser;
+  let page;
+  
+  beforeAll(async () => {
+    browser = await puppeteer.launch();
+    page = await browser.newPage();
+  });
+  
+  afterAll(async () => {
+    await browser.close();
+  });
+  
+  test('should complete the test flow', async () => {
+{$test_steps}
+  });
+});";
+    }
+    
+    /**
+     * Create Vitest fallback test
+     */
+    private function create_vitest_fallback($flow) {
+        $steps = $flow['steps'] ?? array();
+        $test_steps = '';
+        
+        foreach ($steps as $step) {
+            $action = $step['action'] ?? 'navigate';
+            $target = $step['target'] ?? '';
+            $value = $step['value'] ?? '';
+            
+            switch ($action) {
+                case 'navigate':
+                    $test_steps .= "    await page.goto('{$target}');\n";
+                    break;
+                case 'click':
+                    $test_steps .= "    await page.click('{$target}');\n";
+                    break;
+                case 'fill':
+                    $test_steps .= "    await page.fill('{$target}', '{$value}');\n";
+                    break;
+                case 'wait':
+                    $test_steps .= "    await page.waitForSelector('{$target}');\n";
+                    break;
+                case 'assert':
+                    $test_steps .= "    await expect(page.locator('{$target}')).toContainText('{$value}');\n";
+                    break;
+            }
+        }
+        
+        return "import { test, expect } from 'vitest';
+import { chromium } from 'playwright';
+
+test('{$flow['name']}', async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage();
+  
+  try {
+{$test_steps}
+  } finally {
+    await browser.close();
+  }
+});";
+    }
+    
+    /**
+     * Sanitize class name for Java
+     */
+    private function sanitize_class_name($name) {
+        return preg_replace('/[^a-zA-Z0-9_]/', '', $name);
+    }
+    
+    /**
+     * Get configuration files
+     */
+    private function get_playwright_config() {
+        return "import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'html',
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
+});";
+    }
+    
+    private function get_playwright_package_json() {
+        return '{
+  "name": "wp-tester-playwright-suite",
+  "version": "1.0.0",
+  "description": "Generated test automation suite",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}';
+    }
+    
+    private function get_selenium_pom_xml() {
+        return '<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <groupId>com.wptester</groupId>
+    <artifactId>automation-suite</artifactId>
+    <version>1.0.0</version>
+    
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+    
+    <dependencies>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.15.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>7.8.0</version>
+        </dependency>
+    </dependencies>
+</project>';
+    }
+    
+    private function get_cypress_config() {
+        return "const { defineConfig } = require('cypress');
+
+module.exports = defineConfig({
+  e2e: {
+    baseUrl: 'http://localhost:3000',
+    supportFile: false,
+    specPattern: 'cypress/e2e/**/*.cy.js',
+  },
+});";
+    }
+    
+    private function get_cypress_package_json() {
+        return '{
+  "name": "wp-tester-cypress-suite",
+  "version": "1.0.0",
+  "description": "Generated test automation suite",
+  "scripts": {
+    "test": "cypress run",
+    "test:open": "cypress open"
+  },
+  "devDependencies": {
+    "cypress": "^13.6.0"
+  }
+}';
+    }
+    
+    private function get_puppeteer_package_json() {
+        return '{
+  "name": "wp-tester-puppeteer-suite",
+  "version": "1.0.0",
+  "description": "Generated test automation suite",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "puppeteer": "^21.5.0",
+    "jest": "^29.7.0"
+  }
+}';
+    }
+    
+    private function get_vitest_config() {
+        return "import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'node',
+  },
+});";
+    }
+    
+    private function get_vitest_package_json() {
+        return '{
+  "name": "wp-tester-vitest-suite",
+  "version": "1.0.0",
+  "description": "Generated test automation suite",
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "playwright": "^1.40.0"
+  }
+}';
+    }
+    
+    private function get_readme_content($framework) {
+        $framework_info = $this->supported_frameworks[$framework];
+        
+        return "# WP Tester Automation Suite - {$framework_info['name']}
+
+This is a generated test automation suite for {$framework_info['name']}.
+
+## Setup
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Run tests:
+   ```bash
+   npm test
+   ```
+
+## Framework: {$framework_info['name']}
+- Language: {$framework_info['language']}
+- Description: {$framework_info['description']}
+
+## Generated Files
+
+This suite contains test files generated from your WordPress flows.
+
+## Notes
+
+- Update the base URLs in configuration files to match your environment
+- Modify selectors and assertions as needed for your specific site
+- Add additional test data and scenarios as required
+
+Generated by WP Tester Plugin
+";
+    }
+    
+    /**
      * Store generated suite temporarily
      */
     private function store_generated_suite($framework, $flows, $files) {
@@ -395,6 +884,15 @@ IMPORTANT: Each file must be wrapped in ```filename.extension``` code blocks. Be
             
             // Create ZIP file
             error_log('WP Tester: Creating ZIP file...');
+            
+            // Check if suite data has files
+            if (empty($suite_data['files'])) {
+                error_log('WP Tester: No files in suite data');
+                wp_send_json_error(array('message' => __('No files generated for the automation suite', 'wp-tester')));
+                return;
+            }
+            
+            error_log('WP Tester: Suite has ' . count($suite_data['files']) . ' files');
             $zip_file = $this->create_zip_file($suite_data);
             error_log('WP Tester: ZIP file result: ' . ($zip_file ? $zip_file : 'FAILED'));
             
@@ -469,12 +967,27 @@ IMPORTANT: Each file must be wrapped in ```filename.extension``` code blocks. Be
                 error_log('WP Tester: ZipArchive open result: ' . $result);
                 
                 if ($result === TRUE) {
+                    error_log('WP Tester: ZIP file opened successfully, adding files...');
                     $this->add_directory_to_zip($zip, $project_dir, '');
                     $zip->close();
                     error_log('WP Tester: ZIP file created successfully');
+                    
+                    // Verify ZIP file was created
+                    if (!file_exists($zip_path)) {
+                        error_log('WP Tester: ZIP file does not exist after creation');
+                        throw new Exception('ZIP file was not created');
+                    }
+                    
+                    $zip_size = filesize($zip_path);
+                    error_log('WP Tester: ZIP file size: ' . $zip_size . ' bytes');
+                    
+                    if ($zip_size === 0) {
+                        error_log('WP Tester: ZIP file is empty');
+                        throw new Exception('ZIP file is empty');
+                    }
                 } else {
-                    error_log('WP Tester: Failed to open ZIP file for writing');
-                    throw new Exception('Failed to create ZIP file');
+                    error_log('WP Tester: Failed to open ZIP file for writing. Error code: ' . $result);
+                    throw new Exception('Failed to create ZIP file. Error code: ' . $result);
                 }
             } else {
                 error_log('WP Tester: ZipArchive class not available');
