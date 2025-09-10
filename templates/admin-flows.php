@@ -338,6 +338,9 @@ jQuery(document).ready(function($) {
             } else {
                 $item.hide();
                 console.log('Hiding item:', flowName, 'Display:', $item.css('display')); // Debug log
+                // Force hide by setting style attribute directly
+                $item[0].style.setProperty('display', 'none', 'important');
+                console.log('Forced hide - Display:', $item.css('display')); // Debug log
             }
         });
         
@@ -345,6 +348,18 @@ jQuery(document).ready(function($) {
         const visibleCount = $items.filter(':visible').length;
         const totalCount = $items.length;
         updateFlowsCount(visibleCount, totalCount);
+        
+        // Debug: Check if items are still hidden after a short delay
+        setTimeout(function() {
+            console.log('After 100ms - checking visibility:');
+            $items.each(function() {
+                const $item = $(this);
+                const flowName = $item.find('h4').text().toLowerCase();
+                const isVisible = $item.is(':visible');
+                const display = $item.css('display');
+                console.log('Item:', flowName, 'Visible:', isVisible, 'Display:', display);
+            });
+        }, 100);
     }
     
     // Update flows count display
