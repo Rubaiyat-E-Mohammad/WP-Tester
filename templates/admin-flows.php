@@ -320,8 +320,6 @@ jQuery(document).ready(function($) {
             const flowType = $item.find('p').text().toLowerCase();
             const flowStatus = $item.find('.status-badge').text().toLowerCase();
             
-            console.log('Flow name:', flowName, 'Flow type:', flowType); // Debug log
-            
             const matchesSearch = searchTerm === '' || 
                 flowName.includes(searchTerm) || 
                 flowType.includes(searchTerm) || 
@@ -330,10 +328,16 @@ jQuery(document).ready(function($) {
             const matchesType = selectedType === '' || $item.attr('data-flow-type') === selectedType;
             const matchesStatus = selectedStatus === '' || $item.attr('data-flow-status') === selectedStatus;
             
-            if (matchesSearch && matchesType && matchesStatus) {
+            const shouldShow = matchesSearch && matchesType && matchesStatus;
+            
+            console.log('Flow:', flowName, 'Search match:', matchesSearch, 'Type match:', matchesType, 'Status match:', matchesStatus, 'Should show:', shouldShow); // Debug log
+            
+            if (shouldShow) {
                 $item.show();
+                console.log('Showing item:', flowName, 'Display:', $item.css('display')); // Debug log
             } else {
                 $item.hide();
+                console.log('Hiding item:', flowName, 'Display:', $item.css('display')); // Debug log
             }
         });
         
