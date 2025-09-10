@@ -147,7 +147,7 @@ $settings = get_option('wp_tester_settings', array());
                     <div style="position: relative;">
                         <input type="text" id="search-crawled-pages" placeholder="Search pages by URL, title, or content..." 
                                style="padding: 0.5rem 0.5rem 0.5rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem; width: 300px; outline: none;"
-                               onkeyup="console.log('Key pressed:', this.value); filterCrawledPages();">
+                               onkeyup="filterCrawledPages();">
                         <span class="dashicons dashicons-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 16px;"></span>
                     </div>
                     <select id="filter-page-type" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem;">
@@ -385,20 +385,15 @@ jQuery(document).ready(function($) {
 
     // Search functionality for crawled pages
     window.filterCrawledPages = function() {
-        console.log('filterCrawledPages called'); // Debug log
         const searchTerm = $('#search-crawled-pages').val().toLowerCase();
         const selectedType = $('#filter-page-type').val();
         const $items = $('.modern-list-item');
-        
-        console.log('Search term:', searchTerm, 'Items found:', $items.length); // Debug log
         
         $items.each(function() {
             const $item = $(this);
             const title = $item.find('h4 a').text().toLowerCase();
             const description = $item.find('p').text().toLowerCase();
             const url = $item.find('h4 a').attr('href') || '';
-            
-            console.log('Item title:', title, 'Description:', description); // Debug log
             
             const matchesSearch = searchTerm === '' || 
                 title.includes(searchTerm) || 

@@ -154,7 +154,7 @@ if (!defined('ABSPATH')) {
                     <div style="position: relative;">
                         <input type="text" id="search-flows" placeholder="Search flows by name, type, or description..." 
                                style="padding: 0.5rem 0.5rem 0.5rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem; width: 300px; outline: none;"
-                               onkeyup="console.log('Key pressed in flows search:', this.value); filterFlows();">
+                               onkeyup="filterFlows();">
                         <span class="dashicons dashicons-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 16px;"></span>
                     </div>
                     <select id="filter-flow-type" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem;">
@@ -306,13 +306,10 @@ jQuery(document).ready(function($) {
 
     // Search and filter functionality for flows
     window.filterFlows = function() {
-        console.log('filterFlows called'); // Debug log
         const searchTerm = $('#search-flows').val().toLowerCase();
         const selectedType = $('#filter-flow-type').val();
         const selectedStatus = $('#filter-flow-status').val();
         const $items = $('.modern-list-item');
-        
-        console.log('Search term:', searchTerm, 'Items found:', $items.length); // Debug log
         
         $items.each(function() {
             const $item = $(this);
@@ -330,19 +327,10 @@ jQuery(document).ready(function($) {
             
             const shouldShow = matchesSearch && matchesType && matchesStatus;
             
-            console.log('Flow:', flowName, 'Search match:', matchesSearch, 'Type match:', matchesType, 'Status match:', matchesStatus, 'Should show:', shouldShow); // Debug log
-            
             if (shouldShow) {
                 $item.show();
-                $item.css('background-color', 'lightgreen'); // Visual indicator
-                console.log('Showing item:', flowName, 'Display:', $item.css('display')); // Debug log
             } else {
                 $item.hide();
-                $item.css('background-color', 'lightcoral'); // Visual indicator
-                console.log('Hiding item:', flowName, 'Display:', $item.css('display')); // Debug log
-                // Force hide by setting style attribute directly
-                $item[0].style.setProperty('display', 'none', 'important');
-                console.log('Forced hide - Display:', $item.css('display')); // Debug log
             }
         });
         
@@ -350,18 +338,6 @@ jQuery(document).ready(function($) {
         const visibleCount = $items.filter(':visible').length;
         const totalCount = $items.length;
         updateFlowsCount(visibleCount, totalCount);
-        
-        // Debug: Check if items are still hidden after a short delay
-        setTimeout(function() {
-            console.log('After 100ms - checking visibility:');
-            $items.each(function() {
-                const $item = $(this);
-                const flowName = $item.find('h4').text().toLowerCase();
-                const isVisible = $item.is(':visible');
-                const display = $item.css('display');
-                console.log('Item:', flowName, 'Visible:', isVisible, 'Display:', display);
-            });
-        }, 100);
     }
     
     // Update flows count display

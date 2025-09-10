@@ -427,7 +427,7 @@ jQuery(document).ready(function($) {
             const status = $item.find('.status-badge').text().toLowerCase();
             const description = $item.find('p').text().toLowerCase();
             
-            console.log('Flow name:', flowName, 'Status:', status); // Debug log
+            console.log('Flow name:', flowName, 'Status:', status, 'Description:', description); // Debug log
             
             const matchesSearch = searchTerm === '' || 
                 flowName.includes(searchTerm) || 
@@ -436,7 +436,10 @@ jQuery(document).ready(function($) {
             
             const matchesStatus = selectedStatus === '' || $item.attr('data-status') === selectedStatus;
             
-            if (matchesSearch && matchesStatus) {
+            const shouldShow = matchesSearch && matchesStatus;
+            console.log('Should show:', shouldShow, 'Search match:', matchesSearch, 'Status match:', matchesStatus); // Debug log
+            
+            if (shouldShow) {
                 $item.show();
             } else {
                 $item.hide();
