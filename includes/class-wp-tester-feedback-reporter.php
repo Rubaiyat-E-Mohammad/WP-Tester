@@ -141,9 +141,9 @@ class WP_Tester_Feedback_Reporter {
                     
                     // Extract success indicators
                     if (isset($log_entry['data'])) {
-                        if (isset($log_entry['data']['execution_time'])) {
-                            $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
-                        }
+                    if (isset($log_entry['data']['execution_time'])) {
+                        $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
+                    }
                         if (isset($log_entry['data']['success_indicators'])) {
                             $step_details[$current_step]['success_indicators'] = $log_entry['data']['success_indicators'];
                         }
@@ -167,12 +167,12 @@ class WP_Tester_Feedback_Reporter {
                     
                     // Extract detailed error information
                     if (isset($log_entry['data'])) {
-                        if (isset($log_entry['data']['execution_time'])) {
-                            $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
-                        }
-                        if (isset($log_entry['data']['error'])) {
-                            $step_details[$current_step]['error_details'] = $log_entry['data']['error'];
-                        }
+                    if (isset($log_entry['data']['execution_time'])) {
+                        $step_details[$current_step]['execution_time'] = $log_entry['data']['execution_time'];
+                    }
+                    if (isset($log_entry['data']['error'])) {
+                        $step_details[$current_step]['error_details'] = $log_entry['data']['error'];
+                    }
                         if (isset($log_entry['data']['error_type'])) {
                             $step_details[$current_step]['error_type'] = $log_entry['data']['error_type'];
                         }

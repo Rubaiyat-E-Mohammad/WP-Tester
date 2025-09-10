@@ -761,6 +761,19 @@ jQuery(document).ready(function($) {
                 });
             }
         });
+        
+        // Handle keyboard events (Enter/Return to close)
+        modal.on('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === 'Return') {
+                e.preventDefault();
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Focus the modal for keyboard events
+        modal.focus();
     }
 
     function showErrorModal(title, message) {
@@ -802,6 +815,19 @@ jQuery(document).ready(function($) {
                 });
             }
         });
+        
+        // Handle keyboard events (Enter/Return to close)
+        modal.on('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === 'Return') {
+                e.preventDefault();
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Focus the modal for keyboard events
+        modal.focus();
     }
 
     // Cleanup modal functions

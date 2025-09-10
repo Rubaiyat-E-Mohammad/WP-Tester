@@ -327,16 +327,26 @@ $settings = get_option('wp_tester_settings', array());
                     </h4>
                     <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
                         <?php 
-                        $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
-                        if ($next_crawl) {
-                            echo date('M j, Y H:i', $next_crawl);
+                        $settings = get_option('wp_tester_settings', array());
+                        $frequency = $settings['crawl_frequency'] ?? 'never';
+                        
+                        if ($frequency === 'never') {
+                            // For 'never' frequency, ensure no scheduled events exist
+                            $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
+                            if ($next_crawl) {
+                                // Clear any existing scheduled events
+                                wp_clear_scheduled_hook('wp_tester_daily_crawl');
+                                echo '<span style="color: #dc3545;">Cleared scheduled crawl</span>';
+                            } else {
+                                echo '<span style="color: #6c757d;">Not scheduled (Manual Only)</span>';
+                            }
                         } else {
-                            // Try to schedule if not scheduled
-                            $settings = get_option('wp_tester_settings', array());
-                            $frequency = $settings['crawl_frequency'] ?? 'never';
-                            
-                            if ($frequency !== 'never') {
-                                // Force reschedule
+                            // For other frequencies, check if scheduled
+                            $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
+                            if ($next_crawl) {
+                                echo '<span style="color: #28a745;">' . date('M j, Y H:i', $next_crawl) . '</span>';
+                            } else {
+                                // Try to schedule if not scheduled
                                 wp_clear_scheduled_hook('wp_tester_daily_crawl');
                                 if ($frequency === 'daily' && isset($settings['crawl_schedule_time']) && isset($settings['crawl_schedule_days'])) {
                                     // Use custom daily scheduling - schedule for next occurrence
@@ -349,9 +359,11 @@ $settings = get_option('wp_tester_settings', array());
                                 
                                 // Check again
                                 $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
-                                echo $next_crawl ? date('M j, Y H:i', $next_crawl) : 'Failed to schedule';
-                            } else {
-                                echo 'Not scheduled (Manual Only)';
+                                if ($next_crawl) {
+                                    echo '<span style="color: #28a745;">' . date('M j, Y H:i', $next_crawl) . '</span>';
+                                } else {
+                                    echo '<span style="color: #dc3545;">Failed to schedule</span>';
+                                }
                             }
                         }
                         ?>
@@ -666,11 +678,13 @@ jQuery(document).ready(function($) {
     }
     
     function showSuccessModal(title, message) {
+        $('[id^="wp-tester-success-modal"]').remove(); // Remove existing
+        const modalId = 'wp-tester-success-modal-' + Date.now();
         const modal = $(`
-            <div id="wp-tester-success-modal" class="wp-tester-modal-overlay">
-                <div class="wp-tester-modal wp-tester-modal-success">
+            <div id="${modalId}" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
                     <div class="wp-tester-modal-header">
-                        <div class="wp-tester-modal-icon">
+                        <div class="wp-tester-modal-icon" style="background: #d1fae5; color: #065f46;">
                             <span class="dashicons dashicons-yes-alt"></span>
                         </div>
                         <h3>${title}</h3>
@@ -679,21 +693,52 @@ jQuery(document).ready(function($) {
                         <p>${message}</p>
                     </div>
                     <div class="wp-tester-modal-footer">
-                        <button class="modern-btn modern-btn-primary" onclick="$('#wp-tester-success-modal').fadeOut(300, function(){$(this).remove();})">OK</button>
+                        <button class="modern-btn modern-btn-primary wp-tester-modal-close" data-modal-id="${modalId}">OK</button>
                     </div>
                 </div>
             </div>
         `);
         $('body').append(modal);
         modal.fadeIn(300);
+        
+        // Handle close button
+        modal.find('.wp-tester-modal-close').on('click', function() {
+            modal.fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Handle clicking outside modal
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Handle keyboard events (Enter/Return to close)
+        modal.on('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === 'Return') {
+                e.preventDefault();
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Focus the modal for keyboard events
+        modal.focus();
     }
     
     function showErrorModal(title, message) {
+        $('[id^="wp-tester-error-modal"]').remove(); // Remove existing
+        const modalId = 'wp-tester-error-modal-' + Date.now();
         const modal = $(`
-            <div id="wp-tester-error-modal" class="wp-tester-modal-overlay">
-                <div class="wp-tester-modal wp-tester-modal-error">
+            <div id="${modalId}" class="wp-tester-modal-overlay">
+                <div class="wp-tester-modal">
                     <div class="wp-tester-modal-header">
-                        <div class="wp-tester-modal-icon">
+                        <div class="wp-tester-modal-icon" style="background: #fecaca; color: #991b1b;">
                             <span class="dashicons dashicons-dismiss"></span>
                         </div>
                         <h3>${title}</h3>
@@ -702,13 +747,42 @@ jQuery(document).ready(function($) {
                         <p>${message}</p>
                     </div>
                     <div class="wp-tester-modal-footer">
-                        <button class="modern-btn modern-btn-secondary" onclick="$('#wp-tester-error-modal').fadeOut(300, function(){$(this).remove();})">Close</button>
+                        <button class="modern-btn modern-btn-secondary wp-tester-modal-close" data-modal-id="${modalId}">Close</button>
                     </div>
                 </div>
             </div>
         `);
         $('body').append(modal);
         modal.fadeIn(300);
+        
+        // Handle close button
+        modal.find('.wp-tester-modal-close').on('click', function() {
+            modal.fadeOut(300, function() {
+                $(this).remove();
+            });
+        });
+        
+        // Handle clicking outside modal
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Handle keyboard events (Enter/Return to close)
+        modal.on('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === 'Return') {
+                e.preventDefault();
+                modal.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Focus the modal for keyboard events
+        modal.focus();
     }
     
     // Bulk selection functionality for crawls

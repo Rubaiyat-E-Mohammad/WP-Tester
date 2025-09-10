@@ -165,11 +165,17 @@ class WP_Tester_Scheduler {
      * Reschedule events when settings change
      */
     public function reschedule_events($old_value, $new_value) {
-        // Clear existing scheduled crawl
+        // Clear existing scheduled crawl - use more aggressive clearing
         wp_clear_scheduled_hook('wp_tester_daily_crawl');
+        
+        // Also clear any specific scheduled events using the force clear method
+        $this->force_clear_crawl_events();
         
         // Reschedule based on new frequency
         $frequency = isset($new_value['crawl_frequency']) ? $new_value['crawl_frequency'] : 'never';
+        
+        // Log the frequency change for debugging
+        error_log("WP Tester: Crawl frequency changed to: " . $frequency);
         
         // Only schedule if frequency is not 'never'
         if ($frequency !== 'never') {
@@ -182,6 +188,9 @@ class WP_Tester_Scheduler {
                     wp_schedule_event(time(), $frequency, 'wp_tester_daily_crawl');
                 }
             }
+            error_log("WP Tester: Crawl scheduled for frequency: " . $frequency);
+        } else {
+            error_log("WP Tester: Crawl frequency set to 'never' - no scheduling");
         }
     }
     
@@ -324,6 +333,38 @@ class WP_Tester_Scheduler {
         wp_clear_scheduled_hook('wp_tester_daily_crawl');
         wp_clear_scheduled_hook('wp_tester_test_flows');
         wp_clear_scheduled_hook('wp_tester_cleanup');
+    }
+    
+    /**
+     * Force clear crawl events (useful for debugging)
+     */
+    public function force_clear_crawl_events() {
+        try {
+            // Clear all instances of the crawl hook
+            wp_clear_scheduled_hook('wp_tester_daily_crawl');
+            
+            // Also try to unschedule any specific events using WordPress cron functions
+            $cron = get_option('cron');
+            if ($cron && is_array($cron)) {
+                foreach ($cron as $timestamp => $hooks) {
+                    if (isset($hooks['wp_tester_daily_crawl']) && is_array($hooks['wp_tester_daily_crawl'])) {
+                        foreach ($hooks['wp_tester_daily_crawl'] as $key => $event) {
+                            if (isset($event['args'])) {
+                                wp_unschedule_event($timestamp, 'wp_tester_daily_crawl', $event['args']);
+                            } else {
+                                // If no args, try to unschedule without args
+                                wp_unschedule_event($timestamp, 'wp_tester_daily_crawl');
+                            }
+                        }
+                    }
+                }
+            }
+            
+            error_log("WP Tester: Force cleared all crawl events");
+            
+        } catch (Exception $e) {
+            error_log("WP Tester: Error clearing crawl events - " . $e->getMessage());
+        }
     }
     
     /**
