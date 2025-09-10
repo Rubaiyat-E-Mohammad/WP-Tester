@@ -150,7 +150,24 @@ if (!defined('ABSPATH')) {
         <div class="modern-card">
             <div class="card-header">
                 <h2 class="card-title">All Flows</h2>
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div style="position: relative;">
+                        <input type="text" id="search-flows" placeholder="Search flows by name, type, or description..." 
+                               style="padding: 0.5rem 0.5rem 0.5rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem; width: 300px; outline: none;"
+                               onkeyup="filterFlows()">
+                        <span class="dashicons dashicons-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 16px;"></span>
+                    </div>
+                    <select id="filter-flow-type" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem;">
+                        <option value="">All Types</option>
+                        <option value="manual">Manual</option>
+                        <option value="ai_generated">AI Generated</option>
+                        <option value="discovered">Discovered</option>
+                    </select>
+                    <select id="filter-flow-status" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem;">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
                     <button class="modern-btn modern-btn-secondary modern-btn-small" id="bulk-test-flows">
                         <span class="dashicons dashicons-controls-play"></span>
                         Test All
@@ -286,6 +303,63 @@ jQuery(document).ready(function($) {
     if (typeof ajaxurl === 'undefined') {
         ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
     }
+
+    // Search and filter functionality for flows
+    function filterFlows() {
+        const searchTerm = $('#search-flows').val().toLowerCase();
+        const selectedType = $('#filter-flow-type').val();
+        const selectedStatus = $('#filter-flow-status').val();
+        const $items = $('.modern-list-item');
+        
+        $items.each(function() {
+            const $item = $(this);
+            const flowName = $item.find('.item-title').text().toLowerCase();
+            const flowType = $item.find('.flow-type-badge').text().toLowerCase();
+            const flowStatus = $item.find('.status-badge').text().toLowerCase();
+            const description = $item.find('.item-description').text().toLowerCase();
+            
+            const matchesSearch = searchTerm === '' || 
+                flowName.includes(searchTerm) || 
+                flowType.includes(searchTerm) || 
+                flowStatus.includes(searchTerm) ||
+                description.includes(searchTerm);
+            
+            const matchesType = selectedType === '' || $item.attr('data-flow-type') === selectedType;
+            const matchesStatus = selectedStatus === '' || $item.attr('data-flow-status') === selectedStatus;
+            
+            if (matchesSearch && matchesType && matchesStatus) {
+                $item.show();
+            } else {
+                $item.hide();
+            }
+        });
+        
+        // Update results count
+        const visibleCount = $items.filter(':visible').length;
+        const totalCount = $items.length;
+        updateFlowsCount(visibleCount, totalCount);
+    }
+    
+    // Update flows count display
+    function updateFlowsCount(visible, total) {
+        let countText = `${visible} of ${total} flows`;
+        if (visible === total) {
+            countText = `${total} flows`;
+        }
+        
+        // Update or create results count display
+        let $countDisplay = $('.flows-count');
+        if ($countDisplay.length === 0) {
+            $countDisplay = $('<div class="flows-count" style="padding: 0.5rem 1rem; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 0.8125rem; color: #64748b;"></div>');
+            $('.modern-list').append($countDisplay);
+        }
+        $countDisplay.text(countText);
+    }
+
+    // Filter change handlers
+    $('#filter-flow-type, #filter-flow-status').on('change', function() {
+        filterFlows();
+    });
     // Discover flows functionality
     $('#wp-tester-discover-flows, #discover-flows-btn').on('click', function(e) {
         e.preventDefault();

@@ -143,7 +143,13 @@ $settings = get_option('wp_tester_settings', array());
         <div class="modern-card">
             <div class="card-header">
                 <h2 class="card-title">Crawled Pages</h2>
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div style="position: relative;">
+                        <input type="text" id="search-crawled-pages" placeholder="Search pages by URL, title, or content..." 
+                               style="padding: 0.5rem 0.5rem 0.5rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem; width: 300px; outline: none;"
+                               onkeyup="filterCrawledPages()">
+                        <span class="dashicons dashicons-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 16px;"></span>
+                    </div>
                     <select id="filter-page-type" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem;">
                         <option value="">All Types</option>
                         <option value="page">Pages</option>
@@ -374,16 +380,56 @@ jQuery(document).ready(function($) {
     }
     // Filter functionality
     $('#filter-page-type').on('change', function() {
-        const selectedType = $(this).val();
+        filterCrawledPages(); // Use the combined search and filter function
+    });
+
+    // Search functionality for crawled pages
+    function filterCrawledPages() {
+        const searchTerm = $('#search-crawled-pages').val().toLowerCase();
+        const selectedType = $('#filter-page-type').val();
         const $items = $('.modern-list-item');
         
-        if (selectedType === '') {
-            $items.show();
-        } else {
-            $items.hide();
-            $items.filter('[data-page-type="' + selectedType + '"]').show();
+        $items.each(function() {
+            const $item = $(this);
+            const url = $item.find('.item-title a').text().toLowerCase();
+            const title = $item.find('.item-meta').text().toLowerCase();
+            const content = $item.find('.item-description').text().toLowerCase();
+            
+            const matchesSearch = searchTerm === '' || 
+                url.includes(searchTerm) || 
+                title.includes(searchTerm) || 
+                content.includes(searchTerm);
+            
+            const matchesType = selectedType === '' || $item.attr('data-page-type') === selectedType;
+            
+            if (matchesSearch && matchesType) {
+                $item.show();
+            } else {
+                $item.hide();
+            }
+        });
+        
+        // Update results count
+        const visibleCount = $items.filter(':visible').length;
+        const totalCount = $items.length;
+        updateResultsCount(visibleCount, totalCount);
+    }
+    
+    // Update results count display
+    function updateResultsCount(visible, total) {
+        let countText = `${visible} of ${total} pages`;
+        if (visible === total) {
+            countText = `${total} pages`;
         }
-    });
+        
+        // Update or create results count display
+        let $countDisplay = $('.results-count');
+        if ($countDisplay.length === 0) {
+            $countDisplay = $('<div class="results-count" style="padding: 0.5rem 1rem; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 0.8125rem; color: #64748b;"></div>');
+            $('.modern-list').append($countDisplay);
+        }
+        $countDisplay.text(countText);
+    }
 
     // Start crawl functionality
     $('#start-crawl, #start-first-crawl').on('click', function(e) {

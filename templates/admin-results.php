@@ -235,7 +235,13 @@ if (!defined('ABSPATH')) {
         <div class="modern-card">
             <div class="card-header">
                 <h2 class="card-title">Recent Test Results</h2>
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div style="position: relative;">
+                        <input type="text" id="search-test-results" placeholder="Search by flow name, status, or date..." 
+                               style="padding: 0.5rem 0.5rem 0.5rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem; width: 300px; outline: none;"
+                               onkeyup="filterTestResults()">
+                        <span class="dashicons dashicons-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 16px;"></span>
+                    </div>
                     <select id="filter-status" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem;">
                         <option value="">All Status</option>
                         <option value="passed">Passed</option>
@@ -403,16 +409,58 @@ if (!defined('ABSPATH')) {
 jQuery(document).ready(function($) {
     // Filter functionality
     $('#filter-status').on('change', function() {
-        const selectedStatus = $(this).val();
+        filterTestResults(); // Use the combined search and filter function
+    });
+
+    // Search functionality for test results
+    function filterTestResults() {
+        const searchTerm = $('#search-test-results').val().toLowerCase();
+        const selectedStatus = $('#filter-status').val();
         const $items = $('.modern-list-item');
         
-        if (selectedStatus === '') {
-            $items.show();
-        } else {
-            $items.hide();
-            $items.filter('[data-status="' + selectedStatus + '"]').show();
+        $items.each(function() {
+            const $item = $(this);
+            const flowName = $item.find('.item-title').text().toLowerCase();
+            const status = $item.find('.status-badge').text().toLowerCase();
+            const date = $item.find('.item-meta').text().toLowerCase();
+            const description = $item.find('.item-description').text().toLowerCase();
+            
+            const matchesSearch = searchTerm === '' || 
+                flowName.includes(searchTerm) || 
+                status.includes(searchTerm) || 
+                date.includes(searchTerm) ||
+                description.includes(searchTerm);
+            
+            const matchesStatus = selectedStatus === '' || $item.attr('data-status') === selectedStatus;
+            
+            if (matchesSearch && matchesStatus) {
+                $item.show();
+            } else {
+                $item.hide();
+            }
+        });
+        
+        // Update results count
+        const visibleCount = $items.filter(':visible').length;
+        const totalCount = $items.length;
+        updateTestResultsCount(visibleCount, totalCount);
+    }
+    
+    // Update test results count display
+    function updateTestResultsCount(visible, total) {
+        let countText = `${visible} of ${total} results`;
+        if (visible === total) {
+            countText = `${total} results`;
         }
-    });
+        
+        // Update or create results count display
+        let $countDisplay = $('.test-results-count');
+        if ($countDisplay.length === 0) {
+            $countDisplay = $('<div class="test-results-count" style="padding: 0.5rem 1rem; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 0.8125rem; color: #64748b;"></div>');
+            $('.modern-list').append($countDisplay);
+        }
+        $countDisplay.text(countText);
+    }
 
     // Refresh results
     $('#refresh-results').on('click', function(e) {
