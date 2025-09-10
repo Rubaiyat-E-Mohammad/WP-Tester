@@ -29,23 +29,24 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                     <span id="current-ai-model" style="padding: 0.5rem 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem; color: #00265e; font-weight: 500;">
                         <?php echo esc_html($ai_model); ?>
                     </span>
-                    <button type="button" onclick="window.location.href='<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>'" class="modern-btn modern-btn-secondary modern-btn-small" style="
+                    <button type="button" onclick="window.location.href='<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>'" class="modern-btn modern-btn-warning modern-btn-small" style="
                         display: inline-flex !important;
                         align-items: center !important;
                         gap: 0.5rem !important;
                         padding: 0.5rem 0.75rem !important;
                         border-radius: 8px !important;
-                        background: #f8fafc !important;
-                        color: #374151 !important;
-                        border: 1px solid #e2e8f0 !important;
+                        background: #f59e0b !important;
+                        color: white !important;
+                        border: 1px solid #d97706 !important;
                         font-size: 0.8125rem !important;
                         font-weight: 500 !important;
                         cursor: pointer !important;
                         transition: all 0.2s ease !important;
                         text-decoration: none !important;
                         line-height: 1 !important;
-                    ">
-                        <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important;"></span>
+                        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1) !important;
+                    " onmouseover="this.style.background='#d97706'; this.style.borderColor='#b45309';" onmouseout="this.style.background='#f59e0b'; this.style.borderColor='#d97706';">
+                        <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important; color: white !important;"></span>
                         Change Model
                     </button>
                 </div>
