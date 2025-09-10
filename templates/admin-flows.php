@@ -172,6 +172,10 @@ if (!defined('ABSPATH')) {
                         <span class="dashicons dashicons-controls-play"></span>
                         Test All
                     </button>
+                    <button class="modern-btn modern-btn-secondary modern-btn-small" id="export-flows">
+                        <span class="dashicons dashicons-download"></span>
+                        Export
+                    </button>
                     <button class="modern-btn modern-btn-primary modern-btn-small" id="add-new-flow">
                         <span class="dashicons dashicons-plus-alt"></span>
                         Add New
@@ -887,6 +891,141 @@ jQuery(document).ready(function($) {
             }
         });
     });
+    
+    // Export flows
+    $('#export-flows').on('click', function(e) {
+        e.preventDefault();
+        showFlowsExportModal();
+    });
+    
+    // Export flows modal function
+    function showFlowsExportModal() {
+        const modalId = 'flows-export-modal-' + Date.now();
+        const modal = $(`
+            <div id="${modalId}" class="modern-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <div style="width: 60px; height: 60px; background: #00265e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                            <span class="dashicons dashicons-download" style="color: white; font-size: 30px;"></span>
+                        </div>
+                        <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">Export Flows</h3>
+                    </div>
+                    <div style="color: #64748b; line-height: 1.6; margin-bottom: 2rem; text-align: center;">
+                        Choose export format and options for your flows.<br>
+                        <small style="color: #9ca3af;">HTML Report can be opened in any browser and printed to PDF.</small>
+                    </div>
+                    <div style="margin-bottom: 2rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Export Format:</label>
+                            <select id="flows-export-format" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                                <option value="json">JSON (Complete Data)</option>
+                                <option value="csv">CSV (Spreadsheet)</option>
+                                <option value="pdf">HTML Report (Printable)</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Flow Type Filter:</label>
+                            <select id="flows-export-type" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                                <option value="">All Types</option>
+                                <option value="manual">Manual</option>
+                                <option value="ai_generated">AI Generated</option>
+                                <option value="discovered">Discovered</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Status Filter:</label>
+                            <select id="flows-export-status" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Range:</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <input type="date" id="flows-export-date-from" style="padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+                                <input type="date" id="flows-export-date-to" style="padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button class="modal-close-btn" style="background: #6b7280; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            Cancel
+                        </button>
+                        <button id="flows-export-confirm" style="background: #00265e; color: white; border: none; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(modal);
+        
+        // Set default dates
+        const today = new Date().toISOString().split('T')[0];
+        const lastMonth = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        modal.find('#flows-export-date-to').val(today);
+        modal.find('#flows-export-date-from').val(lastMonth);
+        
+        modal.find('.modal-close-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            modal.remove();
+        });
+        
+        // Close modal when clicking on overlay
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                modal.remove();
+            }
+        });
+        
+        modal.find('#flows-export-confirm').on('click', function() {
+            const format = modal.find('#flows-export-format').val();
+            const flowType = modal.find('#flows-export-type').val();
+            const flowStatus = modal.find('#flows-export-status').val();
+            const dateFrom = modal.find('#flows-export-date-from').val();
+            const dateTo = modal.find('#flows-export-date-to').val();
+            
+            // Call export AJAX
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_export_flows',
+                    format: format,
+                    flow_type: flowType,
+                    flow_status: flowStatus,
+                    date_from: dateFrom,
+                    date_to: dateTo,
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                },
+                success: function(response) {
+                    modal.remove();
+                    if (response && response.success && response.data) {
+                        // Create download link
+                        const a = document.createElement('a');
+                        a.href = response.data.download_url;
+                        a.download = response.data.filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        
+                        showSuccessModal('Export Complete!', 
+                            'Flows exported successfully.<br>File: ' + response.data.filename);
+                    } else {
+                        const errorMessage = (response && response.data && response.data.message) ? response.data.message : 'Unknown error occurred';
+                        showErrorModal('Export Failed', errorMessage);
+                    }
+                },
+                error: function() {
+                    modal.remove();
+                    showErrorModal('Export Error', 'Error connecting to server. Please try again.');
+                }
+            });
+        });
+    }
 });
 </script>
 

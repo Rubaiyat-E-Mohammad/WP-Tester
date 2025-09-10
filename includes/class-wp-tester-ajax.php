@@ -25,6 +25,8 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_bulk_action', array($this, 'bulk_action'));
         add_action('wp_ajax_wp_tester_get_test_status', array($this, 'get_test_status'));
         add_action('wp_ajax_wp_tester_export_report', array($this, 'export_report'));
+        add_action('wp_ajax_wp_tester_export_crawl_results', array($this, 'export_crawl_results'));
+        add_action('wp_ajax_wp_tester_export_flows', array($this, 'export_flows'));
         
         // Frontend AJAX actions (if needed)
         add_action('wp_ajax_nopriv_wp_tester_track_interaction', array($this, 'track_interaction'));
@@ -628,6 +630,515 @@ class WP_Tester_Ajax {
                 'message' => __('Failed to export report: ', 'wp-tester') . $e->getMessage()
             ));
         }
+    }
+    
+    /**
+     * Export crawl results
+     */
+    public function export_crawl_results() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $format = sanitize_text_field($_POST['format'] ?? 'json');
+            $allowed_formats = array('json', 'csv', 'pdf');
+            if (!in_array($format, $allowed_formats, true)) {
+                $format = 'json';
+            }
+            
+            $page_type = !empty($_POST['page_type']) ? sanitize_text_field($_POST['page_type']) : null;
+            $date_from = !empty($_POST['date_from']) ? sanitize_text_field($_POST['date_from']) : null;
+            $date_to = !empty($_POST['date_to']) ? sanitize_text_field($_POST['date_to']) : null;
+            
+            // Get crawl results from database
+            global $wpdb;
+            $crawl_table = $wpdb->prefix . 'wp_tester_crawl_results';
+            
+            $where_conditions = array('1=1');
+            $where_values = array();
+            
+            if ($page_type) {
+                $where_conditions[] = 'page_type = %s';
+                $where_values[] = $page_type;
+            }
+            
+            if ($date_from) {
+                $where_conditions[] = 'crawled_at >= %s';
+                $where_values[] = $date_from . ' 00:00:00';
+            }
+            
+            if ($date_to) {
+                $where_conditions[] = 'crawled_at <= %s';
+                $where_values[] = $date_to . ' 23:59:59';
+            }
+            
+            $where_clause = implode(' AND ', $where_conditions);
+            $query = "SELECT * FROM {$crawl_table} WHERE {$where_clause} ORDER BY crawled_at DESC";
+            
+            if (!empty($where_values)) {
+                $query = $wpdb->prepare($query, $where_values);
+            }
+            
+            $crawl_results = $wpdb->get_results($query);
+            
+            // Prepare export data
+            $export_data = array();
+            foreach ($crawl_results as $result) {
+                $export_data[] = array(
+                    'id' => $result->id,
+                    'url' => $result->url,
+                    'title' => $result->title,
+                    'page_type' => $result->page_type,
+                    'status' => $result->status,
+                    'forms_found' => $result->forms_found,
+                    'links_found' => $result->links_found,
+                    'crawled_at' => $result->crawled_at,
+                    'content_length' => $result->content_length ?? 0,
+                    'response_time' => $result->response_time ?? 0
+                );
+            }
+            
+            // Generate export content based on format
+            $export_content = $this->generate_crawl_export_content($export_data, $format);
+            
+            // Create temporary file
+            $upload_dir = wp_upload_dir();
+            $temp_dir = $upload_dir['basedir'] . '/wp-tester-temp/';
+            if (!file_exists($temp_dir)) {
+                wp_mkdir_p($temp_dir);
+            }
+            
+            $filename = 'wp-tester-crawl-report-' . date('Y-m-d-H-i-s') . '.' . $format;
+            $file_path = $temp_dir . $filename;
+            
+            // Write file based on format
+            switch ($format) {
+                case 'csv':
+                    file_put_contents($file_path, $export_content);
+                    break;
+                    
+                case 'pdf':
+                    // For now, save as HTML file since we don't have a PDF library
+                    $html_file_path = str_replace('.pdf', '.html', $file_path);
+                    $html_filename = str_replace('.pdf', '.html', $filename);
+                    file_put_contents($html_file_path, $export_content);
+                    $file_path = $html_file_path;
+                    $filename = $html_filename;
+                    break;
+                    
+                default:
+                    file_put_contents($file_path, wp_json_encode($export_data, JSON_PRETTY_PRINT));
+            }
+            
+            // Set proper file permissions
+            chmod($file_path, 0644);
+            
+            // Return download URL
+            $download_url = $upload_dir['baseurl'] . '/wp-tester-temp/' . $filename;
+            
+            wp_send_json_success(array(
+                'download_url' => $download_url,
+                'filename' => $filename,
+                'message' => __('Crawl export file created successfully', 'wp-tester')
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to export crawl results: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Generate export content for crawl results
+     */
+    private function generate_crawl_export_content($data, $format) {
+        switch ($format) {
+            case 'csv':
+                return $this->generate_crawl_csv($data);
+            case 'pdf':
+                return $this->generate_crawl_html($data);
+            default:
+                return $data;
+        }
+    }
+    
+    /**
+     * Generate CSV content for crawl results
+     */
+    private function generate_crawl_csv($data) {
+        $output = fopen('php://temp', 'r+');
+        
+        // CSV headers
+        fputcsv($output, array(
+            'ID', 'URL', 'Title', 'Page Type', 'Status', 
+            'Forms Found', 'Links Found', 'Crawled At', 'Content Length', 'Response Time'
+        ));
+        
+        // CSV data
+        foreach ($data as $row) {
+            fputcsv($output, array(
+                $row['id'],
+                $row['url'],
+                $row['title'],
+                $row['page_type'],
+                $row['status'],
+                $row['forms_found'],
+                $row['links_found'],
+                $row['crawled_at'],
+                $row['content_length'],
+                $row['response_time']
+            ));
+        }
+        
+        rewind($output);
+        $csv_content = stream_get_contents($output);
+        fclose($output);
+        
+        return $csv_content;
+    }
+    
+    /**
+     * Generate HTML content for crawl results
+     */
+    private function generate_crawl_html($data) {
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WP Tester Crawl Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #00265e; margin: 0; }
+        .header p { color: #666; margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f8f9fa; font-weight: bold; }
+        .status-success { color: #28a745; font-weight: bold; }
+        .status-error { color: #dc3545; font-weight: bold; }
+        .summary { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .url-cell { max-width: 300px; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>WP Tester Crawl Report</h1>
+        <p>Generated on: ' . date('Y-m-d H:i:s') . '</p>
+        <p>Total Pages: ' . count($data) . '</p>
+    </div>
+    
+    <div class="summary">
+        <h3>Summary</h3>
+        <p>Total Pages: ' . count($data) . '</p>
+        <p>Successful Crawls: ' . count(array_filter($data, function($item) { return $item['status'] === 'success'; })) . '</p>
+        <p>Failed Crawls: ' . count(array_filter($data, function($item) { return $item['status'] === 'error'; })) . '</p>
+        <p>Total Forms Found: ' . array_sum(array_column($data, 'forms_found')) . '</p>
+        <p>Total Links Found: ' . array_sum(array_column($data, 'links_found')) . '</p>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>URL</th>
+                <th>Title</th>
+                <th>Page Type</th>
+                <th>Status</th>
+                <th>Forms</th>
+                <th>Links</th>
+                <th>Crawled At</th>
+                <th>Content Length</th>
+                <th>Response Time</th>
+            </tr>
+        </thead>
+        <tbody>';
+        
+        foreach ($data as $result) {
+            $status_class = 'status-' . $result['status'];
+            $html .= '<tr>
+                <td>' . esc_html($result['id']) . '</td>
+                <td class="url-cell">' . esc_html($result['url']) . '</td>
+                <td>' . esc_html($result['title']) . '</td>
+                <td>' . esc_html(ucfirst($result['page_type'])) . '</td>
+                <td class="' . $status_class . '">' . esc_html(ucfirst($result['status'])) . '</td>
+                <td>' . esc_html($result['forms_found']) . '</td>
+                <td>' . esc_html($result['links_found']) . '</td>
+                <td>' . esc_html($result['crawled_at']) . '</td>
+                <td>' . esc_html($result['content_length']) . '</td>
+                <td>' . esc_html($result['response_time']) . 'ms</td>
+            </tr>';
+        }
+        
+        $html .= '</tbody>
+    </table>
+</body>
+</html>';
+        
+        return $html;
+    }
+    
+    /**
+     * Export flows
+     */
+    public function export_flows() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $format = sanitize_text_field($_POST['format'] ?? 'json');
+            $allowed_formats = array('json', 'csv', 'pdf');
+            if (!in_array($format, $allowed_formats, true)) {
+                $format = 'json';
+            }
+            
+            $flow_type = !empty($_POST['flow_type']) ? sanitize_text_field($_POST['flow_type']) : null;
+            $flow_status = !empty($_POST['flow_status']) ? sanitize_text_field($_POST['flow_status']) : null;
+            $date_from = !empty($_POST['date_from']) ? sanitize_text_field($_POST['date_from']) : null;
+            $date_to = !empty($_POST['date_to']) ? sanitize_text_field($_POST['date_to']) : null;
+            
+            // Get flows from database
+            global $wpdb;
+            $flows_table = $wpdb->prefix . 'wp_tester_flows';
+            
+            $where_conditions = array('1=1');
+            $where_values = array();
+            
+            if ($flow_type) {
+                $where_conditions[] = 'flow_type = %s';
+                $where_values[] = $flow_type;
+            }
+            
+            if ($flow_status) {
+                $where_conditions[] = 'is_active = %d';
+                $where_values[] = ($flow_status === 'active') ? 1 : 0;
+            }
+            
+            if ($date_from) {
+                $where_conditions[] = 'created_at >= %s';
+                $where_values[] = $date_from . ' 00:00:00';
+            }
+            
+            if ($date_to) {
+                $where_conditions[] = 'created_at <= %s';
+                $where_values[] = $date_to . ' 23:59:59';
+            }
+            
+            $where_clause = implode(' AND ', $where_conditions);
+            $query = "SELECT * FROM {$flows_table} WHERE {$where_clause} ORDER BY created_at DESC";
+            
+            if (!empty($where_values)) {
+                $query = $wpdb->prepare($query, $where_values);
+            }
+            
+            $flows = $wpdb->get_results($query);
+            
+            // Prepare export data
+            $export_data = array();
+            foreach ($flows as $flow) {
+                $steps = json_decode($flow->steps, true);
+                $steps_count = is_array($steps) ? count($steps) : 0;
+                
+                $export_data[] = array(
+                    'id' => $flow->id,
+                    'flow_name' => $flow->flow_name,
+                    'flow_description' => $flow->flow_description ?? '',
+                    'flow_type' => $flow->flow_type,
+                    'is_active' => $flow->is_active ? 'Active' : 'Inactive',
+                    'priority' => $flow->priority,
+                    'steps_count' => $steps_count,
+                    'created_at' => $flow->created_at,
+                    'updated_at' => $flow->updated_at,
+                    'created_by' => $flow->created_by ?? 0
+                );
+            }
+            
+            // Generate export content based on format
+            $export_content = $this->generate_flows_export_content($export_data, $format);
+            
+            // Create temporary file
+            $upload_dir = wp_upload_dir();
+            $temp_dir = $upload_dir['basedir'] . '/wp-tester-temp/';
+            if (!file_exists($temp_dir)) {
+                wp_mkdir_p($temp_dir);
+            }
+            
+            $filename = 'wp-tester-flows-report-' . date('Y-m-d-H-i-s') . '.' . $format;
+            $file_path = $temp_dir . $filename;
+            
+            // Write file based on format
+            switch ($format) {
+                case 'csv':
+                    file_put_contents($file_path, $export_content);
+                    break;
+                    
+                case 'pdf':
+                    // For now, save as HTML file since we don't have a PDF library
+                    $html_file_path = str_replace('.pdf', '.html', $file_path);
+                    $html_filename = str_replace('.pdf', '.html', $filename);
+                    file_put_contents($html_file_path, $export_content);
+                    $file_path = $html_file_path;
+                    $filename = $html_filename;
+                    break;
+                    
+                default:
+                    file_put_contents($file_path, wp_json_encode($export_data, JSON_PRETTY_PRINT));
+            }
+            
+            // Set proper file permissions
+            chmod($file_path, 0644);
+            
+            // Return download URL
+            $download_url = $upload_dir['baseurl'] . '/wp-tester-temp/' . $filename;
+            
+            wp_send_json_success(array(
+                'download_url' => $download_url,
+                'filename' => $filename,
+                'message' => __('Flows export file created successfully', 'wp-tester')
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to export flows: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Generate export content for flows
+     */
+    private function generate_flows_export_content($data, $format) {
+        switch ($format) {
+            case 'csv':
+                return $this->generate_flows_csv($data);
+            case 'pdf':
+                return $this->generate_flows_html($data);
+            default:
+                return $data;
+        }
+    }
+    
+    /**
+     * Generate CSV content for flows
+     */
+    private function generate_flows_csv($data) {
+        $output = fopen('php://temp', 'r+');
+        
+        // CSV headers
+        fputcsv($output, array(
+            'ID', 'Flow Name', 'Description', 'Type', 'Status', 
+            'Priority', 'Steps Count', 'Created At', 'Updated At', 'Created By'
+        ));
+        
+        // CSV data
+        foreach ($data as $row) {
+            fputcsv($output, array(
+                $row['id'],
+                $row['flow_name'],
+                $row['flow_description'],
+                $row['flow_type'],
+                $row['is_active'],
+                $row['priority'],
+                $row['steps_count'],
+                $row['created_at'],
+                $row['updated_at'],
+                $row['created_by']
+            ));
+        }
+        
+        rewind($output);
+        $csv_content = stream_get_contents($output);
+        fclose($output);
+        
+        return $csv_content;
+    }
+    
+    /**
+     * Generate HTML content for flows
+     */
+    private function generate_flows_html($data) {
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WP Tester Flows Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #00265e; margin: 0; }
+        .header p { color: #666; margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f8f9fa; font-weight: bold; }
+        .status-active { color: #28a745; font-weight: bold; }
+        .status-inactive { color: #dc3545; font-weight: bold; }
+        .summary { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .description-cell { max-width: 200px; word-break: break-word; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>WP Tester Flows Report</h1>
+        <p>Generated on: ' . date('Y-m-d H:i:s') . '</p>
+        <p>Total Flows: ' . count($data) . '</p>
+    </div>
+    
+    <div class="summary">
+        <h3>Summary</h3>
+        <p>Total Flows: ' . count($data) . '</p>
+        <p>Active Flows: ' . count(array_filter($data, function($item) { return $item['is_active'] === 'Active'; })) . '</p>
+        <p>Inactive Flows: ' . count(array_filter($data, function($item) { return $item['is_active'] === 'Inactive'; })) . '</p>
+        <p>Manual Flows: ' . count(array_filter($data, function($item) { return $item['flow_type'] === 'manual'; })) . '</p>
+        <p>AI Generated Flows: ' . count(array_filter($data, function($item) { return $item['flow_type'] === 'ai_generated'; })) . '</p>
+        <p>Discovered Flows: ' . count(array_filter($data, function($item) { return $item['flow_type'] === 'discovered'; })) . '</p>
+        <p>Total Steps: ' . array_sum(array_column($data, 'steps_count')) . '</p>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Flow Name</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Steps</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+            </tr>
+        </thead>
+        <tbody>';
+        
+        foreach ($data as $flow) {
+            $status_class = 'status-' . strtolower($flow['is_active']);
+            $html .= '<tr>
+                <td>' . esc_html($flow['id']) . '</td>
+                <td>' . esc_html($flow['flow_name']) . '</td>
+                <td class="description-cell">' . esc_html($flow['flow_description']) . '</td>
+                <td>' . esc_html(ucfirst(str_replace('_', ' ', $flow['flow_type']))) . '</td>
+                <td class="' . $status_class . '">' . esc_html($flow['is_active']) . '</td>
+                <td>' . esc_html($flow['priority']) . '</td>
+                <td>' . esc_html($flow['steps_count']) . '</td>
+                <td>' . esc_html($flow['created_at']) . '</td>
+                <td>' . esc_html($flow['updated_at']) . '</td>
+            </tr>';
+        }
+        
+        $html .= '</tbody>
+    </table>
+</body>
+</html>';
+        
+        return $html;
     }
     
     /**
