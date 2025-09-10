@@ -32,9 +32,10 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                     <button type="button" onclick="window.location.href='<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>'" class="modern-btn modern-btn-warning modern-btn-small" style="
                         display: inline-flex !important;
                         align-items: center !important;
-                        gap: 0.25rem !important;
-                        padding: 0.75rem 1rem !important;
-                        border-radius: 8px !important;
+                        justify-content: center !important;
+                        gap: 0.375rem !important;
+                        padding: 0.625rem 1.25rem !important;
+                        border-radius: 6px !important;
                         background: #f59e0b !important;
                         color: white !important;
                         border: 1px solid #d97706 !important;
@@ -43,13 +44,14 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                         cursor: pointer !important;
                         transition: all 0.2s ease !important;
                         text-decoration: none !important;
-                        line-height: 1 !important;
-                        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1) !important;
-                        height: auto !important;
-                        min-height: 36px !important;
-                    " onmouseover="this.style.background='#d97706'; this.style.borderColor='#b45309';" onmouseout="this.style.background='#f59e0b'; this.style.borderColor='#d97706';">
-                        <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important; color: white !important;"></span>
-                        Change Model
+                        line-height: 1.2 !important;
+                        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1) !important;
+                        height: 40px !important;
+                        min-width: 120px !important;
+                        white-space: nowrap !important;
+                    " onmouseover="this.style.background='#d97706'; this.style.borderColor='#b45309'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px 0 rgba(0, 0, 0, 0.15)';" onmouseout="this.style.background='#f59e0b'; this.style.borderColor='#d97706'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px 0 rgba(0, 0, 0, 0.1)';">
+                        <span class="dashicons dashicons-admin-settings" style="font-size: 18px !important; width: 18px !important; height: 18px !important; color: white !important; flex-shrink: 0 !important;"></span>
+                        <span style="color: white !important; font-weight: 500 !important;">Change Model</span>
                     </button>
                 </div>
             </div>
