@@ -316,7 +316,7 @@ jQuery(document).ready(function($) {
                 if (response.success) {
                     alert('Test successful! Created ' + response.data.files_created + ' files: ' + response.data.file_names.join(', '));
                 } else {
-                    alert('Test failed: ' + response.data);
+                    alert('Test failed: ' + (response.data.message || response.data));
                 }
             },
             error: function(xhr, status, error) {
@@ -371,7 +371,7 @@ jQuery(document).ready(function($) {
                     <div style="font-size: 0.875rem; color: #64748b;">Flows Included</div>
                 </div>
                 <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 6px;">
-                    <div style="font-size: 1.5rem; font-weight: 600; color: #00265e;">${data.files.length}</div>
+                    <div style="font-size: 1.5rem; font-weight: 600; color: #00265e;">${data.files ? data.files.length : 0}</div>
                     <div style="font-size: 0.875rem; color: #64748b;">Files Generated</div>
                 </div>
                 <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 6px;">
@@ -382,7 +382,7 @@ jQuery(document).ready(function($) {
             <div style="background: #f8fafc; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
                 <h4 style="margin: 0 0 0.5rem 0; color: #00265e;">Generated Files:</h4>
                 <ul style="margin: 0; padding-left: 1.5rem;">
-                    ${data.files.map(file => `<li style="font-family: monospace; font-size: 0.875rem;">${file}</li>`).join('')}
+                    ${data.files && Array.isArray(data.files) ? data.files.map(file => `<li style="font-family: monospace; font-size: 0.875rem;">${file}</li>`).join('') : '<li style="font-family: monospace; font-size: 0.875rem;">No files generated</li>'}
                 </ul>
             </div>
         `);

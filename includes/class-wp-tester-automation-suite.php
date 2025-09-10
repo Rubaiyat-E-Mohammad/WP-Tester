@@ -92,7 +92,8 @@ class WP_Tester_Automation_Suite {
         wp_send_json_success(array(
             'message' => 'Test successful',
             'files_created' => count($files),
-            'file_names' => array_keys($files)
+            'file_names' => array_keys($files),
+            'files' => array_keys($files) // Add this to match the expected format
         ));
     }
     
