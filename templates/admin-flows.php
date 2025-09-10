@@ -305,7 +305,7 @@ jQuery(document).ready(function($) {
     }
 
     // Search and filter functionality for flows
-    function filterFlows() {
+    window.filterFlows = function() {
         const searchTerm = $('#search-flows').val().toLowerCase();
         const selectedType = $('#filter-flow-type').val();
         const selectedStatus = $('#filter-flow-status').val();

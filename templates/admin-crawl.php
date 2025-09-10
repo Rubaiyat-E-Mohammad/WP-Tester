@@ -384,7 +384,7 @@ jQuery(document).ready(function($) {
     });
 
     // Search functionality for crawled pages
-    function filterCrawledPages() {
+    window.filterCrawledPages = function() {
         console.log('filterCrawledPages called'); // Debug log
         const searchTerm = $('#search-crawled-pages').val().toLowerCase();
         const selectedType = $('#filter-page-type').val();

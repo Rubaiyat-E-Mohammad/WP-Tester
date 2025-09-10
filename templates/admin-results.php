@@ -413,7 +413,7 @@ jQuery(document).ready(function($) {
     });
 
     // Search functionality for test results
-    function filterTestResults() {
+    window.filterTestResults = function() {
         const searchTerm = $('#search-test-results').val().toLowerCase();
         const selectedStatus = $('#filter-status').val();
         const $items = $('.modern-list-item');
