@@ -334,9 +334,11 @@ jQuery(document).ready(function($) {
             
             if (shouldShow) {
                 $item.show();
+                $item.css('background-color', 'lightgreen'); // Visual indicator
                 console.log('Showing item:', flowName, 'Display:', $item.css('display')); // Debug log
             } else {
                 $item.hide();
+                $item.css('background-color', 'lightcoral'); // Visual indicator
                 console.log('Hiding item:', flowName, 'Display:', $item.css('display')); // Debug log
                 // Force hide by setting style attribute directly
                 $item[0].style.setProperty('display', 'none', 'important');
