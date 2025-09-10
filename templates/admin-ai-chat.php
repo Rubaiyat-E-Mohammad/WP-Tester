@@ -29,31 +29,31 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                     <span id="current-ai-model" style="padding: 0.5rem 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem; color: #00265e; font-weight: 500;">
                         <?php echo esc_html($ai_model); ?>
                     </span>
-                    <button type="button" onclick="window.location.href='<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>'" style="
-                        display: inline-flex !important;
-                        align-items: center !important;
-                        gap: 4px !important;
-                        padding: 8px 12px !important;
-                        border-radius: 6px !important;
-                        background: #f59e0b !important;
-                        color: white !important;
-                        border: 1px solid #d97706 !important;
-                        font-size: 14px !important;
-                        font-weight: 500 !important;
-                        cursor: pointer !important;
-                        transition: all 0.2s ease !important;
-                        text-decoration: none !important;
-                        line-height: 1 !important;
-                        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1) !important;
-                        height: 36px !important;
-                        white-space: nowrap !important;
-                        margin: 0 !important;
-                        outline: none !important;
-                    " onmouseover="this.style.background='#d97706'; this.style.borderColor='#b45309';" onmouseout="this.style.background='#f59e0b'; this.style.borderColor='#d97706';">
-                        <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important; color: white !important;"></span>
-                        Change Model
-                    </button>
                 </div>
+                <button type="button" onclick="window.location.href='<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>'" style="
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    gap: 4px !important;
+                    padding: 8px 12px !important;
+                    border-radius: 6px !important;
+                    background: #f59e0b !important;
+                    color: white !important;
+                    border: 1px solid #d97706 !important;
+                    font-size: 14px !important;
+                    font-weight: 500 !important;
+                    cursor: pointer !important;
+                    transition: all 0.2s ease !important;
+                    text-decoration: none !important;
+                    line-height: 1 !important;
+                    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1) !important;
+                    height: 36px !important;
+                    white-space: nowrap !important;
+                    margin: 0 !important;
+                    outline: none !important;
+                " onmouseover="this.style.background='#d97706'; this.style.borderColor='#b45309';" onmouseout="this.style.background='#f59e0b'; this.style.borderColor='#d97706';">
+                    <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important; color: white !important;"></span>
+                    Change Model
+                </button>
             </div>
         </div>
     </div>
