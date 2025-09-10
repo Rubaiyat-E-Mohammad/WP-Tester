@@ -585,6 +585,8 @@ class WP_Tester_Ajax {
             $temp_dir = $upload_dir['basedir'] . '/wp-tester-temp/';
             if (!file_exists($temp_dir)) {
                 wp_mkdir_p($temp_dir);
+                // Create .htaccess to allow direct access
+                file_put_contents($temp_dir . '.htaccess', 'Options -Indexes');
             }
             
             $filename = 'wp-tester-report-' . date('Y-m-d-H-i-s') . '.' . $format;
@@ -597,12 +599,20 @@ class WP_Tester_Ajax {
                     break;
                     
                 case 'pdf':
-                    file_put_contents($file_path, $export_data);
+                    // For now, save as HTML file since we don't have a PDF library
+                    $html_file_path = str_replace('.pdf', '.html', $file_path);
+                    $html_filename = str_replace('.pdf', '.html', $filename);
+                    file_put_contents($html_file_path, $export_data);
+                    $file_path = $html_file_path;
+                    $filename = $html_filename;
                     break;
                     
                 default:
                     file_put_contents($file_path, wp_json_encode($export_data, JSON_PRETTY_PRINT));
             }
+            
+            // Set proper file permissions
+            chmod($file_path, 0644);
             
             // Return download URL
             $download_url = $upload_dir['baseurl'] . '/wp-tester-temp/' . $filename;

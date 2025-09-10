@@ -912,9 +912,84 @@ class WP_Tester_Feedback_Reporter {
     }
     
     private function export_to_pdf($data) {
-        // This would require a PDF library like TCPDF or DOMPDF
-        // For now, return a placeholder
-        return 'PDF export functionality would be implemented here';
+        // Generate HTML content for PDF
+        $html = $this->generate_pdf_html($data);
+        
+        // For now, return HTML content that can be saved as HTML file
+        // In a full implementation, you would use a PDF library like TCPDF or DOMPDF
+        return $html;
+    }
+    
+    private function generate_pdf_html($data) {
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WP Tester Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #00265e; margin: 0; }
+        .header p { color: #666; margin: 5px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f8f9fa; font-weight: bold; }
+        .status-passed { color: #28a745; font-weight: bold; }
+        .status-failed { color: #dc3545; font-weight: bold; }
+        .status-running { color: #ffc107; font-weight: bold; }
+        .status-pending { color: #6c757d; font-weight: bold; }
+        .summary { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>WP Tester Report</h1>
+        <p>Generated on: ' . date('Y-m-d H:i:s') . '</p>
+        <p>Total Tests: ' . count($data) . '</p>
+    </div>
+    
+    <div class="summary">
+        <h3>Summary</h3>
+        <p>Total Tests: ' . count($data) . '</p>
+        <p>Passed: ' . count(array_filter($data, function($item) { return $item['status'] === 'passed'; })) . '</p>
+        <p>Failed: ' . count(array_filter($data, function($item) { return $item['status'] === 'failed'; })) . '</p>
+        <p>Running: ' . count(array_filter($data, function($item) { return $item['status'] === 'running'; })) . '</p>
+        <p>Pending: ' . count(array_filter($data, function($item) { return $item['status'] === 'pending'; })) . '</p>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Test ID</th>
+                <th>Flow Name</th>
+                <th>Status</th>
+                <th>Execution Time</th>
+                <th>Steps</th>
+                <th>Started At</th>
+                <th>Completed At</th>
+            </tr>
+        </thead>
+        <tbody>';
+        
+        foreach ($data as $result) {
+            $status_class = 'status-' . $result['status'];
+            $html .= '<tr>
+                <td>' . esc_html($result['test_id']) . '</td>
+                <td>' . esc_html($result['flow_name']) . '</td>
+                <td class="' . $status_class . '">' . esc_html(ucfirst($result['status'])) . '</td>
+                <td>' . esc_html($result['execution_time']) . 's</td>
+                <td>' . esc_html($result['steps_executed'] . '/' . ($result['steps_passed'] + $result['steps_failed'])) . '</td>
+                <td>' . esc_html($result['started_at']) . '</td>
+                <td>' . esc_html($result['completed_at']) . '</td>
+            </tr>';
+        }
+        
+        $html .= '</tbody>
+    </table>
+</body>
+</html>';
+        
+        return $html;
     }
     
     /**

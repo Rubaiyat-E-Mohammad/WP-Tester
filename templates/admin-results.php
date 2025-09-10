@@ -1112,7 +1112,8 @@ jQuery(document).ready(function($) {
                         <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">Export Test Results</h3>
                     </div>
                     <div style="color: #64748b; line-height: 1.6; margin-bottom: 2rem; text-align: center;">
-                        Choose export format and options for your test results.
+                        Choose export format and options for your test results.<br>
+                        <small style="color: #9ca3af;">HTML Report can be opened in any browser and printed to PDF.</small>
                     </div>
                     <div style="margin-bottom: 2rem;">
                         <div style="margin-bottom: 1rem;">
@@ -1120,7 +1121,7 @@ jQuery(document).ready(function($) {
                             <select id="export-format" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
                                 <option value="json">JSON (Complete Data)</option>
                                 <option value="csv">CSV (Spreadsheet)</option>
-                                <option value="pdf">PDF Report</option>
+                                <option value="pdf">HTML Report (Printable)</option>
                             </select>
                         </div>
                         <div style="margin-bottom: 1rem;">
