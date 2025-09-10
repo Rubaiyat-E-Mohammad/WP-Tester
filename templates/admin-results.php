@@ -420,15 +420,13 @@ jQuery(document).ready(function($) {
         
         $items.each(function() {
             const $item = $(this);
-            const flowName = $item.find('.item-title').text().toLowerCase();
+            const flowName = $item.find('h4').text().toLowerCase();
             const status = $item.find('.status-badge').text().toLowerCase();
-            const date = $item.find('.item-meta').text().toLowerCase();
-            const description = $item.find('.item-description').text().toLowerCase();
+            const description = $item.find('p').text().toLowerCase();
             
             const matchesSearch = searchTerm === '' || 
                 flowName.includes(searchTerm) || 
                 status.includes(searchTerm) || 
-                date.includes(searchTerm) ||
                 description.includes(searchTerm);
             
             const matchesStatus = selectedStatus === '' || $item.attr('data-status') === selectedStatus;

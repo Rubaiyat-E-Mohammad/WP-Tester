@@ -313,16 +313,14 @@ jQuery(document).ready(function($) {
         
         $items.each(function() {
             const $item = $(this);
-            const flowName = $item.find('.item-title').text().toLowerCase();
-            const flowType = $item.find('.flow-type-badge').text().toLowerCase();
+            const flowName = $item.find('h4').text().toLowerCase();
+            const flowType = $item.find('p').text().toLowerCase();
             const flowStatus = $item.find('.status-badge').text().toLowerCase();
-            const description = $item.find('.item-description').text().toLowerCase();
             
             const matchesSearch = searchTerm === '' || 
                 flowName.includes(searchTerm) || 
                 flowType.includes(searchTerm) || 
-                flowStatus.includes(searchTerm) ||
-                description.includes(searchTerm);
+                flowStatus.includes(searchTerm);
             
             const matchesType = selectedType === '' || $item.attr('data-flow-type') === selectedType;
             const matchesStatus = selectedStatus === '' || $item.attr('data-flow-status') === selectedStatus;

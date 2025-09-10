@@ -391,14 +391,14 @@ jQuery(document).ready(function($) {
         
         $items.each(function() {
             const $item = $(this);
-            const url = $item.find('.item-title a').text().toLowerCase();
-            const title = $item.find('.item-meta').text().toLowerCase();
-            const content = $item.find('.item-description').text().toLowerCase();
+            const title = $item.find('h4 a').text().toLowerCase();
+            const description = $item.find('p').text().toLowerCase();
+            const url = $item.find('h4 a').attr('href') || '';
             
             const matchesSearch = searchTerm === '' || 
-                url.includes(searchTerm) || 
                 title.includes(searchTerm) || 
-                content.includes(searchTerm);
+                description.includes(searchTerm) ||
+                url.toLowerCase().includes(searchTerm);
             
             const matchesType = selectedType === '' || $item.attr('data-page-type') === selectedType;
             
