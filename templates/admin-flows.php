@@ -154,7 +154,7 @@ if (!defined('ABSPATH')) {
                     <div style="position: relative;">
                         <input type="text" id="search-flows" placeholder="Search flows by name, type, or description..." 
                                style="padding: 0.5rem 0.5rem 0.5rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem; width: 300px; outline: none;"
-                               onkeyup="filterFlows()">
+                               onkeyup="console.log('Key pressed in flows search:', this.value); filterFlows();">
                         <span class="dashicons dashicons-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 16px;"></span>
                     </div>
                     <select id="filter-flow-type" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem;">
@@ -211,7 +211,7 @@ if (!defined('ABSPATH')) {
                 
                 <div class="modern-list">
                     <?php foreach ($flows as $flow) : ?>
-                        <div class="modern-list-item" data-flow-id="<?php echo esc_attr($flow->id ?? ''); ?>">
+                        <div class="modern-list-item" data-flow-id="<?php echo esc_attr($flow->id ?? ''); ?>" data-flow-type="<?php echo esc_attr($flow->flow_type ?? 'generic'); ?>" data-flow-status="<?php echo esc_attr($flow->is_active ? 'active' : 'inactive'); ?>">
                             <div class="item-checkbox">
                                 <input type="checkbox" class="flow-checkbox" value="<?php echo esc_attr($flow->id ?? ''); ?>" id="flow-<?php echo esc_attr($flow->id ?? ''); ?>">
                                 <label for="flow-<?php echo esc_attr($flow->id ?? ''); ?>"></label>
@@ -306,16 +306,21 @@ jQuery(document).ready(function($) {
 
     // Search and filter functionality for flows
     window.filterFlows = function() {
+        console.log('filterFlows called'); // Debug log
         const searchTerm = $('#search-flows').val().toLowerCase();
         const selectedType = $('#filter-flow-type').val();
         const selectedStatus = $('#filter-flow-status').val();
         const $items = $('.modern-list-item');
+        
+        console.log('Search term:', searchTerm, 'Items found:', $items.length); // Debug log
         
         $items.each(function() {
             const $item = $(this);
             const flowName = $item.find('h4').text().toLowerCase();
             const flowType = $item.find('p').text().toLowerCase();
             const flowStatus = $item.find('.status-badge').text().toLowerCase();
+            
+            console.log('Flow name:', flowName, 'Flow type:', flowType); // Debug log
             
             const matchesSearch = searchTerm === '' || 
                 flowName.includes(searchTerm) || 
