@@ -33,7 +33,7 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                         display: inline-flex !important;
                         align-items: center !important;
                         justify-content: center !important;
-                        gap: 0.375rem !important;
+                        gap: 0.1rem !important;
                         padding: 0.1rem 0.1rem !important;
                         border-radius: 6px !important;
                         background: #f59e0b !important;
