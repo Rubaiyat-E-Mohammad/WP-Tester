@@ -580,26 +580,38 @@ class WP_Tester_Ajax {
             $reporter = new WP_Tester_Feedback_Reporter();
             $export_data = $reporter->generate_export_report($flow_id, $date_from, $date_to, $format);
             
+            // Create temporary file
+            $upload_dir = wp_upload_dir();
+            $temp_dir = $upload_dir['basedir'] . '/wp-tester-temp/';
+            if (!file_exists($temp_dir)) {
+                wp_mkdir_p($temp_dir);
+            }
+            
+            $filename = 'wp-tester-report-' . date('Y-m-d-H-i-s') . '.' . $format;
+            $file_path = $temp_dir . $filename;
+            
+            // Write file based on format
             switch ($format) {
                 case 'csv':
-                    header('Content-Type: text/csv');
-                    header('Content-Disposition: attachment; filename="wp-tester-report-' . date('Y-m-d') . '.csv"');
-                    echo $export_data;
+                    file_put_contents($file_path, $export_data);
                     break;
                     
                 case 'pdf':
-                    header('Content-Type: application/pdf');
-                    header('Content-Disposition: attachment; filename="wp-tester-report-' . date('Y-m-d') . '.pdf"');
-                    echo $export_data;
+                    file_put_contents($file_path, $export_data);
                     break;
                     
                 default:
-                    header('Content-Type: application/json');
-                    header('Content-Disposition: attachment; filename="wp-tester-report-' . date('Y-m-d') . '.json"');
-                    echo wp_json_encode($export_data, JSON_PRETTY_PRINT);
+                    file_put_contents($file_path, wp_json_encode($export_data, JSON_PRETTY_PRINT));
             }
             
-            exit;
+            // Return download URL
+            $download_url = $upload_dir['baseurl'] . '/wp-tester-temp/' . $filename;
+            
+            wp_send_json_success(array(
+                'download_url' => $download_url,
+                'filename' => $filename,
+                'message' => __('Export file created successfully', 'wp-tester')
+            ));
             
         } catch (Exception $e) {
             wp_send_json_error(array(

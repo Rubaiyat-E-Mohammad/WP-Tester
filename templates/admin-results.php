@@ -239,7 +239,7 @@ if (!defined('ABSPATH')) {
                     <div style="position: relative;">
                         <input type="text" id="search-test-results" placeholder="Search by flow name, status, or date..." 
                                style="padding: 0.5rem 0.5rem 0.5rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem; width: 300px; outline: none;"
-                               onkeyup="console.log('Key pressed in results search:', this.value); filterTestResults();">
+                               onkeyup="filterTestResults();">
                         <span class="dashicons dashicons-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 16px;"></span>
                     </div>
                     <select id="filter-status" style="padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; background: white; font-size: 0.8125rem;">
@@ -414,20 +414,15 @@ jQuery(document).ready(function($) {
 
     // Search functionality for test results
     window.filterTestResults = function() {
-        console.log('filterTestResults called'); // Debug log
         const searchTerm = $('#search-test-results').val().toLowerCase();
         const selectedStatus = $('#filter-status').val();
         const $items = $('.modern-list-item');
-        
-        console.log('Search term:', searchTerm, 'Items found:', $items.length); // Debug log
         
         $items.each(function() {
             const $item = $(this);
             const flowName = $item.find('h4').text().toLowerCase();
             const status = $item.find('.status-badge').text().toLowerCase();
             const description = $item.find('p').text().toLowerCase();
-            
-            console.log('Flow name:', flowName, 'Status:', status, 'Description:', description); // Debug log
             
             const matchesSearch = searchTerm === '' || 
                 flowName.includes(searchTerm) || 
@@ -437,7 +432,6 @@ jQuery(document).ready(function($) {
             const matchesStatus = selectedStatus === '' || $item.attr('data-status') === selectedStatus;
             
             const shouldShow = matchesSearch && matchesStatus;
-            console.log('Should show:', shouldShow, 'Search match:', matchesSearch, 'Status match:', matchesStatus); // Debug log
             
             if (shouldShow) {
                 $item.show();
@@ -1188,7 +1182,7 @@ jQuery(document).ready(function($) {
                 },
                 success: function(response) {
                     modal.remove();
-                    if (response.success) {
+                    if (response && response.success && response.data) {
                         // Create download link
                         const a = document.createElement('a');
                         a.href = response.data.download_url;
@@ -1200,7 +1194,8 @@ jQuery(document).ready(function($) {
                         showSuccessModal('Export Complete!', 
                             'Test results exported successfully.<br>File: ' + response.data.filename);
                     } else {
-                        showErrorModal('Export Failed', response.data.message || 'Unknown error occurred');
+                        const errorMessage = (response && response.data && response.data.message) ? response.data.message : 'Unknown error occurred';
+                        showErrorModal('Export Failed', errorMessage);
                     }
                 },
                 error: function() {
