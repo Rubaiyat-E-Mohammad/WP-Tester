@@ -29,8 +29,8 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                     <span id="current-ai-model" style="padding: 0.5rem 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem; color: #00265e; font-weight: 500;">
                         <?php echo esc_html($ai_model); ?>
                     </span>
-                    <a href="<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>" class="modern-btn modern-btn-secondary modern-btn-small">
-                        <span class="dashicons dashicons-admin-settings"></span>
+                    <a href="<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>" class="modern-btn modern-btn-secondary modern-btn-small" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 8px; background: #f8fafc; color: #374151; border: 1px solid #e2e8f0; text-decoration: none; font-size: 0.8125rem; font-weight: 500; transition: all 0.2s ease;">
+                        <span class="dashicons dashicons-admin-settings" style="font-size: 16px; width: 16px; height: 16px;"></span>
                         Change Model
                     </a>
                 </div>
