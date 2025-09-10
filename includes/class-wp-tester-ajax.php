@@ -41,6 +41,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_bulk_crawl_action', array($this, 'bulk_crawl_action'));
         add_action('wp_ajax_wp_tester_debug_bulk_action', array($this, 'debug_bulk_action'));
         add_action('wp_ajax_wp_tester_cleanup_crawl_duplicates', array($this, 'cleanup_crawl_duplicates'));
+        add_action('wp_ajax_wp_tester_cleanup_all_crawls', array($this, 'cleanup_all_crawls'));
         add_action('wp_ajax_wp_tester_clear_cache', array($this, 'clear_cache'));
         add_action('wp_ajax_wp_tester_reset_flows', array($this, 'reset_flows'));
         add_action('wp_ajax_wp_tester_export_data', array($this, 'export_data'));
@@ -1173,6 +1174,48 @@ class WP_Tester_Ajax {
         } catch (Exception $e) {
             wp_send_json_error(array(
                 'message' => __('Failed to cleanup duplicates: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
+    }
+    
+    /**
+     * Cleanup all crawl results
+     */
+    public function cleanup_all_crawls() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            global $wpdb;
+            $crawl_results_table = $wpdb->prefix . 'wp_tester_crawl_results';
+            
+            // Check if table exists first
+            $table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$crawl_results_table}'");
+            if (!$table_exists) {
+                wp_send_json_error(array('message' => __('Crawl results table does not exist', 'wp-tester')));
+                return;
+            }
+            
+            // Get count before deletion
+            $total_count = $wpdb->get_var("SELECT COUNT(*) FROM {$crawl_results_table}");
+            
+            // Delete all crawl results
+            $deleted_count = $wpdb->query("DELETE FROM {$crawl_results_table}");
+            
+            error_log("WP Tester: Cleanup all crawls - deleted {$deleted_count} out of {$total_count} total records");
+            
+            wp_send_json_success(array(
+                'message' => sprintf(__('Deleted all %d crawl results successfully.', 'wp-tester'), $deleted_count),
+                'deleted_count' => $deleted_count
+            ));
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to cleanup all crawls: ', 'wp-tester') . $e->getMessage()
             ));
         }
     }

@@ -127,15 +127,15 @@ if (!defined('ABSPATH')) {
                 </div>
                 <div class="stat-value" style="font-size: 1.25rem;">
                     <?php
-                    $last_test = 'Never';
-                    if (!empty($flows)) {
-                        foreach ($flows as $flow) {
-                            if (!empty($flow->last_tested) && $flow->last_tested !== 'Never') {
-                                $last_test = $flow->last_tested;
-                                break;
-                            }
-                        }
+                    // Get last test from database stats instead of individual flows
+                    $database = new WP_Tester_Database();
+                    $stats = $database->get_dashboard_stats();
+                    $last_test = $stats['last_test'] ?? 'Never';
+                    
+                    if ($last_test !== 'Never') {
+                        $last_test = date('M j, Y H:i', strtotime($last_test));
                     }
+                    
                     echo esc_html($last_test);
                     ?>
                 </div>

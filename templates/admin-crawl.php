@@ -36,6 +36,10 @@ $settings = get_option('wp_tester_settings', array());
                     <span class="dashicons dashicons-trash"></span>
                     Cleanup Duplicates
                 </button>
+                <button class="modern-btn modern-btn-danger modern-btn-small" id="cleanup-all-crawls">
+                    <span class="dashicons dashicons-trash"></span>
+                    Cleanup Crawls
+                </button>
             </div>
         </div>
     </div>
@@ -122,7 +126,7 @@ $settings = get_option('wp_tester_settings', array());
                     $last_crawl = $stats['last_crawl'] ?? 'Never';
                     
                     if ($last_crawl !== 'Never') {
-                        $last_crawl = date('M j, Y', strtotime($last_crawl));
+                        $last_crawl = date('M j, Y H:i', strtotime($last_crawl));
                     }
                     
                     echo esc_html($last_crawl);
@@ -750,6 +754,41 @@ jQuery(document).ready(function($) {
             error: function(xhr, status, error) {
                 console.error('Bulk Action AJAX Error:', {xhr, status, error});
                 showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
+            },
+            complete: function() {
+                button.html(originalText).prop('disabled', false);
+            }
+        });
+    });
+    
+    // Cleanup all crawls functionality
+    $('#cleanup-all-crawls').on('click', function() {
+        if (!confirm('Are you sure you want to delete ALL crawl results? This action cannot be undone and will remove all crawled pages data.')) {
+            return;
+        }
+        
+        const button = $(this);
+        const originalText = button.html();
+        button.html('<span class="dashicons dashicons-update-alt"></span> Deleting...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_cleanup_all_crawls',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showSuccessModal('Cleanup Completed', 'All crawl results have been deleted successfully! Refreshing page...');
+                    location.reload();
+                } else {
+                    showErrorModal('Cleanup Failed', 'Cleanup failed: ' + (response.data.message || 'Unknown error occurred'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Cleanup error:', xhr, status, error);
+                showErrorModal('Network Error', 'Failed to cleanup crawls. Please try again.');
             },
             complete: function() {
                 button.html(originalText).prop('disabled', false);
