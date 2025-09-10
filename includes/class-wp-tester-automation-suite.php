@@ -54,7 +54,6 @@ class WP_Tester_Automation_Suite {
         // Add AJAX actions
         add_action('wp_ajax_wp_tester_generate_automation_suite', array($this, 'generate_automation_suite'));
         add_action('wp_ajax_wp_tester_download_automation_suite', array($this, 'download_automation_suite'));
-        add_action('wp_ajax_wp_tester_test_automation_suite', array($this, 'test_automation_suite'));
     }
     
     /**
@@ -62,39 +61,6 @@ class WP_Tester_Automation_Suite {
      */
     public function get_supported_frameworks() {
         return $this->supported_frameworks;
-    }
-    
-    /**
-     * Test automation suite endpoint
-     */
-    public function test_automation_suite() {
-        error_log('WP Tester: test_automation_suite called');
-        
-        check_ajax_referer('wp_tester_nonce', 'nonce');
-        
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
-            return;
-        }
-        
-        // Test creating a simple fallback file
-        $test_flow = array(
-            'name' => 'Test Flow',
-            'description' => 'Test flow for automation suite',
-            'steps' => array(
-                array('action' => 'navigate', 'target' => 'https://example.com', 'description' => 'Navigate to example'),
-                array('action' => 'click', 'target' => '#button', 'description' => 'Click button')
-            )
-        );
-        
-        $files = $this->create_fallback_files('playwright', array($test_flow));
-        
-        wp_send_json_success(array(
-            'message' => 'Test successful',
-            'files_created' => count($files),
-            'file_names' => array_keys($files),
-            'files' => array_keys($files) // Add this to match the expected format
-        ));
     }
     
     /**
@@ -171,7 +137,7 @@ class WP_Tester_Automation_Suite {
                     'suite_id' => $suite_id,
                     'framework' => $framework,
                     'flow_count' => count($flows),
-                    'files' => $suite_data['files']
+                    'files' => array_keys($suite_data['files']) // Convert associative array to simple array
                 ));
             } else {
                 wp_send_json_error(array('message' => __('Failed to generate automation suite: ', 'wp-tester') . $suite_data['error']));
@@ -461,7 +427,7 @@ IMPORTANT: Each file must be wrapped in ```filename.extension``` code blocks. Be
         foreach ($steps as $step) {
             $action = $step['action'] ?? 'navigate';
             $target = $step['target'] ?? '';
-            $value = $step['value'] ?? '';
+            $value = $step['data'] ?? $step['value'] ?? '';
             
             switch ($action) {
                 case 'navigate':
@@ -471,12 +437,17 @@ IMPORTANT: Each file must be wrapped in ```filename.extension``` code blocks. Be
                     $test_steps .= "  await page.click('{$target}');\n";
                     break;
                 case 'fill':
+                case 'fill_input':
                     $test_steps .= "  await page.fill('{$target}', '{$value}');\n";
+                    break;
+                case 'file_input':
+                    $test_steps .= "  await page.setInputFiles('{$target}', '{$value}');\n";
                     break;
                 case 'wait':
                     $test_steps .= "  await page.waitForSelector('{$target}');\n";
                     break;
                 case 'assert':
+                case 'verify':
                     $test_steps .= "  await expect(page.locator('{$target}')).toContainText('{$value}');\n";
                     break;
             }
@@ -499,7 +470,7 @@ test('{$flow['name']}', async ({ page }) => {
         foreach ($steps as $step) {
             $action = $step['action'] ?? 'navigate';
             $target = $step['target'] ?? '';
-            $value = $step['value'] ?? '';
+            $value = $step['data'] ?? $step['value'] ?? '';
             
             switch ($action) {
                 case 'navigate':
@@ -509,6 +480,10 @@ test('{$flow['name']}', async ({ page }) => {
                     $test_steps .= "        driver.findElement(By.css(\"{$target}\")).click();\n";
                     break;
                 case 'fill':
+                case 'fill_input':
+                    $test_steps .= "        driver.findElement(By.css(\"{$target}\")).sendKeys(\"{$value}\");\n";
+                    break;
+                case 'file_input':
                     $test_steps .= "        driver.findElement(By.css(\"{$target}\")).sendKeys(\"{$value}\");\n";
                     break;
                 case 'wait':
@@ -516,6 +491,7 @@ test('{$flow['name']}', async ({ page }) => {
                     $test_steps .= "        wait.until(ExpectedConditions.presenceOfElementLocated(By.css(\"{$target}\")));\n";
                     break;
                 case 'assert':
+                case 'verify':
                     $test_steps .= "        assert driver.findElement(By.css(\"{$target}\")).getText().contains(\"{$value}\");\n";
                     break;
             }
@@ -564,7 +540,7 @@ public class {$this->sanitize_class_name($flow['name'])} {
         foreach ($steps as $step) {
             $action = $step['action'] ?? 'navigate';
             $target = $step['target'] ?? '';
-            $value = $step['value'] ?? '';
+            $value = $step['data'] ?? $step['value'] ?? '';
             
             switch ($action) {
                 case 'navigate':
@@ -574,12 +550,17 @@ public class {$this->sanitize_class_name($flow['name'])} {
                     $test_steps .= "    cy.get('{$target}').click();\n";
                     break;
                 case 'fill':
+                case 'fill_input':
                     $test_steps .= "    cy.get('{$target}').type('{$value}');\n";
+                    break;
+                case 'file_input':
+                    $test_steps .= "    cy.get('{$target}').selectFile('{$value}');\n";
                     break;
                 case 'wait':
                     $test_steps .= "    cy.get('{$target}').should('be.visible');\n";
                     break;
                 case 'assert':
+                case 'verify':
                     $test_steps .= "    cy.get('{$target}').should('contain', '{$value}');\n";
                     break;
             }
@@ -602,7 +583,7 @@ public class {$this->sanitize_class_name($flow['name'])} {
         foreach ($steps as $step) {
             $action = $step['action'] ?? 'navigate';
             $target = $step['target'] ?? '';
-            $value = $step['value'] ?? '';
+            $value = $step['data'] ?? $step['value'] ?? '';
             
             switch ($action) {
                 case 'navigate':
@@ -612,12 +593,17 @@ public class {$this->sanitize_class_name($flow['name'])} {
                     $test_steps .= "  await page.click('{$target}');\n";
                     break;
                 case 'fill':
+                case 'fill_input':
                     $test_steps .= "  await page.type('{$target}', '{$value}');\n";
+                    break;
+                case 'file_input':
+                    $test_steps .= "  await page.setInputFiles('{$target}', '{$value}');\n";
                     break;
                 case 'wait':
                     $test_steps .= "  await page.waitForSelector('{$target}');\n";
                     break;
                 case 'assert':
+                case 'verify':
                     $test_steps .= "  const text = await page.\$eval('{$target}', el => el.textContent);\n";
                     $test_steps .= "  expect(text).toContain('{$value}');\n";
                     break;
@@ -655,7 +641,7 @@ describe('{$flow['name']}', () => {
         foreach ($steps as $step) {
             $action = $step['action'] ?? 'navigate';
             $target = $step['target'] ?? '';
-            $value = $step['value'] ?? '';
+            $value = $step['data'] ?? $step['value'] ?? '';
             
             switch ($action) {
                 case 'navigate':
@@ -665,12 +651,17 @@ describe('{$flow['name']}', () => {
                     $test_steps .= "    await page.click('{$target}');\n";
                     break;
                 case 'fill':
+                case 'fill_input':
                     $test_steps .= "    await page.fill('{$target}', '{$value}');\n";
+                    break;
+                case 'file_input':
+                    $test_steps .= "    await page.setInputFiles('{$target}', '{$value}');\n";
                     break;
                 case 'wait':
                     $test_steps .= "    await page.waitForSelector('{$target}');\n";
                     break;
                 case 'assert':
+                case 'verify':
                     $test_steps .= "    await expect(page.locator('{$target}')).toContainText('{$value}');\n";
                     break;
             }

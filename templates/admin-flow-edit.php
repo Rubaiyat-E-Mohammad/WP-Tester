@@ -157,6 +157,7 @@ if (empty($steps) && !empty($flow->steps)) {
                         <option value="navigate">Navigate to URL</option>
                         <option value="click">Click Element</option>
                         <option value="fill_input">Fill Input Field</option>
+                        <option value="file_input">File Input</option>
                         <option value="fill_form">Fill Form</option>
                         <option value="submit">Submit Form</option>
                         <option value="verify">Verify Element</option>
@@ -172,7 +173,7 @@ if (empty($steps) && !empty($flow->steps)) {
                 </div>
                 
                 <div class="form-group" id="step-data-group" style="display: none;">
-                    <label for="step-data">Data/Value:</label>
+                    <label for="step-data" id="step-data-label">Data/Value:</label>
                     <textarea id="step-data" name="data" placeholder="Enter data"></textarea>
                 </div>
                 
@@ -479,8 +480,23 @@ jQuery(document).ready(function($) {
     // Show/hide data field based on action
     $('#step-action').on('change', function() {
         const action = $(this).val();
-        if (['fill_input', 'fill_form', 'verify'].includes(action)) {
+        if (['fill_input', 'file_input', 'fill_form', 'verify'].includes(action)) {
             $('#step-data-group').show();
+            
+            // Update label and placeholder based on action
+            if (action === 'file_input') {
+                $('#step-data-label').text('File Path:');
+                $('#step-data').attr('placeholder', 'Enter file path (e.g., /path/to/file.jpg)');
+            } else if (action === 'fill_input') {
+                $('#step-data-label').text('Value:');
+                $('#step-data').attr('placeholder', 'Enter input value');
+            } else if (action === 'fill_form') {
+                $('#step-data-label').text('Form Data:');
+                $('#step-data').attr('placeholder', 'Enter form data (JSON format)');
+            } else if (action === 'verify') {
+                $('#step-data-label').text('Expected Value:');
+                $('#step-data').attr('placeholder', 'Enter expected value to verify');
+            }
         } else {
             $('#step-data-group').hide();
         }
@@ -504,7 +520,7 @@ jQuery(document).ready(function($) {
         
         // Show/hide data field based on action
         const action = step.action || '';
-        if (['fill_input', 'fill_form', 'verify'].includes(action)) {
+        if (['fill_input', 'file_input', 'fill_form', 'verify'].includes(action)) {
             $('#step-data-group').show();
         } else {
             $('#step-data-group').hide();
