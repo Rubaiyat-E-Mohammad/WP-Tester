@@ -1146,16 +1146,22 @@ class WP_Tester_Ajax {
      * Create flow from crawled page
      */
     public function create_flow_from_crawl() {
+        error_log('WP Tester: create_flow_from_crawl called');
+        
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
+            error_log('WP Tester: Insufficient permissions');
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
         
         try {
             $url = esc_url_raw($_POST['url'] ?? '');
+            error_log('WP Tester: URL received: ' . $url);
+            
             if (empty($url)) {
+                error_log('WP Tester: URL is empty');
                 wp_send_json_error(array('message' => __('URL is required', 'wp-tester')));
                 return;
             }
@@ -1163,12 +1169,17 @@ class WP_Tester_Ajax {
             // Get crawl data for this URL
             global $wpdb;
             $crawl_table = $wpdb->prefix . 'wp_tester_crawl_results';
+            error_log('WP Tester: Looking for crawl data in table: ' . $crawl_table);
+            
             $crawl_data = $wpdb->get_row($wpdb->prepare(
                 "SELECT * FROM {$crawl_table} WHERE url = %s ORDER BY crawled_at DESC LIMIT 1",
                 $url
             ));
             
+            error_log('WP Tester: Crawl data found: ' . ($crawl_data ? 'Yes' : 'No'));
+            
             if (!$crawl_data) {
+                error_log('WP Tester: No crawl data found for URL: ' . $url);
                 wp_send_json_error(array('message' => __('Crawl data not found for this URL', 'wp-tester')));
                 return;
             }
@@ -1242,8 +1253,10 @@ class WP_Tester_Ajax {
             );
             
             $flow_id = $result ? $wpdb->insert_id : false;
+            error_log('WP Tester: Flow creation result: ' . ($result ? 'Success' : 'Failed') . ', Flow ID: ' . $flow_id);
             
             if ($flow_id) {
+                error_log('WP Tester: Flow created successfully with ID: ' . $flow_id);
                 wp_send_json_success(array(
                     'message' => __('Flow created successfully', 'wp-tester'),
                     'flow_id' => $flow_id,
@@ -1251,7 +1264,8 @@ class WP_Tester_Ajax {
                     'redirect_url' => admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . $flow_id)
                 ));
             } else {
-                wp_send_json_error(array('message' => __('Failed to create flow', 'wp-tester')));
+                error_log('WP Tester: Failed to create flow - Database error: ' . $wpdb->last_error);
+                wp_send_json_error(array('message' => __('Failed to create flow: ' . $wpdb->last_error, 'wp-tester')));
             }
             
         } catch (Exception $e) {

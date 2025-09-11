@@ -338,7 +338,7 @@ $settings = get_option('wp_tester_settings', array());
                                 wp_clear_scheduled_hook('wp_tester_daily_crawl');
                                 echo '<span style="color: #dc3545;">Cleared scheduled crawl</span>';
                             } else {
-                                echo '<span style="color: #6c757d;">Not scheduled (Manual Only)</span>';
+                                echo '<span style="color: #6c757d;">Manual Only - No Auto Schedule</span>';
                             }
                         } else {
                             // For other frequencies, check if scheduled
@@ -609,8 +609,19 @@ jQuery(document).ready(function($) {
             const url = button.data('url');
             const originalText = button.html();
             
+            console.log('Create Flow clicked for URL:', url);
+            console.log('AJAX URL:', ajaxurl);
+            
             // Show progress
             button.html('<span class="dashicons dashicons-update-alt"></span> Creating...').prop('disabled', true);
+            
+            // Test if ajaxurl is defined
+            if (typeof ajaxurl === 'undefined') {
+                console.error('ajaxurl is not defined!');
+                showErrorModal('Configuration Error', 'AJAX URL is not configured. Please refresh the page and try again.');
+                button.html(originalText).prop('disabled', false);
+                return;
+            }
             
             $.ajax({
                 url: ajaxurl,
@@ -621,7 +632,8 @@ jQuery(document).ready(function($) {
                     nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
                 },
                 success: function(response) {
-                    if (response.success) {
+                    console.log('Create Flow AJAX Response:', response);
+                    if (response && response.success) {
                         showSuccessModal('Flow Created!', 
                             'Flow "' + response.data.flow_name + '" has been created successfully.<br>' +
                             '<a href="' + response.data.redirect_url + '" style="color: #00265e; text-decoration: underline;">Click here to edit the flow</a>');
@@ -631,11 +643,14 @@ jQuery(document).ready(function($) {
                             location.reload();
                         }, 3000);
                     } else {
-                        showErrorModal('Flow Creation Failed', response.data.message || 'Unknown error occurred');
+                        const errorMsg = (response && response.data && response.data.message) ? response.data.message : 'Unknown error occurred';
+                        showErrorModal('Flow Creation Failed', errorMsg);
                     }
                 },
-                error: function() {
-                    showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
+                error: function(xhr, status, error) {
+                    console.error('Create Flow AJAX Error:', {xhr, status, error});
+                    console.error('Response text:', xhr.responseText);
+                    showErrorModal('Connection Error', 'Could not connect to server. Please try again. Error: ' + error);
                 },
                 complete: function() {
                     button.html(originalText).prop('disabled', false);
