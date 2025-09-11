@@ -36,21 +36,21 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                     gap: 4px !important;
                     padding: 8px 12px !important;
                     border-radius: 6px !important;
-                    background: #f59e0b !important;
+                    background: #00265e !important;
                     color: white !important;
-                    border: 1px solid #d97706 !important;
+                    border: 1px solid #cbd5e1 !important;
                     font-size: 14px !important;
                     font-weight: 500 !important;
                     cursor: pointer !important;
                     transition: all 0.2s ease !important;
                     text-decoration: none !important;
                     line-height: 1 !important;
-                    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1) !important;
+                    box-shadow: 0 2px 4px 0 #00265e !important;
                     height: 36px !important;
                     white-space: nowrap !important;
                     margin: 0 !important;
                     outline: none !important;
-                " onmouseover="this.style.background='#d97706'; this.style.borderColor='#b45309';" onmouseout="this.style.background='#e2e8f0'; this.style.borderColor='#d97706';">
+                " onmouseover="this.style.background='#001a3d'; this.style.borderColor='#cbd5e1';" onmouseout="this.style.background='#00265e'; this.style.borderColor='#cbd5e1';">
                     <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important; color: white !important;"></span>
                     Change Model
                 </button>
