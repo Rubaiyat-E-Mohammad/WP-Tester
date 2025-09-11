@@ -50,7 +50,7 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                     white-space: nowrap !important;
                     margin: 0 !important;
                     outline: none !important;
-                " onmouseover="this.style.background='#d97706'; this.style.borderColor='#b45309';" onmouseout="this.style.background='#f59e0b'; this.style.borderColor='#d97706';">
+                " onmouseover="this.style.background='#d97706'; this.style.borderColor='#b45309';" onmouseout="this.style.background='#e2e8f0'; this.style.borderColor='#d97706';">
                     <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important; color: white !important;"></span>
                     Change Model
                 </button>
