@@ -26,7 +26,7 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
             <div class="header-actions">
                 <div class="ai-model-display" style="display: flex; align-items: center; gap: 0.5rem;">
                     <label style="font-size: 0.875rem; color: #64748b;">AI Model:</label>
-                    <span id="current-ai-model" style="padding: 0.5rem 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem; color: #00265e; font-weight: 500;">
+                    <span id="current-ai-model" style="padding: 0.5rem 1rem; color: #00265e; font-weight: 500;">
                         <?php echo esc_html($ai_model); ?>
                     </span>
                 </div>
