@@ -327,43 +327,29 @@ $settings = get_option('wp_tester_settings', array());
                     </h4>
                     <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
                         <?php 
-                        $settings = get_option('wp_tester_settings', array());
-                        $frequency = $settings['crawl_frequency'] ?? 'never';
+                        // Always check for next scheduled crawl regardless of frequency setting
+                        $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
                         
-                        if ($frequency === 'never') {
-                            // For 'never' frequency, ensure no scheduled events exist
-                            $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
-                            if ($next_crawl) {
-                                // Clear any existing scheduled events
-                                wp_clear_scheduled_hook('wp_tester_daily_crawl');
-                                echo '<span style="color: #dc3545;">Cleared scheduled crawl</span>';
-                            } else {
-                                echo '<span style="color: #6c757d;">Manual Only - No Auto Schedule</span>';
-                            }
+                        if ($next_crawl) {
+                            echo '<span style="color: #28a745;">' . date('M j, Y H:i', $next_crawl) . '</span>';
                         } else {
-                            // For other frequencies, check if scheduled
-                            $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
-                            if ($next_crawl) {
-                                echo '<span style="color: #28a745;">' . date('M j, Y H:i', $next_crawl) . '</span>';
+                            // Check if there are any scheduled events at all
+                            $cron = get_option('cron');
+                            $has_crawl_events = false;
+                            
+                            if ($cron && is_array($cron)) {
+                                foreach ($cron as $timestamp => $hooks) {
+                                    if (isset($hooks['wp_tester_daily_crawl'])) {
+                                        $has_crawl_events = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if ($has_crawl_events) {
+                                echo '<span style="color: #ffc107;">Scheduled but not active</span>';
                             } else {
-                                // Try to schedule if not scheduled
-                                wp_clear_scheduled_hook('wp_tester_daily_crawl');
-                                if ($frequency === 'daily' && isset($settings['crawl_schedule_time']) && isset($settings['crawl_schedule_days'])) {
-                                    // Use custom daily scheduling - schedule for next occurrence
-                                    $scheduler = new WP_Tester_Scheduler();
-                                    $scheduler->ensure_crawl_scheduled();
-                                } else {
-                                    // Use WordPress default frequency scheduling
-                                    wp_schedule_event(time(), $frequency, 'wp_tester_daily_crawl');
-                                }
-                                
-                                // Check again
-                                $next_crawl = wp_next_scheduled('wp_tester_daily_crawl');
-                                if ($next_crawl) {
-                                    echo '<span style="color: #28a745;">' . date('M j, Y H:i', $next_crawl) . '</span>';
-                                } else {
-                                    echo '<span style="color: #dc3545;">Failed to schedule</span>';
-                                }
+                                echo '<span style="color: #6c757d;">No scheduled crawl</span>';
                             }
                         }
                         ?>
@@ -603,13 +589,24 @@ jQuery(document).ready(function($) {
         });
 
         // Create flow functionality
-        $('.create-flow').off('click').on('click', function(e) {
+        $(document).off('click', '.create-flow').on('click', '.create-flow', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            
+            console.log('Create Flow button clicked');
             
             const button = $(this);
             const url = button.data('url');
             const originalText = button.html();
+            
+            console.log('URL:', url);
+            console.log('Button:', button);
+            
+            if (!url) {
+                console.error('No URL found in button data');
+                showErrorModal('Error', 'No URL found for this page');
+                return;
+            }
             
             // Show progress
             button.html('<span class="dashicons dashicons-update-alt"></span> Creating...').prop('disabled', true);

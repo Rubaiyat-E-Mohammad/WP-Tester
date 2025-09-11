@@ -77,7 +77,7 @@
 
 .wp-tester-badge-success { background-color: #28a745; }
 .wp-tester-badge-danger { background-color: #dc3545; }
-.wp-tester-badge-warning { background-color: #ffc107; color: #212529; }
+.wp-tester-badge-warning { background-color: #e2e8f0; color: #374151; }
 .wp-tester-badge-info { background-color: #17a2b8; }
 .wp-tester-badge-secondary { background-color: #6c757d; }
 
@@ -339,7 +339,7 @@
 
 .wp-tester-priority-critical { border-left-color: #dc3545; }
 .wp-tester-priority-high { border-left-color: #fd7e14; }
-.wp-tester-priority-medium { border-left-color: #ffc107; }
+.wp-tester-priority-medium { border-left-color: #e2e8f0; }
 .wp-tester-priority-low { border-left-color: #28a745; }
 
 .wp-tester-recommendation-icon {
@@ -392,7 +392,7 @@
 }
 
 .wp-tester-priority-high { background-color: #dc3545; }
-.wp-tester-priority-medium { background-color: #ffc107; color: #212529; }
+.wp-tester-priority-medium { background-color: #e2e8f0; color: #374151; }
 .wp-tester-priority-low { background-color: #28a745; }
 
 .wp-tester-status-active {

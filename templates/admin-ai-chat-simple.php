@@ -72,7 +72,9 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                         <div class="chat-message ai-message" style="margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 3px solid #00265e;">
                             <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
                                 <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: #00265e; margin-right: 0.5rem; text-decoration: none;">
-                    <span class="dashicons dashicons-robot" style="color: #00265e;"></span>
+                    <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
+                         alt="AI" 
+                         style="width: 20px; height: 20px;">
                 </a>
                                 <strong style="color: #00265e;">AI Assistant</strong>
                             </div>
@@ -436,14 +438,18 @@ jQuery(document).ready(function($) {
     function addMessage(type, content) {
         const messagesContainer = $('#chat-messages');
         const messageClass = type === 'user' ? 'user-message' : 'ai-message';
-        const icon = type === 'user' ? 'dashicons-admin-users' : 'dashicons-robot';
+        const icon = type === 'user' ? 'dashicons-admin-users' : 'artificial-intelligence';
         const name = type === 'user' ? 'You' : 'AI Assistant';
         const color = type === 'user' ? 'white' : '#00265e';
+        
+        const iconHtml = type === 'user' ? 
+            `<span class="dashicons dashicons-admin-users" style="color: ${color}; margin-right: 0.5rem;"></span>` :
+            `<img src="${ajaxurl.replace('admin-ajax.php', '')}../assets/images/artificial-intelligence.png" alt="AI" style="width: 20px; height: 20px; margin-right: 0.5rem;">`;
         
         const messageHtml = `
             <div class="chat-message ${messageClass}">
                 <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                    <span class="dashicons ${icon}" style="color: ${color}; margin-right: 0.5rem;"></span>
+                    ${iconHtml}
                     <strong style="color: ${color};">${name}</strong>
                 </div>
                 <div style="color: ${type === 'user' ? 'white' : '#374151'};">
@@ -465,7 +471,9 @@ jQuery(document).ready(function($) {
         const typingHtml = `
             <div class="typing-indicator">
                 <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: #00265e; margin-right: 0.5rem; text-decoration: none;">
-                    <span class="dashicons dashicons-robot" style="color: #00265e;"></span>
+                    <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
+                         alt="AI" 
+                         style="width: 20px; height: 20px;">
                 </a>
                 <span>AI is typing</span>
                 <div class="typing-dots">
@@ -495,7 +503,9 @@ jQuery(document).ready(function($) {
                 <div class="chat-message ai-message" style="margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 3px solid #00265e;">
                     <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
                         <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: #00265e; margin-right: 0.5rem; text-decoration: none;">
-                    <span class="dashicons dashicons-robot" style="color: #00265e;"></span>
+                    <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
+                         alt="AI" 
+                         style="width: 20px; height: 20px;">
                 </a>
                         <strong style="color: #00265e;">AI Assistant</strong>
                     </div>

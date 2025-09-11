@@ -45,11 +45,10 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                     <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: white; text-decoration: none;">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: white;">
-                            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V7.5C15 8.3 14.3 9 13.5 9H10.5C9.7 9 9 8.3 9 7.5V6.5L3 7V9L9 8.5V9.5C9 10.3 9.7 11 10.5 11H13.5C14.3 11 15 10.3 15 9.5V8.5L21 9ZM6.5 12C5.7 12 5 12.7 5 13.5V16.5C5 17.3 5.7 18 6.5 18H7.5V22H9V18H15V22H16.5V18H17.5C18.3 18 19 17.3 19 16.5V13.5C19 12.7 18.3 12 17.5 12H6.5Z" fill="currentColor"/>
-                        </svg>
+                        <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
+                             alt="AI" 
+                             style="width: 32px; height: 32px; filter: brightness(0) invert(1);">
                     </a>
-                    <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 1.2rem; font-weight: bold; color: white;">🤖</div>
                 </div>
                 <div>
                     <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: white;">AI Flow Generator</h1>
@@ -355,11 +354,10 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
             <div style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                 <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: #00265e; text-decoration: none;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #00265e;">
-                        <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V7.5C15 8.3 14.3 9 13.5 9H10.5C9.7 9 9 8.3 9 7.5V6.5L3 7V9L9 8.5V9.5C9 10.3 9.7 11 10.5 11H13.5C14.3 11 15 10.3 15 9.5V8.5L21 9ZM6.5 12C5.7 12 5 12.7 5 13.5V16.5C5 17.3 5.7 18 6.5 18H7.5V22H9V18H15V22H16.5V18H17.5C18.3 18 19 17.3 19 16.5V13.5C19 12.7 18.3 12 17.5 12H6.5Z" fill="currentColor"/>
-                    </svg>
+                    <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
+                         alt="AI" 
+                         style="width: 24px; height: 24px;">
                 </a>
-                <div style="display: none; align-items: center; justify-content: center; width: 100%; height: 100%; font-size: 0.9rem; font-weight: bold; color: #00265e;">🤖</div>
             </div>
             <h2 style="margin: 0; color: #00265e; font-size: 1.5rem; font-weight: 600; line-height: 1.2;">Recent AI Generated Flows</h2>
         </div>
