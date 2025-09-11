@@ -26,7 +26,9 @@ if (!defined('ABSPATH')) {
                     Dashboard
                 </a>
                 <button id="test-connection" class="modern-btn modern-btn-secondary modern-btn-small">
-                    <span class="dashicons dashicons-admin-tools"></span>
+                    <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: #00265e; text-decoration: none;">
+                        <span class="dashicons dashicons-admin-tools"></span>
+                    </a>
                     Test Connection
                 </button>
                 <button id="cleanup-flows" class="modern-btn modern-btn-danger modern-btn-small">

@@ -157,10 +157,194 @@ if (!defined('ABSPATH')) {
                         <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
                             Number of times to retry a failed step before marking it as failed
                         </p>
+                    </div>
+                </div>
             </div>
 
+            <!-- Scheduled Testing Settings -->
+            <div class="modern-card" style="margin-bottom: 2rem;">
+                <div class="card-header">
+                    <h3 style="margin: 0; color: #00265e; display: flex; align-items: center;">
+                        <span class="dashicons dashicons-clock" style="margin-right: 0.5rem;"></span>
+                        Scheduled Testing
+                    </h3>
+                </div>
+                <div class="card-content">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        
+                        <!-- Test Frequency -->
+                    <div>
+                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                Test Frequency
+                        </label>
+                            <select name="wp_tester_settings[test_frequency]" 
+                                    style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                                <option value="never" <?php selected($settings['test_frequency'] ?? 'never', 'never'); ?>>Never (Manual Only)</option>
+                                <option value="daily" <?php selected($settings['test_frequency'] ?? 'never', 'daily'); ?>>Daily</option>
+                                <option value="weekly" <?php selected($settings['test_frequency'] ?? 'never', 'weekly'); ?>>Weekly</option>
+                                <option value="monthly" <?php selected($settings['test_frequency'] ?? 'never', 'monthly'); ?>>Monthly</option>
+                        </select>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                How often to automatically run all active flows
+                            </p>
+                        </div>
 
+                        <!-- Test Schedule Time -->
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                Test Schedule Time
+                            </label>
+                            <input type="time" name="wp_tester_settings[test_schedule_time]" 
+                                   value="<?php echo esc_attr($settings['test_schedule_time'] ?? '02:00'); ?>"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                Time of day to run scheduled tests (24-hour format)
+                        </p>
+                    </div>
 
+                        <!-- Email Notifications -->
+                    <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                Email Notifications
+                            </label>
+                            <label style="display: flex; align-items: center; font-size: 0.875rem; color: #374151;">
+                                <input type="checkbox" name="wp_tester_settings[email_notifications]" 
+                                       value="1" 
+                                       <?php checked($settings['email_notifications'] ?? false); ?>
+                                       style="margin-right: 0.5rem;">
+                                Send email notifications for test results
+                        </label>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                Enable email notifications for both scheduled and manual tests
+                        </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Configuration Settings -->
+            <div class="modern-card" style="margin-bottom: 2rem;">
+                <div class="card-header">
+                    <h3 style="margin: 0; color: #00265e; display: flex; align-items: center;">
+                        <span class="dashicons dashicons-email" style="margin-right: 0.5rem;"></span>
+                        Email Configuration
+                    </h3>
+                </div>
+                <div class="card-content">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        
+                        <!-- Email Recipients -->
+                        <div style="grid-column: 1 / -1;">
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                Email Recipients
+                            </label>
+                            <textarea name="wp_tester_settings[email_recipients]" 
+                                      rows="3"
+                                      placeholder="Enter email addresses, one per line"
+                                      style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem; resize: vertical;"><?php echo esc_html($settings['email_recipients'] ?? ''); ?></textarea>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                Email addresses to receive test result notifications (one per line)
+                            </p>
+                        </div>
+
+                        <!-- SMTP Host -->
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                SMTP Host
+                            </label>
+                            <input type="text" name="wp_tester_settings[smtp_host]" 
+                                   value="<?php echo esc_attr($settings['smtp_host'] ?? ''); ?>"
+                                   placeholder="smtp.gmail.com"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                SMTP server hostname
+                            </p>
+                        </div>
+
+                        <!-- SMTP Port -->
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                SMTP Port
+                            </label>
+                            <input type="number" name="wp_tester_settings[smtp_port]" 
+                                   value="<?php echo esc_attr($settings['smtp_port'] ?? 587); ?>"
+                                   min="1" max="65535"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                SMTP server port (587 for TLS, 465 for SSL)
+                            </p>
+                        </div>
+
+                        <!-- SMTP Username -->
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                SMTP Username
+                            </label>
+                            <input type="text" name="wp_tester_settings[smtp_username]" 
+                                   value="<?php echo esc_attr($settings['smtp_username'] ?? ''); ?>"
+                                   placeholder="your-email@gmail.com"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                SMTP authentication username
+                            </p>
+                        </div>
+
+                        <!-- SMTP Password -->
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                SMTP Password
+                            </label>
+                            <input type="password" name="wp_tester_settings[smtp_password]" 
+                                   value="<?php echo esc_attr($settings['smtp_password'] ?? ''); ?>"
+                                   placeholder="Your email password or app password"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                SMTP authentication password
+                            </p>
+                        </div>
+
+                        <!-- SMTP Encryption -->
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                SMTP Encryption
+                            </label>
+                            <select name="wp_tester_settings[smtp_encryption]" 
+                                    style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                                <option value="none" <?php selected($settings['smtp_encryption'] ?? 'tls', 'none'); ?>>None</option>
+                                <option value="tls" <?php selected($settings['smtp_encryption'] ?? 'tls', 'tls'); ?>>TLS</option>
+                                <option value="ssl" <?php selected($settings['smtp_encryption'] ?? 'tls', 'ssl'); ?>>SSL</option>
+                            </select>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                Encryption method for SMTP connection
+                            </p>
+                        </div>
+
+                        <!-- From Email -->
+                        <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                From Email
+                            </label>
+                            <input type="email" name="wp_tester_settings[from_email]" 
+                                   value="<?php echo esc_attr($settings['from_email'] ?? get_option('admin_email')); ?>"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                Email address to send notifications from
+                            </p>
+                        </div>
+
+                        <!-- From Name -->
+                    <div>
+                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                                From Name
+                        </label>
+                            <input type="text" name="wp_tester_settings[from_name]" 
+                                   value="<?php echo esc_attr($settings['from_name'] ?? 'WP Tester'); ?>"
+                                   style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                Name to display in email sender field
+                        </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 

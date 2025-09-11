@@ -9,6 +9,13 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// WordPress function declarations for linter
+if (!function_exists('wp_mail')) {
+    function wp_mail($to, $subject, $message, $headers = '', $attachments = array()) {
+        return false;
+    }
+}
+
 class WP_Tester_Scheduler {
     
     /**
@@ -20,6 +27,9 @@ class WP_Tester_Scheduler {
         add_action('wp_tester_test_flows', array($this, 'run_scheduled_tests'));
         add_action('wp_tester_cleanup', array($this, 'run_cleanup'));
         
+        // Add custom cron intervals
+        add_filter('cron_schedules', array($this, 'add_custom_cron_intervals'));
+        
         // Hook into settings updates to reschedule events
         add_action('update_option_wp_tester_settings', array($this, 'reschedule_events'), 10, 2);
         
@@ -30,6 +40,20 @@ class WP_Tester_Scheduler {
         
         // Ensure crawl is scheduled based on current settings
         $this->ensure_crawl_scheduled();
+        
+        // Ensure tests are scheduled based on current settings
+        $this->ensure_tests_scheduled();
+    }
+    
+    /**
+     * Add custom cron intervals
+     */
+    public function add_custom_cron_intervals($schedules) {
+        $schedules['monthly'] = array(
+            'interval' => 30 * 24 * 60 * 60, // 30 days in seconds
+            'display' => __('Monthly', 'wp-tester')
+        );
+        return $schedules;
     }
     
     /**
@@ -65,40 +89,83 @@ class WP_Tester_Scheduler {
      */
     public function run_scheduled_tests() {
         try {
+            error_log('WP Tester: Starting scheduled test execution');
+            
             $admin = new WP_Tester_Admin();
             $database = new WP_Tester_Database();
             
-            // Get flows that need testing (prioritize by priority and last test date)
+            // Get all active flows
             $flows = $this->get_flows_for_testing();
             
-            $test_count = 0;
-            $success_count = 0;
+            if (empty($flows)) {
+                error_log('WP Tester: No active flows found for scheduled testing');
+                return;
+            }
             
+            $results = array();
+            $total_flows = count($flows);
+            $passed_flows = 0;
+            $failed_flows = 0;
+            
+            error_log("WP Tester: Found {$total_flows} active flows for testing");
+            
+            // Run each flow
             foreach ($flows as $flow) {
-                $result = $admin->execute_flow_with_fallback($flow->id, false);
-                $test_count++;
-                
-                if ($result['success'] && $result['status'] === 'passed') {
-                    $success_count++;
-                }
-                
-                // Add delay between tests to avoid overwhelming the server
-                sleep(5);
-                
-                // Limit number of tests per scheduled run
-                if ($test_count >= 10) {
-                    break;
+                try {
+                    error_log("WP Tester: Testing flow: {$flow->flow_name}");
+                    
+                    $result = $admin->execute_flow_with_fallback($flow->id, false);
+                    
+                    $results[] = array(
+                        'flow_id' => $flow->id,
+                        'flow_name' => $flow->flow_name,
+                        'status' => $result['success'] && $result['status'] === 'passed' ? 'passed' : 'failed',
+                        'execution_time' => $result['execution_time'] ?? 0,
+                        'steps_passed' => $result['steps_passed'] ?? 0,
+                        'steps_failed' => $result['steps_failed'] ?? 0,
+                        'error_message' => $result['error_message'] ?? null
+                    );
+                    
+                    if ($result['success'] && $result['status'] === 'passed') {
+                        $passed_flows++;
+                    } else {
+                        $failed_flows++;
+                    }
+                    
+                    // Add delay between tests to avoid overwhelming the server
+                    sleep(2);
+                    
+                } catch (Exception $e) {
+                    error_log("WP Tester: Error testing flow {$flow->flow_name}: " . $e->getMessage());
+                    $results[] = array(
+                        'flow_id' => $flow->id,
+                        'flow_name' => $flow->flow_name,
+                        'status' => 'failed',
+                        'execution_time' => 0,
+                        'steps_passed' => 0,
+                        'steps_failed' => 0,
+                        'error_message' => $e->getMessage()
+                    );
+                    $failed_flows++;
                 }
             }
             
+            // Send email notification if enabled
+            $this->send_test_notification($results, $total_flows, $passed_flows, $failed_flows, 'scheduled');
+            
+            // Reschedule if this was a monthly test
+            $settings = get_option('wp_tester_settings', array());
+            if (($settings['test_frequency'] ?? 'never') === 'monthly') {
+                $this->schedule_monthly_tests($settings['test_schedule_time'] ?? '02:00');
+            }
+            
             error_log(sprintf(
-                'WP Tester: Scheduled tests completed. Ran %d tests, %d passed.',
-                $test_count,
-                $success_count
+                'WP Tester: Scheduled testing completed. %d flows tested, %d passed, %d failed.',
+                $total_flows, $passed_flows, $failed_flows
             ));
             
         } catch (Exception $e) {
-            error_log('WP Tester: Scheduled tests exception - ' . $e->getMessage());
+            error_log('WP Tester: Error in scheduled testing: ' . $e->getMessage());
         }
     }
     
@@ -192,6 +259,9 @@ class WP_Tester_Scheduler {
         } else {
             error_log("WP Tester: Crawl frequency set to 'never' - no scheduling");
         }
+        
+        // Handle test scheduling changes
+        $this->ensure_tests_scheduled();
     }
     
     /**
@@ -427,5 +497,317 @@ class WP_Tester_Scheduler {
                 'human_time' => $events['cleanup'] ? human_time_diff($events['cleanup'], current_time('timestamp')) : null
             )
         );
+    }
+    
+    /**
+     * Ensure tests are scheduled based on current settings
+     */
+    public function ensure_tests_scheduled() {
+        $settings = get_option('wp_tester_settings', array());
+        $frequency = $settings['test_frequency'] ?? 'never';
+        
+        // Clear existing scheduled tests
+        wp_clear_scheduled_hook('wp_tester_test_flows');
+        
+        // Only schedule if frequency is not 'never'
+        if ($frequency !== 'never') {
+            if ($frequency === 'daily') {
+                $this->schedule_daily_tests($settings['test_schedule_time'] ?? '02:00');
+            } elseif ($frequency === 'weekly') {
+                $this->schedule_weekly_tests($settings['test_schedule_time'] ?? '02:00', $settings['test_schedule_days'] ?? ['monday']);
+            } elseif ($frequency === 'monthly') {
+                $this->schedule_monthly_tests($settings['test_schedule_time'] ?? '02:00');
+            }
+        }
+    }
+    
+    /**
+     * Schedule daily tests
+     */
+    private function schedule_daily_tests($time) {
+        // Use WordPress daily frequency
+        if (!wp_next_scheduled('wp_tester_test_flows')) {
+            wp_schedule_event(time(), 'daily', 'wp_tester_test_flows');
+            error_log("WP Tester: Daily tests scheduled");
+        }
+    }
+    
+    /**
+     * Schedule weekly tests
+     */
+    private function schedule_weekly_tests($time, $days) {
+        // Use WordPress weekly frequency
+        if (!wp_next_scheduled('wp_tester_test_flows')) {
+            wp_schedule_event(time(), 'weekly', 'wp_tester_test_flows');
+            error_log("WP Tester: Weekly tests scheduled");
+        }
+    }
+    
+    /**
+     * Schedule monthly tests
+     */
+    private function schedule_monthly_tests($time) {
+        // For monthly, schedule a single event and reschedule after execution
+        $timestamp = $this->get_next_monthly_timestamp($time);
+        if ($timestamp) {
+            wp_schedule_single_event($timestamp, 'wp_tester_test_flows');
+            error_log("WP Tester: Monthly tests scheduled for " . date('Y-m-d H:i:s', $timestamp));
+        }
+    }
+    
+    /**
+     * Get next daily timestamp
+     */
+    private function get_next_daily_timestamp($time) {
+        $today = date('Y-m-d');
+        $datetime = $today . ' ' . $time . ':00';
+        $timestamp = strtotime($datetime);
+        
+        // If time has passed today, schedule for tomorrow
+        if ($timestamp <= time()) {
+            $timestamp = strtotime('+1 day', $timestamp);
+        }
+        
+        return $timestamp;
+    }
+    
+    /**
+     * Get next weekly timestamp
+     */
+    private function get_next_weekly_timestamp($time, $days) {
+        $day_names = array(
+            'monday' => 1, 'tuesday' => 2, 'wednesday' => 3, 'thursday' => 4,
+            'friday' => 5, 'saturday' => 6, 'sunday' => 0
+        );
+        
+        $next_timestamp = null;
+        $today = date('N'); // 1 = Monday, 7 = Sunday
+        
+        foreach ($days as $day) {
+            $day_num = $day_names[$day] ?? 1;
+            $days_until = ($day_num - $today + 7) % 7;
+            if ($days_until == 0) $days_until = 7; // Next week
+            
+            $target_date = date('Y-m-d', strtotime("+{$days_until} days"));
+            $datetime = $target_date . ' ' . $time . ':00';
+            $timestamp = strtotime($datetime);
+            
+            if ($next_timestamp === null || $timestamp < $next_timestamp) {
+                $next_timestamp = $timestamp;
+            }
+        }
+        
+        return $next_timestamp;
+    }
+    
+    /**
+     * Get next monthly timestamp
+     */
+    private function get_next_monthly_timestamp($time) {
+        $today = date('Y-m-d');
+        $this_month = date('Y-m') . '-01 ' . $time . ':00';
+        $timestamp = strtotime($this_month);
+        
+        // If time has passed this month, schedule for next month
+        if ($timestamp <= time()) {
+            $timestamp = strtotime('+1 month', $timestamp);
+        }
+        
+        return $timestamp;
+    }
+    
+    /**
+     * Send test notification email
+     */
+    public function send_test_notification($results, $total_flows, $passed_flows, $failed_flows, $type = 'manual') {
+        $settings = get_option('wp_tester_settings', array());
+        
+        // Check if email notifications are enabled
+        if (empty($settings['email_notifications'])) {
+            return;
+        }
+        
+        $recipients = $settings['email_recipients'] ?? '';
+        if (empty($recipients)) {
+            error_log('WP Tester: No email recipients configured');
+            return;
+        }
+        
+        $recipient_emails = array_filter(array_map('trim', explode("\n", $recipients)));
+        if (empty($recipient_emails)) {
+            error_log('WP Tester: No valid email recipients found');
+            return;
+        }
+        
+        // Generate email content
+        $subject = sprintf(
+            'WP Tester %s - %d/%d Tests Passed',
+            ucfirst($type) . ' Test Results',
+            $passed_flows,
+            $total_flows
+        );
+        
+        $html_content = $this->generate_test_email_html($results, $total_flows, $passed_flows, $failed_flows, $type);
+        
+        // Send email
+        $this->send_email($recipient_emails, $subject, $html_content);
+    }
+    
+    /**
+     * Generate HTML email content for test results
+     */
+    private function generate_test_email_html($results, $total_flows, $passed_flows, $failed_flows, $type) {
+        $status_color = $failed_flows > 0 ? '#dc3545' : '#28a745';
+        $status_text = $failed_flows > 0 ? 'Some Tests Failed' : 'All Tests Passed';
+        
+        $html = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>WP Tester Test Results</title>
+        </head>
+        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif; background-color: #f8fafc;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, #00265e 0%, #0F9D7A 100%); color: white; padding: 2rem; text-align: center;">
+                    <h1 style="margin: 0; font-size: 1.5rem; font-weight: 700;">WP Tester Test Results</h1>
+                    <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 1rem;">' . ucfirst($type) . ' Test Execution Report</p>
+                </div>
+                
+                <!-- Summary -->
+                <div style="padding: 2rem;">
+                    <div style="background: ' . $status_color . '; color: white; padding: 1.5rem; border-radius: 8px; text-align: center; margin-bottom: 2rem;">
+                        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 600;">' . $status_text . '</h2>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">
+                            ' . $passed_flows . ' of ' . $total_flows . ' tests passed
+                        </p>
+                    </div>
+                    
+                    <!-- Test Results Table -->
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="margin: 0 0 1rem 0; color: #374151; font-size: 1rem; font-weight: 600;">Test Results</h3>
+                        <div style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background-color: #f9fafb;">
+                                        <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Flow Name</th>
+                                        <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Status</th>
+                                        <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Time</th>
+                                        <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb;">Steps</th>
+                                    </tr>
+                                </thead>
+                                <tbody>';
+        
+        foreach ($results as $result) {
+            $status_badge = $result['status'] === 'passed' ? 
+                '<span style="background-color: #10b981; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">PASSED</span>' :
+                '<span style="background-color: #ef4444; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">FAILED</span>';
+            
+            $html .= '
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 0.75rem; color: #374151;">' . esc_html($result['flow_name']) . '</td>
+                                        <td style="padding: 0.75rem; text-align: center;">' . $status_badge . '</td>
+                                        <td style="padding: 0.75rem; text-align: center; color: #6b7280;">' . number_format($result['execution_time'], 2) . 's</td>
+                                        <td style="padding: 0.75rem; text-align: center; color: #6b7280;">' . $result['steps_passed'] . '/' . ($result['steps_passed'] + $result['steps_failed']) . '</td>
+                                    </tr>';
+        }
+        
+        $html .= '
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="text-align: center; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                        <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">
+                            Generated by WP Tester on ' . date('F j, Y \a\t g:i A') . '
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>';
+        
+        return $html;
+    }
+    
+    /**
+     * Send email using SMTP or WordPress mail
+     */
+    private function send_email($recipients, $subject, $html_content) {
+        $settings = get_option('wp_tester_settings', array());
+        
+        // Use SMTP if configured
+        if (!empty($settings['smtp_host']) && !empty($settings['smtp_username'])) {
+            $this->send_smtp_email($recipients, $subject, $html_content, $settings);
+        } else {
+            // Use WordPress default mail
+            $this->send_wp_email($recipients, $subject, $html_content, $settings);
+        }
+    }
+    
+    /**
+     * Send email using SMTP
+     */
+    private function send_smtp_email($recipients, $subject, $html_content, $settings) {
+        try {
+            // Set up SMTP headers
+            $headers = array(
+                'Content-Type: text/html; charset=UTF-8',
+                'From: ' . ($settings['from_name'] ?? 'WP Tester') . ' <' . ($settings['from_email'] ?? get_option('admin_email')) . '>'
+            );
+            
+            // Use wp_mail with SMTP settings
+            add_action('phpmailer_init', function($phpmailer) use ($settings) {
+                $phpmailer->isSMTP();
+                $phpmailer->Host = $settings['smtp_host'];
+                $phpmailer->SMTPAuth = true;
+                $phpmailer->Username = $settings['smtp_username'];
+                $phpmailer->Password = $settings['smtp_password'];
+                $phpmailer->Port = $settings['smtp_port'] ?? 587;
+                
+                if ($settings['smtp_encryption'] === 'ssl') {
+                    $phpmailer->SMTPSecure = 'ssl';
+                } elseif ($settings['smtp_encryption'] === 'tls') {
+                    $phpmailer->SMTPSecure = 'tls';
+                }
+            });
+            foreach ($recipients as $recipient) {
+                if (function_exists('wp_mail')) {
+                    wp_mail($recipient, $subject, $html_content, $headers);
+                } else {
+                    // Fallback to PHP mail if wp_mail is not available
+                    mail($recipient, $subject, $html_content, implode("\r\n", $headers));
+                }
+            }
+            
+            error_log('WP Tester: Test notification email sent via SMTP to ' . count($recipients) . ' recipients');
+        } catch (Exception $e) {
+            error_log('WP Tester: SMTP email error - ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Send email using WordPress default mail
+     */
+    private function send_wp_email($recipients, $subject, $html_content, $settings) {
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . ($settings['from_name'] ?? 'WP Tester') . ' <' . ($settings['from_email'] ?? get_option('admin_email')) . '>'
+        );
+        foreach ($recipients as $recipient) {
+            if (function_exists('wp_mail')) {
+                wp_mail($recipient, $subject, $html_content, $headers);
+            } else {
+                // Fallback to PHP mail if wp_mail is not available
+                mail($recipient, $subject, $html_content, implode("\r\n", $headers));
+            }
+        }
+        
+        error_log('WP Tester: Test notification email sent via WordPress mail to ' . count($recipients) . ' recipients');
     }
 }

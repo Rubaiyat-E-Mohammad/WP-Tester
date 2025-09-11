@@ -256,6 +256,9 @@ class WP_Tester_Ajax {
             $admin = new WP_Tester_Admin();
             $result = $admin->execute_flow_with_fallback($flow_id, true);
             
+            // Send email notification for manual test
+            $this->send_manual_test_notification($flow_id, $result);
+            
             if ($result['success']) {
                 wp_send_json_success(array(
                     'message' => sprintf(
@@ -2967,6 +2970,64 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
             
         } catch (Exception $e) {
             wp_send_json_error('Error loading more results: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Send email notification for manual test execution
+     */
+    private function send_manual_test_notification($flow_id, $result) {
+        try {
+            $settings = get_option('wp_tester_settings', array());
+            
+            // Check if email notifications are enabled
+            if (empty($settings['email_notifications'])) {
+                return;
+            }
+            
+            $recipients = $settings['email_recipients'] ?? '';
+            if (empty($recipients)) {
+                return;
+            }
+            
+            $recipient_emails = array_filter(array_map('trim', explode("\n", $recipients)));
+            if (empty($recipient_emails)) {
+                return;
+            }
+            
+            // Get flow details
+            global $wpdb;
+            $flows_table = $wpdb->prefix . 'wp_tester_flows';
+            $flow = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$flows_table} WHERE id = %d",
+                $flow_id
+            ));
+            
+            if (!$flow) {
+                return;
+            }
+            
+            // Prepare result data
+            $results = array(array(
+                'flow_id' => $flow_id,
+                'flow_name' => $flow->flow_name,
+                'status' => $result['success'] && $result['status'] === 'passed' ? 'passed' : 'failed',
+                'execution_time' => $result['execution_time'] ?? 0,
+                'steps_passed' => $result['steps_passed'] ?? 0,
+                'steps_failed' => $result['steps_failed'] ?? 0,
+                'error_message' => $result['error_message'] ?? null
+            ));
+            
+            $total_flows = 1;
+            $passed_flows = $result['success'] && $result['status'] === 'passed' ? 1 : 0;
+            $failed_flows = 1 - $passed_flows;
+            
+            // Use scheduler to send notification
+            $scheduler = new WP_Tester_Scheduler();
+            $scheduler->send_test_notification($results, $total_flows, $passed_flows, $failed_flows, 'manual');
+            
+        } catch (Exception $e) {
+            error_log('WP Tester: Error sending manual test notification - ' . $e->getMessage());
         }
     }
 }

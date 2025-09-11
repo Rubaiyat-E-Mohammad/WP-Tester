@@ -605,12 +605,11 @@ jQuery(document).ready(function($) {
         // Create flow functionality
         $('.create-flow').off('click').on('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
+            
             const button = $(this);
             const url = button.data('url');
             const originalText = button.html();
-            
-            console.log('Create Flow clicked for URL:', url);
-            console.log('AJAX URL:', ajaxurl);
             
             // Show progress
             button.html('<span class="dashicons dashicons-update-alt"></span> Creating...').prop('disabled', true);
@@ -619,6 +618,14 @@ jQuery(document).ready(function($) {
             if (typeof ajaxurl === 'undefined') {
                 console.error('ajaxurl is not defined!');
                 showErrorModal('Configuration Error', 'AJAX URL is not configured. Please refresh the page and try again.');
+                button.html(originalText).prop('disabled', false);
+                return;
+            }
+            
+            // Test if URL is valid
+            if (!url || url === '') {
+                console.error('URL is empty or invalid!');
+                showErrorModal('Invalid URL', 'No URL found for this page. Please try again.');
                 button.html(originalText).prop('disabled', false);
                 return;
             }

@@ -28,7 +28,9 @@ $flows = $database->get_flows();
         <div class="modern-card" style="margin-bottom: 2rem;">
             <div class="card-header">
                 <h3 style="margin: 0; color: #00265e; display: flex; align-items: center;">
-                    <span class="dashicons dashicons-admin-tools" style="margin-right: 0.5rem;"></span>
+                    <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: #00265e; margin-right: 0.5rem; text-decoration: none;">
+                        <span class="dashicons dashicons-admin-tools" style="margin-right: 0.5rem;"></span>
+                    </a>
                     Select Test Framework
                 </h3>
             </div>

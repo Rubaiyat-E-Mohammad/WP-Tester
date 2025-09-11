@@ -71,7 +71,9 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                     <div id="chat-messages" style="flex: 1; padding: 1rem; overflow-y: auto; min-height: 400px; max-height: 600px; border-bottom: 1px solid #e2e8f0;">
                         <div class="chat-message ai-message" style="margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 3px solid #00265e;">
                             <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                                <span class="dashicons dashicons-robot" style="color: #00265e; margin-right: 0.5rem;"></span>
+                                <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: #00265e; margin-right: 0.5rem; text-decoration: none;">
+                                    <span class="dashicons dashicons-robot" style="color: #00265e;"></span>
+                                </a>
                                 <strong style="color: #00265e;">AI Assistant</strong>
                             </div>
                             <p style="margin: 0; color: #374151;">Hello! I'm your AI assistant. I can help you create custom test flows for your website. What functionality would you like to test today?</p>
@@ -470,7 +472,9 @@ jQuery(document).ready(function($) {
         const messagesContainer = $('#chat-messages');
         const typingHtml = `
             <div class="typing-indicator">
-                <span class="dashicons dashicons-robot" style="color: #00265e; margin-right: 0.5rem;"></span>
+                <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: #00265e; margin-right: 0.5rem; text-decoration: none;">
+                    <span class="dashicons dashicons-robot" style="color: #00265e;"></span>
+                </a>
                 <span>AI is typing</span>
                 <div class="typing-dots">
                     <span></span>
@@ -498,7 +502,9 @@ jQuery(document).ready(function($) {
             $('#chat-messages').html(`
                 <div class="chat-message ai-message" style="margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 3px solid #00265e;">
                     <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                        <span class="dashicons dashicons-robot" style="color: #00265e; margin-right: 0.5rem;"></span>
+                        <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: #00265e; margin-right: 0.5rem; text-decoration: none;">
+                    <span class="dashicons dashicons-robot" style="color: #00265e;"></span>
+                </a>
                         <strong style="color: #00265e;">AI Assistant</strong>
                     </div>
                     <p style="margin: 0; color: #374151;">Hello! I'm your AI assistant. I can help you create custom test flows for your website. What functionality would you like to test today?</p>
