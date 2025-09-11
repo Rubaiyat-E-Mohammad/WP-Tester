@@ -44,10 +44,10 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
     <div class="modern-header" style="background: linear-gradient(135deg, #00265e 0%, #0F9D7A 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; position: relative; overflow: hidden;">
         <div style="position: relative; z-index: 2;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                <div style="width: 48px; height: 48px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <div style="width: 72px; height: 72px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                     <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>"
                         alt="AI"
-                        style="width: 32px; height: 32px;">
+                        style="width: 64px; height: 64px;">
                 </div>
                 <div>
                     <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: white;">AI Flow Generator</h1>
@@ -398,10 +398,10 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                             <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>"
                                 alt="AI"
                                 style="width: 32px; height: 32px;">
-                        </div>
-                        <div>
-                            <p style="margin: 0; font-size: 1.125rem;">No AI flows generated yet</p>
-                            <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Click "Generate AI Flows" to create intelligent test flows</p>
+                            <div>
+                                <p style="margin: 0; font-size: 1.125rem;">No AI flows generated yet</p>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Click "Generate AI Flows" to create intelligent test flows</p>
+                            </div>
                         </div>
                     </div>
                 </div>
