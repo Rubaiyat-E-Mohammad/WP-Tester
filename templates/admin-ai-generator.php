@@ -44,11 +44,9 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
         <div style="position: relative; z-index: 2;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: white; text-decoration: none;">
-                        <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
-                             alt="AI" 
-                             style="width: 32px; height: 32px; filter: brightness(0) invert(1);">
-                    </a>
+                    <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
+                         alt="AI" 
+                         style="width: 32px; height: 32px; filter: brightness(0) invert(1);">
                 </div>
                 <div>
                     <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: white;">AI Flow Generator</h1>
@@ -353,11 +351,9 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
             <div style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <a href="https://www.flaticon.com/free-icons/artificial-intelligence" title="artificial intelligence icons" style="color: #00265e; text-decoration: none;">
-                    <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
-                         alt="AI" 
-                         style="width: 24px; height: 24px;">
-                </a>
+                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
+                     alt="AI" 
+                     style="width: 24px; height: 24px;">
             </div>
             <h2 style="margin: 0; color: #00265e; font-size: 1.5rem; font-weight: 600; line-height: 1.2;">Recent AI Generated Flows</h2>
         </div>
