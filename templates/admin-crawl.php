@@ -513,12 +513,6 @@ jQuery(document).ready(function($) {
         }
     });
 
-    // Create flow functionality
-    $('.create-flow').on('click', function(e) {
-        e.preventDefault();
-        const url = $(this).data('url');
-        showErrorModal('Feature Coming Soon', 'Flow creation for ' + url + ' will be available in a future update.');
-    });
 
     // Export crawl results
     $('#export-crawl').on('click', function(e) {
@@ -611,8 +605,42 @@ jQuery(document).ready(function($) {
         // Create flow functionality
         $('.create-flow').off('click').on('click', function(e) {
             e.preventDefault();
-            const url = $(this).data('url');
-            showErrorModal('Feature Coming Soon', 'Flow creation for ' + url + ' will be available in a future update.');
+            const button = $(this);
+            const url = button.data('url');
+            const originalText = button.html();
+            
+            // Show progress
+            button.html('<span class="dashicons dashicons-update-alt"></span> Creating...').prop('disabled', true);
+            
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_create_flow_from_crawl',
+                    url: url,
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showSuccessModal('Flow Created!', 
+                            'Flow "' + response.data.flow_name + '" has been created successfully.<br>' +
+                            '<a href="' + response.data.redirect_url + '" style="color: #00265e; text-decoration: underline;">Click here to edit the flow</a>');
+                        
+                        // Optionally reload the page to show updated flow count
+                        setTimeout(function() {
+                            location.reload();
+                        }, 3000);
+                    } else {
+                        showErrorModal('Flow Creation Failed', response.data.message || 'Unknown error occurred');
+                    }
+                },
+                error: function() {
+                    showErrorModal('Connection Error', 'Could not connect to server. Please try again.');
+                },
+                complete: function() {
+                    button.html(originalText).prop('disabled', false);
+                }
+            });
         });
         
         // Individual checkbox change for new items

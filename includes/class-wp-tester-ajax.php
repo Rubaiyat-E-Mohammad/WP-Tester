@@ -27,6 +27,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_export_report', array($this, 'export_report'));
         add_action('wp_ajax_wp_tester_export_crawl_results', array($this, 'export_crawl_results'));
         add_action('wp_ajax_wp_tester_export_flows', array($this, 'export_flows'));
+        add_action('wp_ajax_wp_tester_create_flow_from_crawl', array($this, 'create_flow_from_crawl'));
         
         // Frontend AJAX actions (if needed)
         add_action('wp_ajax_nopriv_wp_tester_track_interaction', array($this, 'track_interaction'));
@@ -1139,6 +1140,125 @@ class WP_Tester_Ajax {
 </html>';
         
         return $html;
+    }
+    
+    /**
+     * Create flow from crawled page
+     */
+    public function create_flow_from_crawl() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $url = esc_url_raw($_POST['url'] ?? '');
+            if (empty($url)) {
+                wp_send_json_error(array('message' => __('URL is required', 'wp-tester')));
+                return;
+            }
+            
+            // Get crawl data for this URL
+            global $wpdb;
+            $crawl_table = $wpdb->prefix . 'wp_tester_crawl_results';
+            $crawl_data = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM {$crawl_table} WHERE url = %s ORDER BY crawled_at DESC LIMIT 1",
+                $url
+            ));
+            
+            if (!$crawl_data) {
+                wp_send_json_error(array('message' => __('Crawl data not found for this URL', 'wp-tester')));
+                return;
+            }
+            
+            // Generate flow name from page title
+            $flow_name = !empty($crawl_data->title) ? $crawl_data->title : 'Flow for ' . parse_url($url, PHP_URL_HOST);
+            $flow_name = sanitize_text_field($flow_name);
+            
+            // Generate flow description
+            $flow_description = sprintf(
+                'Automated flow generated from crawled page: %s. Found %d forms and %d links.',
+                $url,
+                $crawl_data->forms_found ?? 0,
+                $crawl_data->links_found ?? 0
+            );
+            
+            // Create basic flow steps based on the crawled data
+            $steps = array();
+            
+            // Add navigation step
+            $steps[] = array(
+                'action' => 'navigate',
+                'selector' => '',
+                'value' => $url,
+                'description' => 'Navigate to ' . $url
+            );
+            
+            // Add form interaction steps if forms were found
+            if (($crawl_data->forms_found ?? 0) > 0) {
+                $steps[] = array(
+                    'action' => 'wait',
+                    'selector' => '',
+                    'value' => '2',
+                    'description' => 'Wait for page to load'
+                );
+                
+                $steps[] = array(
+                    'action' => 'click',
+                    'selector' => 'form',
+                    'value' => '',
+                    'description' => 'Interact with form on page'
+                );
+            }
+            
+            // Add validation step
+            $steps[] = array(
+                'action' => 'assert',
+                'selector' => 'body',
+                'value' => '',
+                'description' => 'Verify page loaded successfully'
+            );
+            
+            // Insert flow into database
+            global $wpdb;
+            $flows_table = $wpdb->prefix . 'wp_tester_flows';
+            
+            $result = $wpdb->insert(
+                $flows_table,
+                array(
+                    'flow_name' => $flow_name,
+                    'flow_description' => $flow_description,
+                    'steps' => wp_json_encode($steps),
+                    'flow_type' => 'discovered',
+                    'is_active' => 1,
+                    'priority' => 5,
+                    'created_by' => 0,
+                    'created_at' => current_time('mysql'),
+                    'updated_at' => current_time('mysql')
+                ),
+                array('%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%s')
+            );
+            
+            $flow_id = $result ? $wpdb->insert_id : false;
+            
+            if ($flow_id) {
+                wp_send_json_success(array(
+                    'message' => __('Flow created successfully', 'wp-tester'),
+                    'flow_id' => $flow_id,
+                    'flow_name' => $flow_name,
+                    'redirect_url' => admin_url('admin.php?page=wp-tester-flows&action=edit&flow_id=' . $flow_id)
+                ));
+            } else {
+                wp_send_json_error(array('message' => __('Failed to create flow', 'wp-tester')));
+            }
+            
+        } catch (Exception $e) {
+            wp_send_json_error(array(
+                'message' => __('Failed to create flow: ', 'wp-tester') . $e->getMessage()
+            ));
+        }
     }
     
     /**
