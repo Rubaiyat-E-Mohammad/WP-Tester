@@ -398,11 +398,11 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                             <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>"
                                 alt="AI"
                                 style="width: 32px; height: 32px;">
-                            <div>
-                                <p style="margin: 0; font-size: 1.125rem;">No AI flows generated yet</p>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Click "Generate AI Flows" to create intelligent test flows</p>
-                            </div>
                         </div>
+                    </div>
+                    <div>
+                        <p style="margin: 0; font-size: 1.125rem;">No AI flows generated yet</p>
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Click "Generate AI Flows" to create intelligent test flows</p>
                     </div>
                 </div>
             <?php endif; ?>
