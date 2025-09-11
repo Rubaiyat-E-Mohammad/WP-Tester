@@ -1,4 +1,5 @@
 <?php
+
 /**
  * AI Flow Generator Admin Page
  */
@@ -43,10 +44,10 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
     <div class="modern-header" style="background: linear-gradient(135deg, #00265e 0%, #0F9D7A 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; position: relative; overflow: hidden;">
         <div style="position: relative; z-index: 2;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                <div style="width: 48px; height: 48px; border-radius: 8px; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                    <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
-                         alt="AI" 
-                         style="width: 32px; height: 32px; filter: brightness(0) invert(1);">
+                <div style="width: 48px; height: 48px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                    <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>"
+                        alt="AI"
+                        style="width: 32px; height: 32px; filter: brightness(0) invert(1);">
                 </div>
                 <div>
                     <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: white;">AI Flow Generator</h1>
@@ -66,7 +67,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                 <?php echo $has_api_key ? 'AI Enabled' : 'Fallback Mode'; ?>
             </div>
         </div>
-        
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
             <!-- AI Model Configuration -->
             <div>
@@ -83,33 +84,33 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                         Choose your AI model. Some models require API keys regardless of free/paid status.
                     </p>
                 </div>
-                
+
                 <!-- API Key Input (Hidden by default) -->
                 <div id="api-key-section" style="margin-bottom: 1.5rem; display: none;">
                     <label style="display: block; font-weight: 600; color: #00265e; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         API Key
                     </label>
-                    <input type="password" id="ai-api-key" 
-                           value="<?php echo esc_attr($ai_api_key); ?>"
-                           placeholder="Enter your API key"
-                           style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                    <input type="password" id="ai-api-key"
+                        value="<?php echo esc_attr($ai_api_key); ?>"
+                        placeholder="Enter your API key"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
                     <p id="api-key-help" style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
                         <!-- API key help text will be loaded here -->
                     </p>
                 </div>
-                
-                
+
+
                 <!-- Save Button -->
                 <button id="save-ai-config" class="modern-btn modern-btn-primary">
                     <span class="dashicons dashicons-saved"></span>
                     Save Configuration
                 </button>
             </div>
-            
+
             <!-- Site Analysis -->
             <div>
                 <h3 style="margin: 0 0 1rem 0; color: #00265e; font-size: 1.125rem; font-weight: 600;">Site Analysis</h3>
-                
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; text-align: center;">
                         <div style="font-size: 1.5rem; font-weight: 700; color: #00265e; margin-bottom: 0.25rem;">
@@ -117,21 +118,21 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                         </div>
                         <div style="font-size: 0.8125rem; color: #64748b;">Site Type</div>
                     </div>
-                    
+
                     <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; text-align: center;">
                         <div style="font-size: 1.5rem; font-weight: 700; color: #00265e; margin-bottom: 0.25rem;">
                             <?php echo esc_html($site_analysis['pages_count']); ?>
                         </div>
                         <div style="font-size: 0.8125rem; color: #64748b;">Pages</div>
                     </div>
-                    
+
                     <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; text-align: center;">
                         <div style="font-size: 1.5rem; font-weight: 700; color: #00265e; margin-bottom: 0.25rem;">
                             <?php echo esc_html($site_analysis['posts_count']); ?>
                         </div>
                         <div style="font-size: 0.8125rem; color: #64748b;">Posts</div>
                     </div>
-                    
+
                     <div style="padding: 1rem; background: #f8fafc; border-radius: 8px; text-align: center;">
                         <div style="font-size: 1.5rem; font-weight: 700; color: #00265e; margin-bottom: 0.25rem;">
                             <?php echo esc_html($site_analysis['plugins_count']); ?>
@@ -139,7 +140,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                         <div style="font-size: 0.8125rem; color: #64748b;">Plugins</div>
                     </div>
                 </div>
-                
+
                 <div style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #00265e;">
                     <div style="font-weight: 600; color: #00265e; margin-bottom: 0.5rem;">Theme: <?php echo esc_html($site_analysis['theme']); ?></div>
                     <div style="font-size: 0.875rem; color: #00265e;">
@@ -153,12 +154,12 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
     <!-- Flow Generation Options -->
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
         <h2 style="margin: 0 0 1.5rem 0; color: #00265e; font-size: 1.5rem; font-weight: 600;">Flow Generation Options</h2>
-        
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
             <!-- Target Areas -->
             <div>
                 <h3 style="margin: 0 0 1rem 0; color: #00265e; font-size: 1.125rem; font-weight: 600;">Target Areas</h3>
-                
+
                 <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                     <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
                         <input type="checkbox" id="include-frontend" checked style="width: 1.25rem; height: 1.25rem; accent-color: #00265e;">
@@ -167,7 +168,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                             <div style="font-size: 0.8125rem; color: #64748b;">Public pages, posts, and user-facing content</div>
                         </div>
                     </label>
-                    
+
                     <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
                         <input type="checkbox" id="include-admin" checked style="width: 1.25rem; height: 1.25rem; accent-color: #00265e;">
                         <div>
@@ -175,7 +176,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                             <div style="font-size: 0.8125rem; color: #64748b;">WordPress admin, settings, and management areas</div>
                         </div>
                     </label>
-                    
+
                     <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
                         <input type="checkbox" id="include-plugins" style="width: 1.25rem; height: 1.25rem; accent-color: #00265e;">
                         <div>
@@ -185,33 +186,33 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                     </label>
                 </div>
             </div>
-            
+
             <!-- Generation Settings -->
             <div>
                 <h3 style="margin: 0 0 1rem 0; color: #00265e; font-size: 1.125rem; font-weight: 600;">Generation Settings</h3>
-                
+
                 <div style="margin-bottom: 1rem;">
                     <label style="display: block; font-weight: 600; color: #00265e; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         Max Flows per Area
                     </label>
-                    <input type="number" id="max-flows" value="10" min="1" max="50" 
-                           style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                    <input type="number" id="max-flows" value="10" min="1" max="50"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
                     <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
                         Maximum number of flows to generate for each area
                     </p>
                 </div>
-                
+
                 <div style="margin-bottom: 1rem;">
                     <label style="display: block; font-weight: 600; color: #00265e; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         Max Flows per Plugin
                     </label>
-                    <input type="number" id="max-flows-per-plugin" value="5" min="1" max="20" 
-                           style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
+                    <input type="number" id="max-flows-per-plugin" value="5" min="1" max="20"
+                        style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; font-size: 0.875rem;">
                     <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
                         Maximum number of flows to generate for each selected plugin
                     </p>
                 </div>
-                
+
                 <div style="margin-bottom: 1rem;">
                     <label style="display: block; font-weight: 600; color: #00265e; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         Focus Areas
@@ -237,72 +238,72 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                 </div>
             </div>
         </div>
-        
+
         <!-- Plugin Selection -->
         <div id="plugin-selection-section" style="display: none; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #e5e7eb;">
             <h3 style="margin: 0 0 1rem 0; color: #00265e; font-size: 1.125rem; font-weight: 600;">Select Plugins for Flow Generation</h3>
             <p style="margin: 0 0 1.5rem 0; color: #64748b; font-size: 0.875rem;">
                 Choose which plugins should have AI-generated test flows created. AI will analyze each plugin's functionality and create relevant test scenarios.
             </p>
-            
+
             <div class="plugin-cards-grid" style="max-height: 500px; overflow-y: auto; width: 100%; max-width: 100%;">
                 <?php foreach ($available_plugins as $plugin): ?>
-                <div class="plugin-card" 
-                     data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
-                     style="cursor: pointer; position: relative; background: white; border: 2px solid #e5e7eb; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
-                    
-                    <!-- Header with icon and selection -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0;">
-                            <div style="width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #00265e, #0ea5e9); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <span class="dashicons dashicons-admin-plugins" style="color: white; font-size: 14px;"></span>
-                            </div>
-                            <div style="flex: 1; min-width: 0;">
-                                <h3 style="margin: 0; font-size: 0.875rem; font-weight: 700; color: #00265e; line-height: 1.2; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    <?php echo esc_html($plugin['name']); ?>
-                                </h3>
-                                <div style="display: inline-block; padding: 0.125rem 0.5rem; background: #f0f9ff; color: #0369a1; border-radius: 12px; font-size: 0.625rem; font-weight: 600; text-transform: uppercase;">
-                                    <?php echo esc_html($plugin['type']); ?>
+                    <div class="plugin-card"
+                        data-plugin-slug="<?php echo esc_attr($plugin['slug']); ?>"
+                        style="cursor: pointer; position: relative; background: white; border: 2px solid #e5e7eb; border-radius: 8px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+
+                        <!-- Header with icon and selection -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 0;">
+                                <div style="width: 32px; height: 32px; border-radius: 6px; background: linear-gradient(135deg, #00265e, #0ea5e9); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <span class="dashicons dashicons-admin-plugins" style="color: white; font-size: 14px;"></span>
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <h3 style="margin: 0; font-size: 0.875rem; font-weight: 700; color: #00265e; line-height: 1.2; margin-bottom: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        <?php echo esc_html($plugin['name']); ?>
+                                    </h3>
+                                    <div style="display: inline-block; padding: 0.125rem 0.5rem; background: #f0f9ff; color: #0369a1; border-radius: 12px; font-size: 0.625rem; font-weight: 600; text-transform: uppercase;">
+                                        <?php echo esc_html($plugin['type']); ?>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- Selection Indicator -->
+                            <div class="plugin-selection-indicator" style="width: 20px; height: 20px; border: 2px solid #d1d5db; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; cursor: pointer; z-index: 10; flex-shrink: 0;">
+                                <div class="checkmark" style="width: 8px; height: 8px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.3s ease;"></div>
+                            </div>
                         </div>
-                        
-                        <!-- Selection Indicator -->
-                        <div class="plugin-selection-indicator" style="width: 20px; height: 20px; border: 2px solid #d1d5db; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; cursor: pointer; z-index: 10; flex-shrink: 0;">
-                            <div class="checkmark" style="width: 8px; height: 8px; background: #00265e; border-radius: 50%; opacity: 0; transition: opacity 0.3s ease;"></div>
+
+                        <!-- Description -->
+                        <p style="margin: 0 0 0.75rem 0; font-size: 0.75rem; color: #64748b; line-height: 1.4; min-height: 2rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 8)); ?>
+                        </p>
+
+                        <!-- Footer with version and author -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid #f1f5f9;">
+                            <div style="font-size: 0.625rem; color: #9ca3af;">
+                                <div style="font-weight: 600; color: #64748b;">v<?php echo esc_html($plugin['version']); ?></div>
+                                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html($plugin['author']); ?></div>
+                            </div>
+                            <div style="font-size: 0.625rem; color: #00265e; font-weight: 600;">
+                                Ready
+                            </div>
                         </div>
+
+                        <!-- Hidden checkbox for form submission -->
+                        <input type="checkbox" class="plugin-checkbox" value="<?php echo esc_attr($plugin['slug']); ?>" style="display: none;">
                     </div>
-                    
-                    <!-- Description -->
-                    <p style="margin: 0 0 0.75rem 0; font-size: 0.75rem; color: #64748b; line-height: 1.4; min-height: 2rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                        <?php echo esc_html(wp_trim_words($plugin['description'] ?? '', 8)); ?>
-                    </p>
-                    
-                    <!-- Footer with version and author -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid #f1f5f9;">
-                        <div style="font-size: 0.625rem; color: #9ca3af;">
-                            <div style="font-weight: 600; color: #64748b;">v<?php echo esc_html($plugin['version']); ?></div>
-                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><?php echo esc_html($plugin['author']); ?></div>
-                        </div>
-                        <div style="font-size: 0.625rem; color: #00265e; font-weight: 600;">
-                            Ready
-                        </div>
-                    </div>
-                    
-                    <!-- Hidden checkbox for form submission -->
-                    <input type="checkbox" class="plugin-checkbox" value="<?php echo esc_attr($plugin['slug']); ?>" style="display: none;">
-                </div>
                 <?php endforeach; ?>
             </div>
-            
+
             <?php if (empty($available_plugins)): ?>
-            <div style="text-align: center; padding: 2rem; color: #64748b;">
-                <div class="dashicons dashicons-admin-plugins" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></div>
-                <p style="margin: 0; font-size: 1.125rem;">No plugins available for flow generation</p>
-                <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Install and activate some plugins to generate plugin-specific test flows</p>
-            </div>
+                <div style="text-align: center; padding: 2rem; color: #64748b;">
+                    <div class="dashicons dashicons-admin-plugins" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></div>
+                    <p style="margin: 0; font-size: 1.125rem;">No plugins available for flow generation</p>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Install and activate some plugins to generate plugin-specific test flows</p>
+                </div>
             <?php endif; ?>
-            
+
             <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem;">
                 <button id="select-all-plugins" class="modern-btn modern-btn-secondary modern-btn-small">
                     <span class="dashicons dashicons-yes-alt"></span>
@@ -325,12 +326,12 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
         <p style="margin: 0 0 2rem 0; color: #64748b; font-size: 1.125rem;">
             AI will analyze your site and create intelligent test flows for both frontend and backend areas.
         </p>
-        
+
         <button id="generate-ai-flows" class="modern-btn modern-btn-primary" style="padding: 1rem 2rem; font-size: 1.125rem; font-weight: 600;">
             <span class="dashicons dashicons-admin-generic"></span>
             Generate AI Flows
         </button>
-        
+
         <div id="generation-progress" style="display: none; margin-top: 2rem;">
             <div style="background: #f3f4f6; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
                 <div style="display: flex; align-items: center; justify-content: between; margin-bottom: 0.5rem;">
@@ -351,13 +352,13 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
     <div class="modern-card" style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
             <div style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" 
-                     alt="AI" 
-                     style="width: 24px; height: 24px;">
+                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>"
+                    alt="AI"
+                    style="width: 24px; height: 24px;">
             </div>
             <h2 style="margin: 0; color: #00265e; font-size: 1.5rem; font-weight: 600; line-height: 1.2;">Recent AI Generated Flows</h2>
         </div>
-        
+
         <div id="ai-flows-list">
             <?php if (!empty($ai_generated_flows)): ?>
                 <div class="modern-list">
@@ -371,7 +372,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                                     <div>
                                         <h4 style="margin: 0; font-size: 1rem; font-weight: 600; color: #00265e;"><?php echo esc_html($flow->flow_name); ?></h4>
                                         <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; color: #64748b;">
-                                            <?php echo esc_html($flow->flow_type); ?> • 
+                                            <?php echo esc_html($flow->flow_type); ?> •
                                             <?php echo esc_html(human_time_diff(strtotime($flow->created_at), current_time('timestamp'))); ?> ago
                                         </p>
                                     </div>
@@ -393,9 +394,11 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
             <?php else: ?>
                 <div style="text-align: center; padding: 2rem; color: #64748b;">
                     <div style="display: flex; align-items: center; justify-content: center; gap: 1rem;">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #d1d5db;">
-                            <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 6.5V7.5C15 8.3 14.3 9 13.5 9H10.5C9.7 9 9 8.3 9 7.5V6.5L3 7V9L9 8.5V9.5C9 10.3 9.7 11 10.5 11H13.5C14.3 11 15 10.3 15 9.5V8.5L21 9ZM6.5 12C5.7 12 5 12.7 5 13.5V16.5C5 17.3 5.7 18 6.5 18H7.5V22H9V18H15V22H16.5V18H17.5C18.3 18 19 17.3 19 16.5V13.5C19 12.7 18.3 12 17.5 12H6.5Z" fill="currentColor"/>
-                        </svg>
+                        <div style="width: 40px; height: 40px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>"
+                                alt="AI"
+                                style="width: 24px; height: 24px;">
+                        </div>
                         <div>
                             <p style="margin: 0; font-size: 1.125rem;">No AI flows generated yet</p>
                             <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">Click "Generate AI Flows" to create intelligent test flows</p>
@@ -408,766 +411,793 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
 </div>
 
 <style>
-.modern-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-}
-
-.modern-btn-primary {
-    background: linear-gradient(135deg, #00265e 0%, #0F9D7A 100%);
-    color: white;
-}
-
-.modern-btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(31, 192, 154, 0.3);
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.status-badge.success {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.status-badge.warning {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.dashicons {
-    font-family: dashicons;
-    font-size: 1.25rem;
-    line-height: 1;
-}
-
-.plugin-card:hover {
-    border-color: #00265e;
-    background: #f0fdfa;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(31, 192, 154, 0.1);
-}
-
-.plugin-card input[type="checkbox"]:checked + div {
-    color: #00265e;
-}
-
-.plugin-type-badge {
-    flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-    .plugin-card {
-        min-height: 100px !important;
+    .modern-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
     }
-    
-    .plugin-card label {
-        flex-direction: column;
-        align-items: flex-start !important;
+
+    .modern-btn-primary {
+        background: linear-gradient(135deg, #00265e 0%, #0F9D7A 100%);
+        color: white;
     }
-    
-    .plugin-card input[type="checkbox"] {
-        margin-top: 0 !important;
+
+    .modern-btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(31, 192, 154, 0.3);
     }
-}
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-badge.success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .status-badge.warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .dashicons {
+        font-family: dashicons;
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+
+    .plugin-card:hover {
+        border-color: #00265e;
+        background: #f0fdfa;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(31, 192, 154, 0.1);
+    }
+
+    .plugin-card input[type="checkbox"]:checked+div {
+        color: #00265e;
+    }
+
+    .plugin-type-badge {
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        .plugin-card {
+            min-height: 100px !important;
+        }
+
+        .plugin-card label {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+
+        .plugin-card input[type="checkbox"] {
+            margin-top: 0 !important;
+        }
+    }
 </style>
 
 <script>
-jQuery(document).ready(function($) {
-    // Ensure ajaxurl is available
-    if (typeof ajaxurl === 'undefined') {
-        ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
-    }
-    
-    // Initialize plugin selection counter
-    updateSelectedPluginsCount();
-    
-    // Add click handlers for plugin cards
-    $('.plugin-card').on('click', function(e) {
-        const pluginSlug = $(this).data('plugin-slug');
-        togglePluginSelection(pluginSlug);
-    });
-    
-    // Save AI Configuration
-    $('#save-ai-config').on('click', function(e) {
-        e.preventDefault();
-        const button = $(this);
-        const originalText = button.html();
-        
-        // Add loading animation
-        button.addClass('saving');
-        button.html(`
+    jQuery(document).ready(function($) {
+        // Ensure ajaxurl is available
+        if (typeof ajaxurl === 'undefined') {
+            ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
+        }
+
+        // Initialize plugin selection counter
+        updateSelectedPluginsCount();
+
+        // Add click handlers for plugin cards
+        $('.plugin-card').on('click', function(e) {
+            const pluginSlug = $(this).data('plugin-slug');
+            togglePluginSelection(pluginSlug);
+        });
+
+        // Save AI Configuration
+        $('#save-ai-config').on('click', function(e) {
+            e.preventDefault();
+            const button = $(this);
+            const originalText = button.html();
+
+            // Add loading animation
+            button.addClass('saving');
+            button.html(`
             <div class="save-spinner"></div>
             <span>Saving Configuration...</span>
         `);
-        button.prop('disabled', true);
-        
-        const selectedModel = $('#ai-model-select').val();
-        const apiKey = $('#ai-api-key').val();
-        
-        
-        if (!selectedModel) {
-            showErrorModal('Model Selection Required', 'Please select an AI model first.');
-            button.html(originalText).prop('disabled', false);
-            return;
-        }
-        
-        const selectedOption = $('#ai-model-select option:selected');
-        const isFree = selectedOption.attr('data-free') === 'true';
-        const requiresApiKey = selectedOption.attr('data-requires-api-key') === 'true';
-        const provider = selectedOption.attr('data-provider');
-        
-        // For models that require API key, check if API key is provided
-        if (requiresApiKey && !apiKey.trim()) {
-            showErrorModal('API Key Required', 'API key is required for this model. Please enter your API key.');
-            button.html(originalText).prop('disabled', false);
-            return;
-        }
-        
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'wp_tester_set_ai_api_key',
-                api_key: apiKey,
-                api_provider: provider,
-                model: selectedModel,
-                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
-            },
-            success: function(response) {
-                if (response.success) {
-                    // Show success animation
-                    button.removeClass('saving').addClass('success');
-                    button.html(`
+            button.prop('disabled', true);
+
+            const selectedModel = $('#ai-model-select').val();
+            const apiKey = $('#ai-api-key').val();
+
+
+            if (!selectedModel) {
+                showErrorModal('Model Selection Required', 'Please select an AI model first.');
+                button.html(originalText).prop('disabled', false);
+                return;
+            }
+
+            const selectedOption = $('#ai-model-select option:selected');
+            const isFree = selectedOption.attr('data-free') === 'true';
+            const requiresApiKey = selectedOption.attr('data-requires-api-key') === 'true';
+            const provider = selectedOption.attr('data-provider');
+
+            // For models that require API key, check if API key is provided
+            if (requiresApiKey && !apiKey.trim()) {
+                showErrorModal('API Key Required', 'API key is required for this model. Please enter your API key.');
+                button.html(originalText).prop('disabled', false);
+                return;
+            }
+
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_set_ai_api_key',
+                    api_key: apiKey,
+                    api_provider: provider,
+                    model: selectedModel,
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Show success animation
+                        button.removeClass('saving').addClass('success');
+                        button.html(`
                         <span class="dashicons dashicons-yes-alt"></span>
                         <span>Configuration Saved!</span>
                     `);
-                    
-                    // Show success modal
-                    showSuccessModal('Configuration Saved', 'AI configuration saved successfully!');
-                    
-                    // Reset button after 1 second
-                    setTimeout(function() {
-                        button.removeClass('success');
-                        button.html(`
+
+                        // Show success modal
+                        showSuccessModal('Configuration Saved', 'AI configuration saved successfully!');
+
+                        // Reset button after 1 second
+                        setTimeout(function() {
+                            button.removeClass('success');
+                            button.html(`
                             <span class="dashicons dashicons-saved"></span>
                             Save Configuration
                         `);
-                        button.prop('disabled', false);
-                    }, 1000);
-                } else {
-                    // Show error animation
-                    button.removeClass('saving').addClass('error');
-                    button.html(`
+                            button.prop('disabled', false);
+                        }, 1000);
+                    } else {
+                        // Show error animation
+                        button.removeClass('saving').addClass('error');
+                        button.html(`
                         <span class="dashicons dashicons-warning"></span>
                         <span>Save Failed</span>
                     `);
-                    
-                    showErrorModal('Save Failed', 'Failed to save configuration: ' + (response.data.message || 'Unknown error'));
-                    
+
+                        showErrorModal('Save Failed', 'Failed to save configuration: ' + (response.data.message || 'Unknown error'));
+
+                        // Reset button after delay
+                        setTimeout(function() {
+                            button.removeClass('error');
+                            button.html(`
+                            <span class="dashicons dashicons-saved"></span>
+                            Save Configuration
+                        `).prop('disabled', false);
+                        }, 1000);
+                    }
+                },
+                error: function() {
+                    // Show error animation
+                    button.removeClass('saving').addClass('error');
+                    button.html(`
+                    <span class="dashicons dashicons-warning"></span>
+                    <span>Connection Error</span>
+                `);
+
+                    showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
+
                     // Reset button after delay
                     setTimeout(function() {
                         button.removeClass('error');
                         button.html(`
-                            <span class="dashicons dashicons-saved"></span>
-                            Save Configuration
-                        `).prop('disabled', false);
-                    }, 1000);
-                }
-            },
-            error: function() {
-                // Show error animation
-                button.removeClass('saving').addClass('error');
-                button.html(`
-                    <span class="dashicons dashicons-warning"></span>
-                    <span>Connection Error</span>
-                `);
-                
-                showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
-                
-                // Reset button after delay
-                setTimeout(function() {
-                    button.removeClass('error');
-                    button.html(`
                         <span class="dashicons dashicons-saved"></span>
                         Save Configuration
                     `).prop('disabled', false);
-                }, 1000);
-            }
-        });
-    });
-    
-    // Plugin selection toggle
-    $('#include-plugins').on('change', function() {
-        if ($(this).is(':checked')) {
-            $('#plugin-selection-section').slideDown(300);
-        } else {
-            $('#plugin-selection-section').slideUp(300);
-        }
-    });
-    
-    // Plugin selection handlers
-    $('.plugin-checkbox').on('change', function() {
-        updateSelectedPluginsCount();
-    });
-    
-    $('#select-all-plugins').on('click', function() {
-        $('.plugin-card').each(function() {
-            const pluginSlug = $(this).data('plugin-slug');
-            const checkbox = $(this).find('.plugin-checkbox');
-            if (!checkbox.prop('checked')) {
-                togglePluginSelection(pluginSlug);
-            }
-        });
-    });
-    
-    $('#deselect-all-plugins').on('click', function() {
-        $('.plugin-card').each(function() {
-            const pluginSlug = $(this).data('plugin-slug');
-            const checkbox = $(this).find('.plugin-checkbox');
-            if (checkbox.prop('checked')) {
-                togglePluginSelection(pluginSlug);
-            }
-        });
-    });
-    
-    function updateSelectedPluginsCount() {
-        const selectedCount = $('.plugin-checkbox:checked').length;
-        const countElement = $('#selected-plugins-count');
-        const newText = selectedCount + ' plugin' + (selectedCount !== 1 ? 's' : '') + ' selected';
-        
-        
-        countElement.text(newText);
-    }
-    
-    // Toggle plugin selection
-    function togglePluginSelection(pluginSlug) {
-        
-        const card = $(`.plugin-card[data-plugin-slug="${pluginSlug}"]`);
-        const checkbox = card.find('.plugin-checkbox');
-        const indicator = card.find('.plugin-selection-indicator');
-        const checkmark = indicator.find('.checkmark');
-        
-        
-        if (card.length === 0) {
-            console.error('Card not found for slug:', pluginSlug);
-            return;
-        }
-        
-        if (checkbox.length === 0) {
-            console.error('Checkbox not found in card');
-            return;
-        }
-        
-        // Toggle checkbox
-        const isChecked = checkbox.prop('checked');
-        checkbox.prop('checked', !isChecked);
-        
-        // Update visual state using CSS classes
-        if (!isChecked) {
-            card.addClass('selected');
-        } else {
-            card.removeClass('selected');
-        }
-        
-        // Force update the counter
-        setTimeout(function() {
-            updateSelectedPluginsCount();
-        }, 100);
-        
-    }
-    
-    // AI Model Selection
-    let availableModels = {
-        free_models: {},
-        paid_models: {},
-        models_by_provider: {}
-    };
-    
-    // Load available models on page load
-    function loadAvailableModels() {
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'wp_tester_get_available_ai_models',
-                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
-            },
-            success: function(response) {
-                if (response.success) {
-                    availableModels = response.data;
-                    populateModelDropdown();
-                } else {
-                    console.error('Failed to load AI models:', response.data.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error loading AI models:', {xhr, status, error});
-            }
-        });
-    }
-    
-    function populateModelDropdown() {
-        const modelSelect = $('#ai-model-select');
-        const description = $('#ai-model-description');
-        
-        // Clear existing options except the first one
-        modelSelect.find('option:not(:first)').remove();
-        
-        // Add free models first
-        Object.keys(availableModels.free_models).forEach(modelId => {
-            const model = availableModels.free_models[modelId];
-            const option = $('<option></option>')
-                .attr('value', modelId)
-                .attr('data-provider', model.provider)
-                .attr('data-free', 'true')
-                .attr('data-requires-api-key', model.requires_api_key ? 'true' : 'false')
-                .text(`${model.name} (${model.provider}) - Free`);
-            modelSelect.append(option);
-        });
-        
-        // Add paid models
-        Object.keys(availableModels.paid_models).forEach(modelId => {
-            const model = availableModels.paid_models[modelId];
-            const option = $('<option></option>')
-                .attr('value', modelId)
-                .attr('data-provider', model.provider)
-                .attr('data-free', 'false')
-                .attr('data-requires-api-key', model.requires_api_key ? 'true' : 'false')
-                .text(`${model.name} (${model.provider}) - Paid`);
-            modelSelect.append(option);
-        });
-        
-        // Set default to first free model
-        const firstFreeModel = modelSelect.find('option[data-free="true"]:first');
-        if (firstFreeModel.length > 0) {
-            firstFreeModel.prop('selected', true);
-            updateApiKeySection();
-        }
-    }
-    
-    function updateApiKeySection() {
-        const selectedOption = $('#ai-model-select option:selected');
-        const isFree = selectedOption.attr('data-free') === 'true';
-        const requiresApiKey = selectedOption.attr('data-requires-api-key') === 'true';
-        const provider = selectedOption.attr('data-provider');
-        const apiKeySection = $('#api-key-section');
-        const apiKeyHelp = $('#api-key-help');
-        
-        if (!requiresApiKey) {
-            apiKeySection.hide();
-            $('#ai-model-description').text('This model works without API keys and is recommended for testing.');
-        } else {
-            apiKeySection.show();
-            if (isFree) {
-                $('#ai-model-description').text('Free model that requires API key for enhanced capabilities.');
-            } else {
-                $('#ai-model-description').text('Paid model that requires API key for enhanced capabilities.');
-            }
-            
-            // Update API key help text based on provider
-            let helpText = '';
-            let apiUrl = '';
-            
-            switch(provider) {
-                case 'OpenAI':
-                    helpText = 'Get your API key from OpenAI Platform';
-                    apiUrl = 'https://platform.openai.com/api-keys';
-                    break;
-                case 'Anthropic':
-                    helpText = 'Get your API key from Anthropic Console';
-                    apiUrl = 'https://console.anthropic.com/';
-                    break;
-                case 'Google':
-                    helpText = 'Get your API key from Google AI Studio';
-                    apiUrl = 'https://aistudio.google.com/';
-                    break;
-                case 'X.AI':
-                    helpText = 'Get your API key from X.AI Console';
-                    apiUrl = 'https://console.x.ai/';
-                    break;
-                case 'DeepSeek':
-                    helpText = 'Get your API key from DeepSeek Platform';
-                    apiUrl = 'https://platform.deepseek.com/';
-                    break;
-                case 'Mistral AI':
-                    helpText = 'Get your API key from Mistral AI Console';
-                    apiUrl = 'https://console.mistral.ai/';
-                    break;
-                case 'Cohere':
-                    helpText = 'Get your API key from Cohere Dashboard';
-                    apiUrl = 'https://dashboard.cohere.ai/';
-                    break;
-                case 'Perplexity':
-                    helpText = 'Get your API key from Perplexity API';
-                    apiUrl = 'https://www.perplexity.ai/settings/api';
-                    break;
-                case 'Hugging Face':
-                    helpText = 'Get your API key from Hugging Face';
-                    apiUrl = 'https://huggingface.co/settings/tokens';
-                    break;
-                case 'Meta':
-                    helpText = 'Get your API key from Hugging Face (for Meta models)';
-                    apiUrl = 'https://huggingface.co/settings/tokens';
-                    break;
-                default:
-                    helpText = 'Get your API key from the provider\'s website';
-                    apiUrl = '#';
-            }
-            
-            apiKeyHelp.html(`<a href="${apiUrl}" target="_blank" style="color: #00265e; text-decoration: none;">${helpText}</a>`);
-        }
-    }
-    
-    // Model selection change handler
-    $('#ai-model-select').on('change', function() {
-        updateApiKeySection();
-    });
-    
-    // Load models on page load
-    loadAvailableModels();
-    
-    // Set current model after models are loaded
-    setTimeout(function() {
-        const currentModel = '<?php echo esc_js($ai_model); ?>';
-        if (currentModel) {
-            $('#ai-model-select').val(currentModel);
-            updateApiKeySection();
-        }
-    }, 1000);
-    
-    // Generate AI Flows
-    $('#generate-ai-flows').on('click', function(e) {
-        e.preventDefault();
-        const button = $(this);
-        const originalText = button.html();
-        
-        // Get options
-        const includeFrontend = $('#include-frontend').is(':checked');
-        const includeAdmin = $('#include-admin').is(':checked');
-        const includePlugins = $('#include-plugins').is(':checked');
-        const maxFlows = $('#max-flows').val();
-        const maxFlowsPerPlugin = $('#max-flows-per-plugin').val() || 5;
-        const aiProvider = $('#ai-provider').val() || 'free';
-        const aiModel = $('#ai-model').val() || 'gpt-3.5-turbo';
-        const focusAreas = [];
-        const selectedPlugins = [];
-        
-        $('input[type="checkbox"][value]').each(function() {
-            if ($(this).is(':checked')) {
-                focusAreas.push($(this).val());
-            }
-        });
-        
-        $('.plugin-checkbox:checked').each(function() {
-            selectedPlugins.push($(this).val());
-        });
-        
-        if (!includeFrontend && !includeAdmin && !includePlugins) {
-            showErrorModal('Selection Required', 'Please select at least one target area (Frontend, Admin, or Plugins).');
-            return;
-        }
-        
-        if (includePlugins && selectedPlugins.length === 0) {
-            showErrorModal('Plugin Selection Required', 'Please select at least one plugin for flow generation.');
-            return;
-        }
-        
-        // Show progress
-        button.html('<span class="dashicons dashicons-update-alt"></span> Generating...').prop('disabled', true);
-        $('#generation-progress').show();
-        
-        // Simulate progress
-        let progress = 0;
-        const progressInterval = setInterval(function() {
-            progress += Math.random() * 15;
-            if (progress > 90) progress = 90;
-            
-            $('#progress-bar').css('width', progress + '%');
-            $('#progress-percentage').text(Math.round(progress) + '%');
-            
-            if (progress < 30) {
-                $('#generation-status').text('Analyzing site structure...');
-            } else if (progress < 60) {
-                $('#generation-status').text('Generating frontend flows...');
-            } else if (progress < 90) {
-                $('#generation-status').text('Generating admin flows...');
-            }
-        }, 500);
-        
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'wp_tester_generate_ai_flows',
-                include_frontend: includeFrontend,
-                include_admin: includeAdmin,
-                include_plugins: includePlugins,
-                selected_plugins: selectedPlugins,
-                max_flows_per_area: maxFlows,
-                max_flows_per_plugin: maxFlowsPerPlugin,
-                focus_areas: focusAreas.join(','),
-                ai_provider: aiProvider,
-                ai_model: aiModel,
-                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
-            },
-            timeout: 300000, // 5 minutes
-            success: function(response) {
-                clearInterval(progressInterval);
-                $('#progress-bar').css('width', '100%');
-                $('#progress-percentage').text('100%');
-                $('#generation-status').text('Generation completed!');
-                
-                if (response.success) {
-                    setTimeout(function() {
-                        showSuccessModal('AI Flows Generated', 'AI flows generated successfully!\n\n' + response.data.message);
-                        location.reload(); // Reload to show new flows
                     }, 1000);
-                } else {
-                    showErrorModal('AI Generation Failed', 'AI flow generation failed: ' + (response.data.message || 'Unknown error'));
                 }
-            },
-            error: function(xhr, status, error) {
-                clearInterval(progressInterval);
-                if (status === 'timeout') {
-                    showErrorModal('Generation Timeout', 'Generation timed out. Please try again with fewer flows.');
-                } else {
-                    showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
-                }
-            },
-            complete: function() {
-                button.html(originalText).prop('disabled', false);
-                setTimeout(function() {
-                    $('#generation-progress').hide();
-                }, 2000);
+            });
+        });
+
+        // Plugin selection toggle
+        $('#include-plugins').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('#plugin-selection-section').slideDown(300);
+            } else {
+                $('#plugin-selection-section').slideUp(300);
             }
         });
+
+        // Plugin selection handlers
+        $('.plugin-checkbox').on('change', function() {
+            updateSelectedPluginsCount();
+        });
+
+        $('#select-all-plugins').on('click', function() {
+            $('.plugin-card').each(function() {
+                const pluginSlug = $(this).data('plugin-slug');
+                const checkbox = $(this).find('.plugin-checkbox');
+                if (!checkbox.prop('checked')) {
+                    togglePluginSelection(pluginSlug);
+                }
+            });
+        });
+
+        $('#deselect-all-plugins').on('click', function() {
+            $('.plugin-card').each(function() {
+                const pluginSlug = $(this).data('plugin-slug');
+                const checkbox = $(this).find('.plugin-checkbox');
+                if (checkbox.prop('checked')) {
+                    togglePluginSelection(pluginSlug);
+                }
+            });
+        });
+
+        function updateSelectedPluginsCount() {
+            const selectedCount = $('.plugin-checkbox:checked').length;
+            const countElement = $('#selected-plugins-count');
+            const newText = selectedCount + ' plugin' + (selectedCount !== 1 ? 's' : '') + ' selected';
+
+
+            countElement.text(newText);
+        }
+
+        // Toggle plugin selection
+        function togglePluginSelection(pluginSlug) {
+
+            const card = $(`.plugin-card[data-plugin-slug="${pluginSlug}"]`);
+            const checkbox = card.find('.plugin-checkbox');
+            const indicator = card.find('.plugin-selection-indicator');
+            const checkmark = indicator.find('.checkmark');
+
+
+            if (card.length === 0) {
+                console.error('Card not found for slug:', pluginSlug);
+                return;
+            }
+
+            if (checkbox.length === 0) {
+                console.error('Checkbox not found in card');
+                return;
+            }
+
+            // Toggle checkbox
+            const isChecked = checkbox.prop('checked');
+            checkbox.prop('checked', !isChecked);
+
+            // Update visual state using CSS classes
+            if (!isChecked) {
+                card.addClass('selected');
+            } else {
+                card.removeClass('selected');
+            }
+
+            // Force update the counter
+            setTimeout(function() {
+                updateSelectedPluginsCount();
+            }, 100);
+
+        }
+
+        // AI Model Selection
+        let availableModels = {
+            free_models: {},
+            paid_models: {},
+            models_by_provider: {}
+        };
+
+        // Load available models on page load
+        function loadAvailableModels() {
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_get_available_ai_models',
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        availableModels = response.data;
+                        populateModelDropdown();
+                    } else {
+                        console.error('Failed to load AI models:', response.data.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading AI models:', {
+                        xhr,
+                        status,
+                        error
+                    });
+                }
+            });
+        }
+
+        function populateModelDropdown() {
+            const modelSelect = $('#ai-model-select');
+            const description = $('#ai-model-description');
+
+            // Clear existing options except the first one
+            modelSelect.find('option:not(:first)').remove();
+
+            // Add free models first
+            Object.keys(availableModels.free_models).forEach(modelId => {
+                const model = availableModels.free_models[modelId];
+                const option = $('<option></option>')
+                    .attr('value', modelId)
+                    .attr('data-provider', model.provider)
+                    .attr('data-free', 'true')
+                    .attr('data-requires-api-key', model.requires_api_key ? 'true' : 'false')
+                    .text(`${model.name} (${model.provider}) - Free`);
+                modelSelect.append(option);
+            });
+
+            // Add paid models
+            Object.keys(availableModels.paid_models).forEach(modelId => {
+                const model = availableModels.paid_models[modelId];
+                const option = $('<option></option>')
+                    .attr('value', modelId)
+                    .attr('data-provider', model.provider)
+                    .attr('data-free', 'false')
+                    .attr('data-requires-api-key', model.requires_api_key ? 'true' : 'false')
+                    .text(`${model.name} (${model.provider}) - Paid`);
+                modelSelect.append(option);
+            });
+
+            // Set default to first free model
+            const firstFreeModel = modelSelect.find('option[data-free="true"]:first');
+            if (firstFreeModel.length > 0) {
+                firstFreeModel.prop('selected', true);
+                updateApiKeySection();
+            }
+        }
+
+        function updateApiKeySection() {
+            const selectedOption = $('#ai-model-select option:selected');
+            const isFree = selectedOption.attr('data-free') === 'true';
+            const requiresApiKey = selectedOption.attr('data-requires-api-key') === 'true';
+            const provider = selectedOption.attr('data-provider');
+            const apiKeySection = $('#api-key-section');
+            const apiKeyHelp = $('#api-key-help');
+
+            if (!requiresApiKey) {
+                apiKeySection.hide();
+                $('#ai-model-description').text('This model works without API keys and is recommended for testing.');
+            } else {
+                apiKeySection.show();
+                if (isFree) {
+                    $('#ai-model-description').text('Free model that requires API key for enhanced capabilities.');
+                } else {
+                    $('#ai-model-description').text('Paid model that requires API key for enhanced capabilities.');
+                }
+
+                // Update API key help text based on provider
+                let helpText = '';
+                let apiUrl = '';
+
+                switch (provider) {
+                    case 'OpenAI':
+                        helpText = 'Get your API key from OpenAI Platform';
+                        apiUrl = 'https://platform.openai.com/api-keys';
+                        break;
+                    case 'Anthropic':
+                        helpText = 'Get your API key from Anthropic Console';
+                        apiUrl = 'https://console.anthropic.com/';
+                        break;
+                    case 'Google':
+                        helpText = 'Get your API key from Google AI Studio';
+                        apiUrl = 'https://aistudio.google.com/';
+                        break;
+                    case 'X.AI':
+                        helpText = 'Get your API key from X.AI Console';
+                        apiUrl = 'https://console.x.ai/';
+                        break;
+                    case 'DeepSeek':
+                        helpText = 'Get your API key from DeepSeek Platform';
+                        apiUrl = 'https://platform.deepseek.com/';
+                        break;
+                    case 'Mistral AI':
+                        helpText = 'Get your API key from Mistral AI Console';
+                        apiUrl = 'https://console.mistral.ai/';
+                        break;
+                    case 'Cohere':
+                        helpText = 'Get your API key from Cohere Dashboard';
+                        apiUrl = 'https://dashboard.cohere.ai/';
+                        break;
+                    case 'Perplexity':
+                        helpText = 'Get your API key from Perplexity API';
+                        apiUrl = 'https://www.perplexity.ai/settings/api';
+                        break;
+                    case 'Hugging Face':
+                        helpText = 'Get your API key from Hugging Face';
+                        apiUrl = 'https://huggingface.co/settings/tokens';
+                        break;
+                    case 'Meta':
+                        helpText = 'Get your API key from Hugging Face (for Meta models)';
+                        apiUrl = 'https://huggingface.co/settings/tokens';
+                        break;
+                    default:
+                        helpText = 'Get your API key from the provider\'s website';
+                        apiUrl = '#';
+                }
+
+                apiKeyHelp.html(`<a href="${apiUrl}" target="_blank" style="color: #00265e; text-decoration: none;">${helpText}</a>`);
+            }
+        }
+
+        // Model selection change handler
+        $('#ai-model-select').on('change', function() {
+            updateApiKeySection();
+        });
+
+        // Load models on page load
+        loadAvailableModels();
+
+        // Set current model after models are loaded
+        setTimeout(function() {
+            const currentModel = '<?php echo esc_js($ai_model); ?>';
+            if (currentModel) {
+                $('#ai-model-select').val(currentModel);
+                updateApiKeySection();
+            }
+        }, 1000);
+
+        // Generate AI Flows
+        $('#generate-ai-flows').on('click', function(e) {
+            e.preventDefault();
+            const button = $(this);
+            const originalText = button.html();
+
+            // Get options
+            const includeFrontend = $('#include-frontend').is(':checked');
+            const includeAdmin = $('#include-admin').is(':checked');
+            const includePlugins = $('#include-plugins').is(':checked');
+            const maxFlows = $('#max-flows').val();
+            const maxFlowsPerPlugin = $('#max-flows-per-plugin').val() || 5;
+            const aiProvider = $('#ai-provider').val() || 'free';
+            const aiModel = $('#ai-model').val() || 'gpt-3.5-turbo';
+            const focusAreas = [];
+            const selectedPlugins = [];
+
+            $('input[type="checkbox"][value]').each(function() {
+                if ($(this).is(':checked')) {
+                    focusAreas.push($(this).val());
+                }
+            });
+
+            $('.plugin-checkbox:checked').each(function() {
+                selectedPlugins.push($(this).val());
+            });
+
+            if (!includeFrontend && !includeAdmin && !includePlugins) {
+                showErrorModal('Selection Required', 'Please select at least one target area (Frontend, Admin, or Plugins).');
+                return;
+            }
+
+            if (includePlugins && selectedPlugins.length === 0) {
+                showErrorModal('Plugin Selection Required', 'Please select at least one plugin for flow generation.');
+                return;
+            }
+
+            // Show progress
+            button.html('<span class="dashicons dashicons-update-alt"></span> Generating...').prop('disabled', true);
+            $('#generation-progress').show();
+
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(function() {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+
+                $('#progress-bar').css('width', progress + '%');
+                $('#progress-percentage').text(Math.round(progress) + '%');
+
+                if (progress < 30) {
+                    $('#generation-status').text('Analyzing site structure...');
+                } else if (progress < 60) {
+                    $('#generation-status').text('Generating frontend flows...');
+                } else if (progress < 90) {
+                    $('#generation-status').text('Generating admin flows...');
+                }
+            }, 500);
+
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_generate_ai_flows',
+                    include_frontend: includeFrontend,
+                    include_admin: includeAdmin,
+                    include_plugins: includePlugins,
+                    selected_plugins: selectedPlugins,
+                    max_flows_per_area: maxFlows,
+                    max_flows_per_plugin: maxFlowsPerPlugin,
+                    focus_areas: focusAreas.join(','),
+                    ai_provider: aiProvider,
+                    ai_model: aiModel,
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                },
+                timeout: 300000, // 5 minutes
+                success: function(response) {
+                    clearInterval(progressInterval);
+                    $('#progress-bar').css('width', '100%');
+                    $('#progress-percentage').text('100%');
+                    $('#generation-status').text('Generation completed!');
+
+                    if (response.success) {
+                        setTimeout(function() {
+                            showSuccessModal('AI Flows Generated', 'AI flows generated successfully!\n\n' + response.data.message);
+                            location.reload(); // Reload to show new flows
+                        }, 1000);
+                    } else {
+                        showErrorModal('AI Generation Failed', 'AI flow generation failed: ' + (response.data.message || 'Unknown error'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    clearInterval(progressInterval);
+                    if (status === 'timeout') {
+                        showErrorModal('Generation Timeout', 'Generation timed out. Please try again with fewer flows.');
+                    } else {
+                        showErrorModal('Connection Error', 'Error connecting to server. Please try again.');
+                    }
+                },
+                complete: function() {
+                    button.html(originalText).prop('disabled', false);
+                    setTimeout(function() {
+                        $('#generation-progress').hide();
+                    }, 2000);
+                }
+            });
+        });
     });
-});
 </script>
 
 <style>
-/* Plugin card styling - responsive design */
-.plugin-card {
-    transition: all 0.3s ease;
-    min-height: 140px;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    margin: 0;
-    padding: 1rem;
-    overflow: hidden;
-    word-wrap: break-word;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    background: white;
-}
-
-.plugin-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 38, 94, 0.15);
-    border-color: #00265e;
-}
-
-.plugin-card:hover .plugin-selection-indicator {
-    border-color: #00265e;
-    transform: scale(1.1);
-}
-
-.plugin-card.selected {
-    border: 2px solid #00265e !important;
-    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%) !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(0, 38, 94, 0.2) !important;
-    position: relative;
-    z-index: 1;
-}
-
-.plugin-card.selected h3 {
-    color: #00265e !important;
-}
-
-.plugin-card.selected .plugin-selection-indicator {
-    border-color: #00265e !important;
-    background: #00265e !important;
-    box-shadow: 0 4px 12px rgba(0, 38, 94, 0.3) !important;
-}
-
-.plugin-card.selected .checkmark {
-    opacity: 1 !important;
-    background: white !important;
-    width: 8px !important;
-    height: 8px !important;
-}
-
-/* Fixed grid layout for consistent spacing */
-.plugin-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    width: 100%;
-    max-width: 100%;
-    overflow: hidden;
-}
-
-/* Responsive breakpoints - much more aggressive */
-@media (max-width: 1024px) {
-    .plugin-cards-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.75rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .plugin-cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .plugin-cards-grid {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-    }
-}
-
-@media (max-width: 360px) {
-    .plugin-cards-grid {
-        grid-template-columns: 1fr;
-        gap: 0.5rem;
-    }
-    
+    /* Plugin card styling - responsive design */
     .plugin-card {
-        padding: 0.75rem;
-        min-height: 120px;
+        transition: all 0.3s ease;
+        min-height: 140px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: 0;
+        padding: 1rem;
+        overflow: hidden;
+        word-wrap: break-word;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: white;
     }
-}
 
-/* Ensure cards are clickable */
-.plugin-card {
-    pointer-events: auto;
-    cursor: pointer;
-}
+    .plugin-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 38, 94, 0.15);
+        border-color: #00265e;
+    }
 
-.plugin-card * {
-    pointer-events: none;
-}
+    .plugin-card:hover .plugin-selection-indicator {
+        border-color: #00265e;
+        transform: scale(1.1);
+    }
 
-.plugin-selection-indicator {
-    pointer-events: auto;
-    cursor: pointer;
-}
+    .plugin-card.selected {
+        border: 2px solid #00265e !important;
+        background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(0, 38, 94, 0.2) !important;
+        position: relative;
+        z-index: 1;
+    }
 
-/* Save Configuration Button Animations */
-#save-ai-config {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    background: #00265e !important;
-    border: 2px solid #00265e !important;
-    border-radius: 50px !important;
-    padding: 12px 24px !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-    box-shadow: 0 4px 15px rgba(0, 38, 94, 0.2) !important;
-}
+    .plugin-card.selected h3 {
+        color: #00265e !important;
+    }
 
-#save-ai-config:hover {
-    background: #001a3d !important;
-    border-color: #001a3d !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 20px rgba(0, 38, 94, 0.3) !important;
-}
+    .plugin-card.selected .plugin-selection-indicator {
+        border-color: #00265e !important;
+        background: #00265e !important;
+        box-shadow: 0 4px 12px rgba(0, 38, 94, 0.3) !important;
+    }
 
-#save-ai-config.saving {
-    background: linear-gradient(135deg, #00265e, #0ea5e9) !important;
-    border-color: #0ea5e9 !important;
-    transform: scale(0.98);
-    box-shadow: 0 4px 20px rgba(0, 38, 94, 0.3);
-    border-radius: 50px !important;
-}
+    .plugin-card.selected .checkmark {
+        opacity: 1 !important;
+        background: white !important;
+        width: 8px !important;
+        height: 8px !important;
+    }
 
-#save-ai-config.success {
-    background: linear-gradient(135deg, #10b981, #059669) !important;
-    border-color: #059669 !important;
-    transform: scale(1.02);
-    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
-    border-radius: 50px !important;
-}
+    /* Fixed grid layout for consistent spacing */
+    .plugin-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+    }
 
-#save-ai-config.error {
-    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-    border-color: #dc2626 !important;
-    transform: scale(1.02);
-    box-shadow: 0 6px 25px rgba(239, 68, 68, 0.4);
-    border-radius: 50px !important;
-}
+    /* Responsive breakpoints - much more aggressive */
+    @media (max-width: 1024px) {
+        .plugin-cards-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+    }
 
-/* Spinner Animation */
-.save-spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top: 2px solid white;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    display: inline-block;
-    margin-right: 8px;
-}
+    @media (max-width: 768px) {
+        .plugin-cards-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+    }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+    @media (max-width: 480px) {
+        .plugin-cards-grid {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+    }
 
-/* Button Content Animation */
-#save-ai-config span {
-    transition: all 0.3s ease;
-}
+    @media (max-width: 360px) {
+        .plugin-cards-grid {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
 
-#save-ai-config .dashicons {
-    transition: all 0.3s ease;
-}
+        .plugin-card {
+            padding: 0.75rem;
+            min-height: 120px;
+        }
+    }
 
-/* Pulse Animation for Success */
-#save-ai-config.success {
-    animation: pulse-success 0.6s ease-in-out;
-}
+    /* Ensure cards are clickable */
+    .plugin-card {
+        pointer-events: auto;
+        cursor: pointer;
+    }
 
-@keyframes pulse-success {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1.02); }
-}
+    .plugin-card * {
+        pointer-events: none;
+    }
 
-/* Shake Animation for Error */
-#save-ai-config.error {
-    animation: shake 0.5s ease-in-out;
-}
+    .plugin-selection-indicator {
+        pointer-events: auto;
+        cursor: pointer;
+    }
 
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
+    /* Save Configuration Button Animations */
+    #save-ai-config {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        background: #00265e !important;
+        border: 2px solid #00265e !important;
+        border-radius: 50px !important;
+        padding: 12px 24px !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        box-shadow: 0 4px 15px rgba(0, 38, 94, 0.2) !important;
+    }
+
+    #save-ai-config:hover {
+        background: #001a3d !important;
+        border-color: #001a3d !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(0, 38, 94, 0.3) !important;
+    }
+
+    #save-ai-config.saving {
+        background: linear-gradient(135deg, #00265e, #0ea5e9) !important;
+        border-color: #0ea5e9 !important;
+        transform: scale(0.98);
+        box-shadow: 0 4px 20px rgba(0, 38, 94, 0.3);
+        border-radius: 50px !important;
+    }
+
+    #save-ai-config.success {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        border-color: #059669 !important;
+        transform: scale(1.02);
+        box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+        border-radius: 50px !important;
+    }
+
+    #save-ai-config.error {
+        background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+        border-color: #dc2626 !important;
+        transform: scale(1.02);
+        box-shadow: 0 6px 25px rgba(239, 68, 68, 0.4);
+        border-radius: 50px !important;
+    }
+
+    /* Spinner Animation */
+    .save-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-right: 8px;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Button Content Animation */
+    #save-ai-config span {
+        transition: all 0.3s ease;
+    }
+
+    #save-ai-config .dashicons {
+        transition: all 0.3s ease;
+    }
+
+    /* Pulse Animation for Success */
+    #save-ai-config.success {
+        animation: pulse-success 0.6s ease-in-out;
+    }
+
+    @keyframes pulse-success {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1.02);
+        }
+    }
+
+    /* Shake Animation for Error */
+    #save-ai-config.error {
+        animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+
+        0%,
+        100% {
+            transform: translateX(0);
+        }
+
+        25% {
+            transform: translateX(-5px);
+        }
+
+        75% {
+            transform: translateX(5px);
+        }
+    }
 </style>
