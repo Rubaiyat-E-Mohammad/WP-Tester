@@ -590,74 +590,14 @@ jQuery(document).ready(function($) {
         $(document).off('click', '.create-flow').on('click', '.create-flow', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
-            console.log('Create Flow button clicked');
-            
             const button = $(this);
             const url = button.data('url');
-            const originalText = button.html();
-            
-            console.log('URL:', url);
-            console.log('Button:', button);
-            
             if (!url) {
-                console.error('No URL found in button data');
                 showErrorModal('Error', 'No URL found for this page');
                 return;
             }
-            
-            // Show progress
-            button.html('<span class="dashicons dashicons-update-alt"></span> Creating...').prop('disabled', true);
-            
-            // Test if ajaxurl is defined
-            if (typeof ajaxurl === 'undefined') {
-                console.error('ajaxurl is not defined!');
-                showErrorModal('Configuration Error', 'AJAX URL is not configured. Please refresh the page and try again.');
-                button.html(originalText).prop('disabled', false);
-                return;
-            }
-            
-            // Test if URL is valid
-            if (!url || url === '') {
-                console.error('URL is empty or invalid!');
-                showErrorModal('Invalid URL', 'No URL found for this page. Please try again.');
-                button.html(originalText).prop('disabled', false);
-                return;
-            }
-            
-            $.ajax({
-                url: ajaxurl,
-                type: 'POST',
-                data: {
-                    action: 'wp_tester_create_flow_from_crawl',
-                    url: url,
-                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
-                },
-                success: function(response) {
-                    console.log('Create Flow AJAX Response:', response);
-                    if (response && response.success) {
-                        showSuccessModal('Flow Created!', 
-                            'Flow "' + response.data.flow_name + '" has been created successfully.<br>' +
-                            '<a href="' + response.data.redirect_url + '" style="color: #00265e; text-decoration: underline;">Click here to edit the flow</a>');
-                        
-                        // Optionally reload the page to show updated flow count
-                        setTimeout(function() {
-                            location.reload();
-                        }, 3000);
-                    } else {
-                        const errorMsg = (response && response.data && response.data.message) ? response.data.message : 'Unknown error occurred';
-                        showErrorModal('Flow Creation Failed', errorMsg);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Create Flow AJAX Error:', {xhr, status, error});
-                    console.error('Response text:', xhr.responseText);
-                    showErrorModal('Connection Error', 'Could not connect to server. Please try again. Error: ' + error);
-                },
-                complete: function() {
-                    button.html(originalText).prop('disabled', false);
-                }
-            });
+            // Redirect to flow creation page with start_url as query param
+            window.location.href = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>' + '&start_url=' + encodeURIComponent(url);
         });
         
         // Individual checkbox change for new items
