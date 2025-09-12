@@ -83,7 +83,7 @@ class WP_Tester {
      */
     private function __construct() {
         // Load text domain on init action (WordPress 6.7.0+ requirement)
-        add_action('init', array($this, 'load_textdomain'), 1);
+        add_action('init', array($this, 'load_textdomain'));
         
         // Initialize everything after text domain is loaded
         add_action('init', array($this, 'init_ajax'), 5);
@@ -113,6 +113,9 @@ class WP_Tester {
      * Initialize AJAX handler
      */
     public function init_ajax() {
+        // Include required files first
+        $this->includes();
+        
         // Include AJAX class if not already included
         if (!class_exists('WP_Tester_Ajax')) {
             require_once plugin_dir_path(WP_TESTER_PLUGIN_FILE) . 'includes/class-wp-tester-ajax.php';
@@ -126,6 +129,9 @@ class WP_Tester {
      * Initialize admin interface
      */
     public function init_admin() {
+        // Include required files first
+        $this->includes();
+        
         // Include admin class if not already included
         if (!class_exists('WP_Tester_Admin')) {
             require_once plugin_dir_path(WP_TESTER_PLUGIN_FILE) . 'includes/class-wp-tester-admin.php';
@@ -139,6 +145,9 @@ class WP_Tester {
      * Initialize automation suite
      */
     public function init_automation_suite() {
+        // Include required files first
+        $this->includes();
+        
         // Include automation suite class if not already included
         if (!class_exists('WP_Tester_Automation_Suite')) {
             require_once plugin_dir_path(WP_TESTER_PLUGIN_FILE) . 'includes/class-wp-tester-automation-suite.php';
@@ -166,26 +175,12 @@ class WP_Tester {
      * Load plugin text domain for translations
      */
     public function load_textdomain() {
-        // Load plugin text domain
-        $domain = 'wp-tester';
-        
-        // Check if WordPress functions are available
-        if (function_exists('apply_filters') && function_exists('get_locale')) {
-            $locale = apply_filters('plugin_locale', get_locale(), $domain);
-        } else {
-            $locale = 'en_US'; // Fallback locale
-        }
-        
-        // Load from languages directory in plugin
-        $mo_file = WP_TESTER_PLUGIN_DIR . 'languages/' . $domain . '-' . $locale . '.mo';
-        
-        if (file_exists($mo_file) && function_exists('load_textdomain')) {
-            load_textdomain($domain, $mo_file);
-        }
-        
-        // Fallback to WordPress.org language pack
         if (function_exists('load_plugin_textdomain')) {
-            load_plugin_textdomain($domain, false, basename(dirname(__FILE__)) . '/languages');
+            load_plugin_textdomain(
+                'wp-tester',
+                false,
+                'wp-tester/languages'
+            );
         }
     }
     
@@ -193,8 +188,8 @@ class WP_Tester {
      * Get translated string safely
      */
     private function get_translated_string($string) {
-        // Only translate if we're past the init action and text domain is loaded
-        if (function_exists('__') && did_action('init')) {
+        // Text domain is loaded on init action, so we can safely translate
+        if (function_exists('__')) {
             return __($string, 'wp-tester');
         }
         return $string;
