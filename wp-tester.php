@@ -21,6 +21,26 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// WordPress function declarations for linter
+if (!function_exists('apply_filters')) {
+    function apply_filters($tag, $value, ...$args) { return $value; }
+}
+if (!function_exists('get_locale')) {
+    function get_locale() { return 'en_US'; }
+}
+if (!function_exists('load_textdomain')) {
+    function load_textdomain($domain, $mofile) { return true; }
+}
+if (!function_exists('load_plugin_textdomain')) {
+    function load_plugin_textdomain($domain, $deprecated = false, $plugin_rel_path = false) { return true; }
+}
+if (!function_exists('did_action')) {
+    function did_action($tag) { return false; }
+}
+if (!function_exists('__')) {
+    function __($text, $domain = 'default') { return $text; }
+}
+
 // Define plugin constants
 define('WP_TESTER_VERSION', '1.0.5');
 define('WP_TESTER_PLUGIN_FILE', __FILE__);
@@ -62,14 +82,16 @@ class WP_Tester {
      * Constructor
      */
     private function __construct() {
+        // Load text domain early but after plugins_loaded
+        add_action('plugins_loaded', array($this, 'load_textdomain'), 1);
+        
         // Initialize AJAX handler early to ensure it's available for all requests
         add_action('init', array($this, 'init_ajax'), 1);
         
         // Add a simple test AJAX action directly to verify AJAX works
         add_action('wp_ajax_wp_tester_simple_test', array($this, 'simple_ajax_test'));
         
-        add_action('plugins_loaded', array($this, 'load_textdomain'));
-        add_action('plugins_loaded', array($this, 'init'));
+        add_action('plugins_loaded', array($this, 'init'), 5);
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
         register_uninstall_hook(__FILE__, array('WP_Tester', 'uninstall'));
@@ -116,7 +138,38 @@ class WP_Tester {
      * Load plugin text domain for translations
      */
     public function load_textdomain() {
-        load_plugin_textdomain('wp-tester', false, basename(dirname(__FILE__)) . '/languages');
+        // Load plugin text domain
+        $domain = 'wp-tester';
+        
+        // Check if WordPress functions are available
+        if (function_exists('apply_filters') && function_exists('get_locale')) {
+            $locale = apply_filters('plugin_locale', get_locale(), $domain);
+        } else {
+            $locale = 'en_US'; // Fallback locale
+        }
+        
+        // Load from languages directory in plugin
+        $mo_file = WP_TESTER_PLUGIN_DIR . 'languages/' . $domain . '-' . $locale . '.mo';
+        
+        if (file_exists($mo_file) && function_exists('load_textdomain')) {
+            load_textdomain($domain, $mo_file);
+        }
+        
+        // Fallback to WordPress.org language pack
+        if (function_exists('load_plugin_textdomain')) {
+            load_plugin_textdomain($domain, false, basename(dirname(__FILE__)) . '/languages');
+        }
+    }
+    
+    /**
+     * Get translated string safely
+     */
+    private function get_translated_string($string) {
+        // Only translate if text domain is loaded and WordPress functions are available
+        if (function_exists('did_action') && did_action('plugins_loaded') && function_exists('__')) {
+            return __($string, 'wp-tester');
+        }
+        return $string;
     }
     
     /**
@@ -223,10 +276,10 @@ class WP_Tester {
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('wp_tester_admin_nonce'),
             'strings' => array(
-                'confirm_delete' => __('Are you sure you want to delete this test result?', 'wp-tester'),
-                'test_running' => __('Test is running...', 'wp-tester'),
-                'test_completed' => __('Test completed successfully!', 'wp-tester'),
-                'test_failed' => __('Test failed. Please check the logs.', 'wp-tester')
+                'confirm_delete' => $this->get_translated_string('Are you sure you want to delete this test result?'),
+                'test_running' => $this->get_translated_string('Test is running...'),
+                'test_completed' => $this->get_translated_string('Test completed successfully!'),
+                'test_failed' => $this->get_translated_string('Test failed. Please check the logs.')
             )
         ));
     }
@@ -277,7 +330,7 @@ class WP_Tester {
      * Add plugin action links
      */
     public function add_plugin_action_links($links) {
-        $settings_link = '<a href="' . admin_url('admin.php?page=wp-tester-settings') . '">' . __('Settings', 'wp-tester') . '</a>';
+        $settings_link = '<a href="' . admin_url('admin.php?page=wp-tester-settings') . '">' . $this->get_translated_string('Settings') . '</a>';
         array_unshift($links, $settings_link);
         return $links;
     }
@@ -302,7 +355,7 @@ class WP_Tester {
             }
             
             // Add our custom "View Details" link
-            $cleaned_links['wp_tester_view_details'] = '<a href="#" class="wp-tester-view-details">' . __('View Details', 'wp-tester') . '</a>';
+            $cleaned_links['wp_tester_view_details'] = '<a href="#" class="wp-tester-view-details">' . $this->get_translated_string('View Details') . '</a>';
             
             return $cleaned_links;
         }
