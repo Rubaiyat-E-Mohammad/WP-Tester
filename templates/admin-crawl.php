@@ -383,6 +383,9 @@ $settings = get_option('wp_tester_settings', array());
 
 <script>
 jQuery(document).ready(function($) {
+    // Test if jQuery is working
+    alert('jQuery is loaded and working!');
+    
     // Ensure ajaxurl is available
     if (typeof ajaxurl === 'undefined') {
         ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
