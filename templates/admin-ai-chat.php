@@ -24,18 +24,18 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
                 <h1 style="margin: 0; font-size: 1.5rem; font-weight: 600; color: #1e293b;">AI Chat Assistant</h1>
                 <p style="margin: 0; font-size: 0.875rem; color: #64748b;">Chat with AI to create custom test flows</p>
             </div>
-        </div>
-        <div class="header-actions">
-            <div class="ai-model-display" style="display: flex; align-items: center; gap: 0.5rem;">
-                <label style="font-size: 0.875rem; color: #64748b;">AI Model:</label>
-                <span id="current-ai-model" style="padding: 0.5rem 1rem; font-size: 0.875rem; color: #00265e; font-weight: 500;">
-                    <?php echo esc_html($ai_model); ?>
-                </span>
+            <div class="header-actions">
+                <div class="ai-model-display" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <label style="font-size: 0.875rem; color: #64748b;">AI Model:</label>
+                    <span id="current-ai-model" style="padding: 0.5rem 1rem; font-size: 0.875rem; color: #00265e; font-weight: 500;">
+                        <?php echo esc_html($ai_model); ?>
+                    </span>
+                </div>
+                <button class="modern-btn modern-btn-primary modern-btn-small" type="button" onclick="window.location.href='<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>'">
+                    <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important; color: white !important;"></span>
+                    Change Model
+                </button>
             </div>
-            <button class="modern-btn modern-btn-primary modern-btn-small" type="button" onclick="window.location.href='<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>'">
-                <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important; color: white !important;"></span>
-                Change Model
-            </button>
         </div>
     </div>
 </div>
