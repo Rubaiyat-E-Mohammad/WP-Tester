@@ -600,29 +600,30 @@ jQuery(document).ready(function($) {
             }
         });
 
-        // Create flow functionality - Remove all existing handlers first
-        $('.create-flow').off('click').unbind('click');
-        
-        // Bind new click handler
-        $(document).off('click', '.create-flow').on('click', '.create-flow', function(e) {
+        // Create flow functionality - Simple direct approach
+        $('.create-flow').on('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            
+            alert('Create Flow button clicked!'); // Immediate feedback
             
             const button = $(this);
             const url = button.data('url');
             
             console.log('WP Tester: Create Flow clicked, URL:', url);
+            alert('URL from data attribute: ' + url);
             
             if (!url) {
-                showErrorModal('Error', 'No URL found for this page');
+                alert('No URL found!');
                 return;
             }
             
-            // Build the redirect URL - FIXED: Go to flow creation page, not the crawled URL
+            // Build the redirect URL
             const flowCreationUrl = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>';
             const redirectUrl = flowCreationUrl + '&start_url=' + encodeURIComponent(url);
             
-            console.log('WP Tester: Redirecting to flow creation page:', redirectUrl);
+            console.log('WP Tester: Redirecting to:', redirectUrl);
+            alert('Redirecting to: ' + redirectUrl);
             
             // Redirect to flow creation page
             window.location.href = redirectUrl;
