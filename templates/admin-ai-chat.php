@@ -21,164 +21,161 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
     <div class="wp-tester-header">
         <div class="header-content">
             <div class="header-info">
-                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" alt="AI" style="width: 64px; height: 64px;">
-                <div>
-                    <h1 style="margin: 0; font-size: 1.5rem; font-weight: 600; color: #1e293b;">AI Chat Assistant</h1>
-                    <p style="margin: 0; font-size: 0.875rem; color: #64748b;">Chat with AI to create custom test flows</p>
-                </div>
-            </div>
-            </div>
-            <div class="header-actions">
-                <div class="ai-model-display" style="display: flex; align-items: center; gap: 0.5rem;">
-                    <label style="font-size: 0.875rem; color: #64748b;">AI Model:</label>
-                    <span id="current-ai-model" style="padding: 0.5rem 1rem; font-size: 0.875rem; color: #00265e; font-weight: 500;">
-                        <?php echo esc_html($ai_model); ?>
-                    </span>
-                </div>
-                <button class="modern-btn modern-btn-primary modern-btn-small" type="button" onclick="window.location.href='<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>'">
-                    <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important; color: white !important;"></span>
-                    Change Model
-                </button>
+                <h1 style="margin: 0; font-size: 1.5rem; font-weight: 600; color: #1e293b;">AI Chat Assistant</h1>
+                <p style="margin: 0; font-size: 0.875rem; color: #64748b;">Chat with AI to create custom test flows</p>
             </div>
         </div>
+        <div class="header-actions">
+            <div class="ai-model-display" style="display: flex; align-items: center; gap: 0.5rem;">
+                <label style="font-size: 0.875rem; color: #64748b;">AI Model:</label>
+                <span id="current-ai-model" style="padding: 0.5rem 1rem; font-size: 0.875rem; color: #00265e; font-weight: 500;">
+                    <?php echo esc_html($ai_model); ?>
+                </span>
+            </div>
+            <button class="modern-btn modern-btn-primary modern-btn-small" type="button" onclick="window.location.href='<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>'">
+                <span class="dashicons dashicons-admin-settings" style="font-size: 16px !important; width: 16px !important; height: 16px !important; color: white !important;"></span>
+                Change Model
+            </button>
+        </div>
     </div>
+</div>
 
-    <!-- Main Content -->
-    <div class="wp-tester-content" style="min-height: calc(100vh - 200px);">
-        <div style="display: grid; grid-template-columns: 1fr 300px; gap: 2rem; height: 100%;">
-            <!-- Chat Area -->
-            <div class="modern-card" style="display: flex; flex-direction: column; height: 100%;">
+<!-- Main Content -->
+<div class="wp-tester-content" style="min-height: calc(100vh - 200px);">
+    <div style="display: grid; grid-template-columns: 1fr 300px; gap: 2rem; height: 100%;">
+        <!-- Chat Area -->
+        <div class="modern-card" style="display: flex; flex-direction: column; height: 100%;">
+            <div class="card-header">
+                <h3 class="card-title">AI Chat</h3>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <!-- Chat Messages -->
+                <div id="chat-messages" style="flex: 1; padding: 1rem; overflow-y: auto; min-height: 400px; max-height: 600px; border-bottom: 1px solid #e2e8f0;">
+                    <div class="chat-message ai-message" style="margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 3px solid #00265e;">
+                        <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                            <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>"
+                                alt="AI"
+                                style="width: 20px; height: 20px; margin-right: 0.5rem;">
+                            <strong style="color: #00265e;">AI Assistant</strong>
+                        </div>
+                        <p style="margin: 0; color: #374151;">Hello! I'm your AI assistant. I can help you create custom test flows for your website. What functionality would you like to test today?</p>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div style="padding: 1rem; border-top: 1px solid #e2e8f0;">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <textarea id="chat-input" placeholder="Type your message here... (Ctrl+Enter to send)"
+                            style="flex: 1; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; resize: none; min-height: 60px; max-height: 120px; font-family: inherit;"></textarea>
+                        <button id="send-message" class="modern-btn modern-btn-primary" style="padding: 0.75rem 1.5rem; align-self: flex-end;">
+                            <span class="dashicons dashicons-paperclip"></span>
+                            Send
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Generated Flows -->
+                <div style="padding: 1rem; border-top: 1px solid #e2e8f0; background: #f8fafc;">
+                    <h4 style="margin: 0 0 1rem 0; font-size: 0.875rem; color: #374151; font-weight: 600; display: flex; align-items: center;">
+                        <span class="dashicons dashicons-admin-generic" style="color: #00265e; margin-right: 0.5rem;"></span>
+                        AI Generated Flows
+                    </h4>
+                    <div id="ai-generated-flows" style="max-height: 200px; overflow-y: auto;">
+                        <p style="margin: 0; font-size: 0.875rem; color: #64748b; text-align: center; padding: 1rem;">
+                            No flows generated yet. Start chatting with AI to create flows!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <!-- AI Settings -->
+            <div class="modern-card">
                 <div class="card-header">
-                    <h3 class="card-title">AI Chat</h3>
+                    <h3 class="card-title">AI Settings</h3>
                 </div>
-                <div style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
-                    <!-- Chat Messages -->
-                    <div id="chat-messages" style="flex: 1; padding: 1rem; overflow-y: auto; min-height: 400px; max-height: 600px; border-bottom: 1px solid #e2e8f0;">
-                        <div class="chat-message ai-message" style="margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 3px solid #00265e;">
-                            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
-                                <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>"
-                                    alt="AI"
-                                    style="width: 20px; height: 20px; margin-right: 0.5rem;">
-                                <strong style="color: #00265e;">AI Assistant</strong>
-                            </div>
-                            <p style="margin: 0; color: #374151;">Hello! I'm your AI assistant. I can help you create custom test flows for your website. What functionality would you like to test today?</p>
-                        </div>
-                    </div>
-
-                    <!-- Chat Input -->
-                    <div style="padding: 1rem; border-top: 1px solid #e2e8f0;">
-                        <div style="display: flex; gap: 0.5rem;">
-                            <textarea id="chat-input" placeholder="Type your message here... (Ctrl+Enter to send)"
-                                style="flex: 1; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; resize: none; min-height: 60px; max-height: 120px; font-family: inherit;"></textarea>
-                            <button id="send-message" class="modern-btn modern-btn-primary" style="padding: 0.75rem 1.5rem; align-self: flex-end;">
-                                <span class="dashicons dashicons-paperclip"></span>
-                                Send
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- AI Generated Flows -->
-                    <div style="padding: 1rem; border-top: 1px solid #e2e8f0; background: #f8fafc;">
-                        <h4 style="margin: 0 0 1rem 0; font-size: 0.875rem; color: #374151; font-weight: 600; display: flex; align-items: center;">
-                            <span class="dashicons dashicons-admin-generic" style="color: #00265e; margin-right: 0.5rem;"></span>
-                            AI Generated Flows
-                        </h4>
-                        <div id="ai-generated-flows" style="max-height: 200px; overflow-y: auto;">
-                            <p style="margin: 0; font-size: 0.875rem; color: #64748b; text-align: center; padding: 1rem;">
-                                No flows generated yet. Start chatting with AI to create flows!
+                <div style="padding: 1rem;">
+                    <!-- API Key Info -->
+                    <div style="margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: #374151; font-weight: 600;">API Configuration</h4>
+                        <p style="margin: 0; font-size: 0.75rem; color: #64748b;">
+                            Using API key and model from <a href="<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>" style="color: #00265e; text-decoration: none;">AI Flow Generator settings</a>.
+                        </p>
+                        <?php if (!empty($ai_api_key)): ?>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: #059669;">
+                                <span class="dashicons dashicons-yes-alt" style="font-size: 12px; vertical-align: middle;"></span>
+                                API key configured
                             </p>
-                        </div>
+                        <?php else: ?>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: #dc2626;">
+                                <span class="dashicons dashicons-warning" style="font-size: 12px; vertical-align: middle;"></span>
+                                No API key configured
+                            </p>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Model Description -->
+                    <div id="model-description" style="margin-bottom: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 6px; border-left: 3px solid #00265e;">
+                        <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
+                            Currently using: <strong><?php echo esc_html($ai_model); ?></strong><br>
+                            To change the AI model, go to <a href="<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>" style="color: #00265e; text-decoration: none;">AI Flow Generator settings</a>.
+                        </p>
+                    </div>
+
+                    <!-- Temperature -->
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                            Temperature: <span id="temperature-value">0</span>
+                        </label>
+                        <input type="range" id="ai-temperature" min="0" max="1" step="0.1" value="0"
+                            style="width: 100%; margin-bottom: 0.5rem;">
+                        <p style="margin: 0; font-size: 0.75rem; color: #64748b;">
+                            Controls randomness. Lower = more focused, Higher = more creative.
+                        </p>
+                    </div>
+
+                    <!-- Max Tokens -->
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                            Max Tokens
+                        </label>
+                        <input type="number" id="ai-max-tokens" min="100" value=""
+                            placeholder="No limit" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
+                        <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: #64748b;">
+                            Maximum length of AI response. Leave empty for no limit.
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <!-- Sidebar -->
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <!-- AI Settings -->
-                <div class="modern-card">
-                    <div class="card-header">
-                        <h3 class="card-title">AI Settings</h3>
-                    </div>
-                    <div style="padding: 1rem;">
-                        <!-- API Key Info -->
-                        <div style="margin-bottom: 1rem; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-                            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: #374151; font-weight: 600;">API Configuration</h4>
-                            <p style="margin: 0; font-size: 0.75rem; color: #64748b;">
-                                Using API key and model from <a href="<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>" style="color: #00265e; text-decoration: none;">AI Flow Generator settings</a>.
-                            </p>
-                            <?php if (!empty($ai_api_key)): ?>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: #059669;">
-                                    <span class="dashicons dashicons-yes-alt" style="font-size: 12px; vertical-align: middle;"></span>
-                                    API key configured
-                                </p>
-                            <?php else: ?>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: #dc2626;">
-                                    <span class="dashicons dashicons-warning" style="font-size: 12px; vertical-align: middle;"></span>
-                                    No API key configured
-                                </p>
-                            <?php endif; ?>
-                        </div>
-
-                        <!-- Model Description -->
-                        <div id="model-description" style="margin-bottom: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 6px; border-left: 3px solid #00265e;">
-                            <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
-                                Currently using: <strong><?php echo esc_html($ai_model); ?></strong><br>
-                                To change the AI model, go to <a href="<?php echo admin_url('admin.php?page=wp-tester-ai-generator'); ?>" style="color: #00265e; text-decoration: none;">AI Flow Generator settings</a>.
-                            </p>
-                        </div>
-
-                        <!-- Temperature -->
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                                Temperature: <span id="temperature-value">0</span>
-                            </label>
-                            <input type="range" id="ai-temperature" min="0" max="1" step="0.1" value="0"
-                                style="width: 100%; margin-bottom: 0.5rem;">
-                            <p style="margin: 0; font-size: 0.75rem; color: #64748b;">
-                                Controls randomness. Lower = more focused, Higher = more creative.
-                            </p>
-                        </div>
-
-                        <!-- Max Tokens -->
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                                Max Tokens
-                            </label>
-                            <input type="number" id="ai-max-tokens" min="100" value=""
-                                placeholder="No limit" style="width: 100%; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.875rem;">
-                            <p style="margin: 0.5rem 0 0 0; font-size: 0.75rem; color: #64748b;">
-                                Maximum length of AI response. Leave empty for no limit.
-                            </p>
-                        </div>
+            <!-- Quick Actions -->
+            <div class="modern-card">
+                <div class="card-header">
+                    <h3 class="card-title">Quick Actions</h3>
+                </div>
+                <div style="padding: 1rem;">
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <button id="clear-chat" class="modern-btn modern-btn-secondary" style="justify-content: flex-start;">
+                            <span class="dashicons dashicons-trash"></span>
+                            Clear Chat
+                        </button>
+                        <button id="export-chat" class="modern-btn modern-btn-secondary" style="justify-content: flex-start;">
+                            <span class="dashicons dashicons-download"></span>
+                            Export Chat
+                        </button>
+                        <button id="save-conversation" class="modern-btn modern-btn-secondary" style="justify-content: flex-start;">
+                            <span class="dashicons dashicons-saved"></span>
+                            Save Conversation
+                        </button>
                     </div>
                 </div>
-
-                <!-- Quick Actions -->
-                <div class="modern-card">
-                    <div class="card-header">
-                        <h3 class="card-title">Quick Actions</h3>
-                    </div>
-                    <div style="padding: 1rem;">
-                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <button id="clear-chat" class="modern-btn modern-btn-secondary" style="justify-content: flex-start;">
-                                <span class="dashicons dashicons-trash"></span>
-                                Clear Chat
-                            </button>
-                            <button id="export-chat" class="modern-btn modern-btn-secondary" style="justify-content: flex-start;">
-                                <span class="dashicons dashicons-download"></span>
-                                Export Chat
-                            </button>
-                            <button id="save-conversation" class="modern-btn modern-btn-secondary" style="justify-content: flex-start;">
-                                <span class="dashicons dashicons-saved"></span>
-                                Save Conversation
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
             </div>
+
         </div>
     </div>
+</div>
 </div>
 
 <style>
