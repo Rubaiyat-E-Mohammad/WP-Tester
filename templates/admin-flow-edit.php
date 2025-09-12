@@ -18,13 +18,15 @@ if ($flow_id > 0) {
     if (!$flow) {
         wp_die('Flow not found');
     }
+
 } else {
-    // For new flows, create an empty flow object
+    // For new flows, create an empty flow object, but pre-fill start_url if provided in query
+    $start_url = isset($_GET['start_url']) ? esc_url_raw($_GET['start_url']) : '';
     $flow = (object) array(
         'id' => 0,
         'flow_name' => '',
         'flow_type' => 'login',
-        'start_url' => '',
+        'start_url' => $start_url,
         'steps' => '[]',
         'expected_outcome' => '',
         'priority' => 5,
