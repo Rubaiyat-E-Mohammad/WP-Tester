@@ -82,8 +82,8 @@ class WP_Tester {
      * Constructor
      */
     private function __construct() {
-        // Load text domain early but after plugins_loaded
-        add_action('plugins_loaded', array($this, 'load_textdomain'), 1);
+        // Load text domain immediately
+        $this->load_textdomain();
         
         // Initialize AJAX handler after text domain is loaded
         add_action('plugins_loaded', array($this, 'init_ajax'), 10);
@@ -197,8 +197,8 @@ class WP_Tester {
      * Get translated string safely
      */
     private function get_translated_string($string) {
-        // Only translate if text domain is loaded and WordPress functions are available
-        if (function_exists('did_action') && did_action('plugins_loaded') && function_exists('__')) {
+        // Text domain is loaded immediately in constructor, so we can safely translate
+        if (function_exists('__')) {
             return __($string, 'wp-tester');
         }
         return $string;
