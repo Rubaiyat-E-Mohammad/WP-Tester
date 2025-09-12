@@ -245,7 +245,8 @@ $settings = get_option('wp_tester_settings', array());
                                         View
                                     </button>
                                     <button class="modern-btn modern-btn-primary modern-btn-small create-flow" 
-                                            data-url="<?php echo esc_url($result->url ?? ''); ?>">
+                                            data-url="<?php echo esc_url($result->url ?? ''); ?>"
+                                            onclick="alert('Inline onclick works! URL: <?php echo esc_js($result->url ?? ''); ?>'); return false;">
                                         Create Flow
                                     </button>
                                 </div>
@@ -370,6 +371,13 @@ $settings = get_option('wp_tester_settings', array());
 
 <script>
 jQuery(document).ready(function($) {
+    console.log('WP Tester: Crawl page JavaScript loaded');
+    console.log('WP Tester: jQuery version:', $.fn.jquery);
+    console.log('WP Tester: Document ready');
+    
+    // Test if jQuery is working
+    alert('WP Tester: JavaScript loaded successfully!');
+    
     // Ensure ajaxurl is available
     if (typeof ajaxurl === 'undefined') {
         ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
@@ -577,6 +585,9 @@ jQuery(document).ready(function($) {
     
     // Function to bind event handlers for crawl items
     function bindCrawlItemEvents() {
+        console.log('WP Tester: Binding crawl item events');
+        console.log('WP Tester: Found', $('.create-flow').length, 'Create Flow buttons');
+        
         // View details functionality
         $('.view-details').off('click').on('click', function(e) {
             e.preventDefault();
@@ -586,28 +597,42 @@ jQuery(document).ready(function($) {
             }
         });
 
-        // Create flow functionality
-        $(document).off('click', '.create-flow').on('click', '.create-flow', function(e) {
+        // Create flow functionality - Use direct binding instead of document delegation
+        $('.create-flow').off('click').on('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            
+            // Show immediate feedback
+            alert('Create Flow button clicked!');
+            
+            console.log('WP Tester: Create Flow button clicked!');
+            console.log('WP Tester: Event object:', e);
+            console.log('WP Tester: Button element:', this);
+            
             const button = $(this);
             const url = button.data('url');
             
-            console.log('Create Flow button clicked');
-            console.log('URL from data attribute:', url);
+            console.log('WP Tester: URL from data attribute:', url);
+            console.log('WP Tester: Button classes:', button.attr('class'));
             
             if (!url) {
-                console.error('No URL found for this page');
+                console.error('WP Tester: No URL found for this page');
+                alert('Error: No URL found for this page');
                 showErrorModal('Error', 'No URL found for this page');
                 return;
             }
             
             // Build the redirect URL
             const redirectUrl = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>' + '&start_url=' + encodeURIComponent(url);
-            console.log('Redirecting to:', redirectUrl);
+            console.log('WP Tester: Redirecting to:', redirectUrl);
             
-            // Redirect to flow creation page with start_url as query param
-            window.location.href = redirectUrl;
+            // Show redirect URL in alert for debugging
+            alert('Redirecting to: ' + redirectUrl);
+            
+            // Add a small delay to see the console log
+            setTimeout(function() {
+                window.location.href = redirectUrl;
+            }, 100);
         });
         
         // Individual checkbox change for new items
