@@ -564,12 +564,13 @@ class WP_Tester_Admin {
             }
         }
         
-        // Create empty flow object for form
+        // Create empty flow object for form, pre-fill start_url if provided
+        $start_url = isset($_GET['start_url']) ? esc_url_raw($_GET['start_url']) : '';
         $flow = (object) array(
             'id' => 0,
             'flow_name' => '',
             'flow_type' => 'login',
-            'start_url' => '',
+            'start_url' => $start_url,
             'steps' => '[]',
             'expected_outcome' => '',
             'priority' => 5,

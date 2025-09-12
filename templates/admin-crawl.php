@@ -592,12 +592,22 @@ jQuery(document).ready(function($) {
             e.stopPropagation();
             const button = $(this);
             const url = button.data('url');
+            
+            console.log('Create Flow button clicked');
+            console.log('URL from data attribute:', url);
+            
             if (!url) {
+                console.error('No URL found for this page');
                 showErrorModal('Error', 'No URL found for this page');
                 return;
             }
+            
+            // Build the redirect URL
+            const redirectUrl = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>' + '&start_url=' + encodeURIComponent(url);
+            console.log('Redirecting to:', redirectUrl);
+            
             // Redirect to flow creation page with start_url as query param
-            window.location.href = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>' + '&start_url=' + encodeURIComponent(url);
+            window.location.href = redirectUrl;
         });
         
         // Individual checkbox change for new items
