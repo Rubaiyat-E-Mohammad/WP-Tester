@@ -258,7 +258,13 @@ $settings = get_option('wp_tester_settings', array());
                                     ?>
                                     <button class="modern-btn modern-btn-primary modern-btn-small create-flow" 
                                             data-url="<?php echo esc_url($flow_url); ?>"
-                                            onclick="alert('Inline onclick works! URL: <?php echo esc_js($flow_url); ?>'); return false;">
+                                            onclick="
+                                                var url = '<?php echo esc_js($flow_url); ?>';
+                                                var flowCreationUrl = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>';
+                                                var redirectUrl = flowCreationUrl + '&start_url=' + encodeURIComponent(url);
+                                                window.location.href = redirectUrl;
+                                                return false;
+                                            ">
                                         Create Flow
                                     </button>
                                     <?php endif; ?>
@@ -384,20 +390,7 @@ $settings = get_option('wp_tester_settings', array());
 
 <script>
 jQuery(document).ready(function($) {
-    // Test if jQuery is working
-    alert('jQuery is loaded and working!');
-    
-    // Check if buttons exist
-    setTimeout(function() {
-        const buttonCount = $('.create-flow').length;
-        alert('Found ' + buttonCount + ' Create Flow buttons');
-        
-        if (buttonCount > 0) {
-            const firstButton = $('.create-flow').first();
-            const buttonHtml = firstButton.prop('outerHTML');
-            alert('First button HTML: ' + buttonHtml.substring(0, 200));
-        }
-    }, 1000);
+    // jQuery is working
     
     // Ensure ajaxurl is available
     if (typeof ajaxurl === 'undefined') {
@@ -616,61 +609,7 @@ jQuery(document).ready(function($) {
             }
         });
 
-        // Create flow functionality - Use event delegation
-        $(document).on('click', '.create-flow', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            alert('Create Flow button clicked!'); // Immediate feedback
-            
-            const button = $(this);
-            const url = button.data('url');
-            
-            console.log('WP Tester: Create Flow clicked, URL:', url);
-            alert('URL from data attribute: ' + url);
-            
-            if (!url) {
-                alert('No URL found!');
-                return;
-            }
-            
-            // Build the redirect URL
-            const flowCreationUrl = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>';
-            const redirectUrl = flowCreationUrl + '&start_url=' + encodeURIComponent(url);
-            
-            console.log('WP Tester: Redirecting to:', redirectUrl);
-            alert('Redirecting to: ' + redirectUrl);
-            
-            // Redirect to flow creation page
-            window.location.href = redirectUrl;
-        });
-        
-        // Also try binding directly to existing buttons
-        $('.create-flow').each(function() {
-            $(this).off('click').on('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                alert('Direct binding Create Flow clicked!');
-                
-                const button = $(this);
-                const url = button.data('url');
-                
-                if (!url) {
-                    alert('No URL found in direct binding!');
-                    return;
-                }
-                
-                // Build the redirect URL
-                const flowCreationUrl = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>';
-                const redirectUrl = flowCreationUrl + '&start_url=' + encodeURIComponent(url);
-                
-                alert('Direct binding redirecting to: ' + redirectUrl);
-                
-                // Redirect to flow creation page
-                window.location.href = redirectUrl;
-            });
-        });
+        // Create flow functionality is now handled by inline onclick
         
         // Individual checkbox change for new items
         $('.crawl-checkbox').off('change').on('change', function() {
