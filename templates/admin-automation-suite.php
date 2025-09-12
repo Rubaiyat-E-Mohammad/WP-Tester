@@ -18,7 +18,7 @@ $flows = $database->get_flows();
 ?>
 
 <div class="wrap">
-    <h1 class="wp-heading-inline">
+    <h1 class="wp-heading-inline" style="margin: 0; font-size: 1.5rem; font-weight: 600; color: #00265e;">
         <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/robotic.png'); ?>"
             alt="AI"
             style="width: 32px; height: 32px;">
