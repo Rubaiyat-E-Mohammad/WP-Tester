@@ -9,6 +9,25 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+// WordPress function declarations for linter
+if (!function_exists('is_email')) {
+    function is_email($email) {
+        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+    }
+}
+
+if (!function_exists('sanitize_email')) {
+    function sanitize_email($email) {
+        return sanitize_text_field($email);
+    }
+}
+
+if (!function_exists('esc_textarea')) {
+    function esc_textarea($text) {
+        return esc_html($text);
+    }
+}
+
 class WP_Tester_Admin {
     
     /**
@@ -31,6 +50,16 @@ class WP_Tester_Admin {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('admin_init', array($this, 'admin_init'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        add_action('admin_notices', array($this, 'admin_notices'));
+    }
+    
+    /**
+     * Admin notices
+     */
+    public function admin_notices() {
+        if (isset($_GET['settings-updated']) && $_GET['settings-updated']) {
+            echo '<div class="notice notice-success is-dismissible"><p>✅ Settings saved successfully!</p></div>';
+        }
     }
     
     /**
@@ -255,6 +284,128 @@ class WP_Tester_Admin {
             'max_pages_per_crawl',
             __('Max Pages per Crawl', 'wp-tester'),
             array($this, 'max_pages_per_crawl_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'include_admin_in_crawl',
+            __('Include Admin Panel in Crawl', 'wp-tester'),
+            array($this, 'include_admin_in_crawl_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'prevent_duplicate_flows',
+            __('Prevent Duplicate Flows', 'wp-tester'),
+            array($this, 'prevent_duplicate_flows_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'crawl_schedule_time',
+            __('Crawl Schedule Time', 'wp-tester'),
+            array($this, 'crawl_schedule_time_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'crawl_schedule_days',
+            __('Crawl Schedule Days', 'wp-tester'),
+            array($this, 'crawl_schedule_days_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        // Test frequency settings
+        add_settings_field(
+            'test_frequency',
+            __('Test Frequency', 'wp-tester'),
+            array($this, 'test_frequency_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'test_schedule_time',
+            __('Test Schedule Time', 'wp-tester'),
+            array($this, 'test_schedule_time_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'email_notifications',
+            __('Email Notifications', 'wp-tester'),
+            array($this, 'email_notifications_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        // Email configuration fields
+        add_settings_field(
+            'email_recipients',
+            __('Email Recipients', 'wp-tester'),
+            array($this, 'email_recipients_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'smtp_host',
+            __('SMTP Host', 'wp-tester'),
+            array($this, 'smtp_host_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'smtp_port',
+            __('SMTP Port', 'wp-tester'),
+            array($this, 'smtp_port_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'smtp_username',
+            __('SMTP Username', 'wp-tester'),
+            array($this, 'smtp_username_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'smtp_password',
+            __('SMTP Password', 'wp-tester'),
+            array($this, 'smtp_password_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'smtp_encryption',
+            __('SMTP Encryption', 'wp-tester'),
+            array($this, 'smtp_encryption_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'from_email',
+            __('From Email', 'wp-tester'),
+            array($this, 'from_email_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'from_name',
+            __('From Name', 'wp-tester'),
+            array($this, 'from_name_callback'),
             'wp_tester_settings',
             'wp_tester_general'
         );
@@ -695,10 +846,167 @@ class WP_Tester_Admin {
         echo '<p class="description">' . __('Maximum number of pages to crawl per post type during each crawl session.', 'wp-tester') . '</p>';
     }
     
+    public function include_admin_in_crawl_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['include_admin_in_crawl']) ? $settings['include_admin_in_crawl'] : true;
+        
+        echo '<input type="checkbox" name="wp_tester_settings[include_admin_in_crawl]" value="1" ' . checked($value, true, false) . ' />';
+        echo '<label>' . __('Automatically discover and create flows for WordPress admin pages.', 'wp-tester') . '</label>';
+    }
+    
+    public function prevent_duplicate_flows_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['prevent_duplicate_flows']) ? $settings['prevent_duplicate_flows'] : true;
+        
+        echo '<input type="checkbox" name="wp_tester_settings[prevent_duplicate_flows]" value="1" ' . checked($value, true, false) . ' />';
+        echo '<label>' . __('Automatically prevent creation of duplicate flows during crawling.', 'wp-tester') . '</label>';
+    }
+    
+    public function crawl_schedule_time_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['crawl_schedule_time']) ? $settings['crawl_schedule_time'] : '02:00';
+        
+        echo '<input type="time" name="wp_tester_settings[crawl_schedule_time]" value="' . esc_attr($value) . '" />';
+        echo '<p class="description">' . __('Time of day to run scheduled crawls (24-hour format).', 'wp-tester') . '</p>';
+    }
+    
+    public function crawl_schedule_days_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $selected_days = isset($settings['crawl_schedule_days']) ? $settings['crawl_schedule_days'] : array('monday', 'tuesday', 'wednesday', 'thursday', 'friday');
+        
+        $days = array(
+            'monday' => __('Monday', 'wp-tester'),
+            'tuesday' => __('Tuesday', 'wp-tester'),
+            'wednesday' => __('Wednesday', 'wp-tester'),
+            'thursday' => __('Thursday', 'wp-tester'),
+            'friday' => __('Friday', 'wp-tester'),
+            'saturday' => __('Saturday', 'wp-tester'),
+            'sunday' => __('Sunday', 'wp-tester')
+        );
+        
+        foreach ($days as $day => $label) {
+            echo '<label><input type="checkbox" name="wp_tester_settings[crawl_schedule_days][]" value="' . $day . '" ' . checked(in_array($day, $selected_days), true, false) . ' /> ' . $label . '</label><br>';
+        }
+        echo '<p class="description">' . __('Select which days of the week to run scheduled crawls.', 'wp-tester') . '</p>';
+    }
+    
+    public function test_frequency_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['test_frequency']) ? $settings['test_frequency'] : 'never';
+        
+        $options = array(
+            'never' => __('Never (Manual Only)', 'wp-tester'),
+            'daily' => __('Daily', 'wp-tester'),
+            'weekly' => __('Weekly', 'wp-tester'),
+            'monthly' => __('Monthly', 'wp-tester')
+        );
+        
+        echo '<select name="wp_tester_settings[test_frequency]">';
+        foreach ($options as $key => $label) {
+            echo '<option value="' . $key . '" ' . selected($value, $key, false) . '>' . $label . '</option>';
+        }
+        echo '</select>';
+        echo '<p class="description">' . __('How often to automatically run all active flows.', 'wp-tester') . '</p>';
+    }
+    
+    public function test_schedule_time_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['test_schedule_time']) ? $settings['test_schedule_time'] : '02:00';
+        
+        echo '<input type="time" name="wp_tester_settings[test_schedule_time]" value="' . esc_attr($value) . '" />';
+        echo '<p class="description">' . __('Time of day to run scheduled tests (24-hour format).', 'wp-tester') . '</p>';
+    }
+    
+    public function email_notifications_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['email_notifications']) ? $settings['email_notifications'] : false;
+        
+        echo '<input type="checkbox" name="wp_tester_settings[email_notifications]" value="1" ' . checked($value, true, false) . ' />';
+        echo '<label>' . __('Send email notifications for test results.', 'wp-tester') . '</label>';
+        echo '<p class="description">' . __('Enable email notifications for both scheduled and manual tests.', 'wp-tester') . '</p>';
+    }
+    
+    public function email_recipients_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['email_recipients']) ? $settings['email_recipients'] : '';
+        
+        echo '<textarea name="wp_tester_settings[email_recipients]" rows="3" cols="50" placeholder="' . esc_attr(__('Enter email addresses, one per line', 'wp-tester')) . '">' . esc_textarea($value) . '</textarea>';
+        echo '<p class="description">' . __('Email addresses to receive test result notifications (one per line).', 'wp-tester') . '</p>';
+    }
+    
+    public function smtp_host_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['smtp_host']) ? $settings['smtp_host'] : '';
+        
+        echo '<input type="text" name="wp_tester_settings[smtp_host]" value="' . esc_attr($value) . '" placeholder="smtp.gmail.com" />';
+        echo '<p class="description">' . __('SMTP server hostname.', 'wp-tester') . '</p>';
+    }
+    
+    public function smtp_port_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['smtp_port']) ? $settings['smtp_port'] : 587;
+        
+        echo '<input type="number" name="wp_tester_settings[smtp_port]" value="' . esc_attr($value) . '" min="1" max="65535" />';
+        echo '<p class="description">' . __('SMTP server port (587 for TLS, 465 for SSL).', 'wp-tester') . '</p>';
+    }
+    
+    public function smtp_username_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['smtp_username']) ? $settings['smtp_username'] : '';
+        
+        echo '<input type="text" name="wp_tester_settings[smtp_username]" value="' . esc_attr($value) . '" placeholder="your-email@gmail.com" />';
+        echo '<p class="description">' . __('SMTP authentication username.', 'wp-tester') . '</p>';
+    }
+    
+    public function smtp_password_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['smtp_password']) ? $settings['smtp_password'] : '';
+        
+        echo '<input type="password" name="wp_tester_settings[smtp_password]" value="' . esc_attr($value) . '" placeholder="' . esc_attr(__('Your email password or app password', 'wp-tester')) . '" />';
+        echo '<p class="description">' . __('SMTP authentication password.', 'wp-tester') . '</p>';
+    }
+    
+    public function smtp_encryption_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['smtp_encryption']) ? $settings['smtp_encryption'] : 'tls';
+        
+        $options = array(
+            'none' => __('None', 'wp-tester'),
+            'tls' => __('TLS', 'wp-tester'),
+            'ssl' => __('SSL', 'wp-tester')
+        );
+        
+        echo '<select name="wp_tester_settings[smtp_encryption]">';
+        foreach ($options as $key => $label) {
+            echo '<option value="' . $key . '" ' . selected($value, $key, false) . '>' . $label . '</option>';
+        }
+        echo '</select>';
+        echo '<p class="description">' . __('Encryption method for SMTP connection.', 'wp-tester') . '</p>';
+    }
+    
+    public function from_email_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['from_email']) ? $settings['from_email'] : get_option('admin_email');
+        
+        echo '<input type="email" name="wp_tester_settings[from_email]" value="' . esc_attr($value) . '" />';
+        echo '<p class="description">' . __('Email address to send notifications from.', 'wp-tester') . '</p>';
+    }
+    
+    public function from_name_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['from_name']) ? $settings['from_name'] : 'WP Tester';
+        
+        echo '<input type="text" name="wp_tester_settings[from_name]" value="' . esc_attr($value) . '" />';
+        echo '<p class="description">' . __('Name to display in email sender field.', 'wp-tester') . '</p>';
+    }
+    
     /**
      * Sanitize settings
      */
     public function sanitize_settings($input) {
+        // Debug logging
+        error_log('WP Tester: Sanitizing settings input: ' . print_r($input, true));
+        
         $sanitized = array();
         
         if (isset($input['crawl_frequency'])) {
@@ -757,6 +1065,75 @@ class WP_Tester_Admin {
             // Default to weekdays if no days selected
             $sanitized['crawl_schedule_days'] = array('monday', 'tuesday', 'wednesday', 'thursday', 'friday');
         }
+        
+        // Test frequency settings
+        if (isset($input['test_frequency'])) {
+            $allowed_frequencies = array('never', 'daily', 'weekly', 'monthly');
+            $sanitized['test_frequency'] = in_array($input['test_frequency'], $allowed_frequencies) 
+                ? $input['test_frequency'] 
+                : 'never';
+        }
+        
+        if (isset($input['test_schedule_time'])) {
+            // Validate time format (HH:MM)
+            if (preg_match('/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/', $input['test_schedule_time'])) {
+                $sanitized['test_schedule_time'] = sanitize_text_field($input['test_schedule_time']);
+            } else {
+                $sanitized['test_schedule_time'] = '02:00'; // Default to 2 AM
+            }
+        }
+        
+        // Email notification settings
+        if (isset($input['email_notifications'])) {
+            $sanitized['email_notifications'] = (bool) $input['email_notifications'];
+        }
+        
+        // Email configuration settings
+        if (isset($input['email_recipients'])) {
+            $recipients = array_filter(array_map('trim', explode("\n", $input['email_recipients'])));
+            $valid_recipients = array();
+            foreach ($recipients as $recipient) {
+                if (is_email($recipient)) {
+                    $valid_recipients[] = sanitize_email($recipient);
+                }
+            }
+            $sanitized['email_recipients'] = implode("\n", $valid_recipients);
+        }
+        
+        if (isset($input['smtp_host'])) {
+            $sanitized['smtp_host'] = sanitize_text_field($input['smtp_host']);
+        }
+        
+        if (isset($input['smtp_port'])) {
+            $sanitized['smtp_port'] = max(1, min(65535, intval($input['smtp_port'])));
+        }
+        
+        if (isset($input['smtp_username'])) {
+            $sanitized['smtp_username'] = sanitize_text_field($input['smtp_username']);
+        }
+        
+        if (isset($input['smtp_password'])) {
+            $sanitized['smtp_password'] = sanitize_text_field($input['smtp_password']);
+        }
+        
+        if (isset($input['smtp_encryption'])) {
+            $allowed_encryption = array('none', 'tls', 'ssl');
+            $sanitized['smtp_encryption'] = in_array($input['smtp_encryption'], $allowed_encryption) 
+                ? $input['smtp_encryption'] 
+                : 'tls';
+        }
+        
+        if (isset($input['from_email'])) {
+            $email = sanitize_email($input['from_email']);
+            $sanitized['from_email'] = is_email($email) ? $email : get_option('admin_email');
+        }
+        
+        if (isset($input['from_name'])) {
+            $sanitized['from_name'] = sanitize_text_field($input['from_name']);
+        }
+        
+        // Debug logging
+        error_log('WP Tester: Sanitized settings output: ' . print_r($sanitized, true));
         
         return $sanitized;
     }

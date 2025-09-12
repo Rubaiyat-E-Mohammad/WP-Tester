@@ -32,10 +32,24 @@ if (!defined('ABSPATH')) {
     <!-- Main Content -->
     <div class="wp-tester-content">
         
+        <?php if (isset($_GET['settings-updated']) && $_GET['settings-updated']): ?>
+        <div class="notice notice-success is-dismissible" style="margin: 1rem 0; padding: 1rem; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; color: #155724;">
+            <p style="margin: 0; font-weight: 600;">✅ Settings saved successfully!</p>
+        </div>
+        <?php endif; ?>
+        
         <form method="post" action="options.php">
             <?php
             settings_fields('wp_tester_settings');
             $settings = get_option('wp_tester_settings', array());
+            
+            // Debug: Show current settings
+            if (current_user_can('manage_options') && isset($_GET['debug'])) {
+                echo '<div style="background: #f0f0f0; padding: 1rem; margin: 1rem 0; border-radius: 8px;">';
+                echo '<h4>Debug: Current Settings</h4>';
+                echo '<pre>' . print_r($settings, true) . '</pre>';
+                echo '</div>';
+            }
             ?>
 
             <!-- General Settings -->
@@ -607,6 +621,12 @@ jQuery(document).ready(function($) {
                 button.html(originalText).prop('disabled', false);
             }
         });
+    });
+    
+    // Add debugging for form submission
+    $('form').on('submit', function(e) {
+        console.log('Settings form submitted');
+        console.log('Form data:', $(this).serialize());
     });
     
     // Modal functions
