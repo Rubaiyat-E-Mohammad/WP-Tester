@@ -386,6 +386,18 @@ jQuery(document).ready(function($) {
     // Test if jQuery is working
     alert('jQuery is loaded and working!');
     
+    // Check if buttons exist
+    setTimeout(function() {
+        const buttonCount = $('.create-flow').length;
+        alert('Found ' + buttonCount + ' Create Flow buttons');
+        
+        if (buttonCount > 0) {
+            const firstButton = $('.create-flow').first();
+            const buttonHtml = firstButton.prop('outerHTML');
+            alert('First button HTML: ' + buttonHtml.substring(0, 200));
+        }
+    }, 1000);
+    
     // Ensure ajaxurl is available
     if (typeof ajaxurl === 'undefined') {
         ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
