@@ -241,11 +241,11 @@ $settings = get_option('wp_tester_settings', array());
                                 </div>
                                 <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
                                     <button class="modern-btn modern-btn-secondary modern-btn-small view-details" 
-                                            data-url="<?php echo esc_attr($result->url ?? ''); ?>">
+                                            data-url="<?php echo esc_url($result->url ?? ''); ?>">
                                         View
                                     </button>
                                     <button class="modern-btn modern-btn-primary modern-btn-small create-flow" 
-                                            data-url="<?php echo esc_attr($result->url ?? ''); ?>">
+                                            data-url="<?php echo esc_url($result->url ?? ''); ?>">
                                         Create Flow
                                     </button>
                                 </div>
