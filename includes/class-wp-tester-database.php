@@ -80,6 +80,7 @@ class WP_Tester_Database {
             is_active tinyint(1) DEFAULT 1,
             ai_generated tinyint(1) DEFAULT 0,
             ai_provider varchar(100) DEFAULT NULL,
+            created_by varchar(100) DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
@@ -616,6 +617,22 @@ class WP_Tester_Database {
      * Update flows table schema to add AI generation fields
      */
     public function update_flows_table_schema() {
+        // Check if created_by column exists
+        global $wpdb;
+        $created_by_exists = $wpdb->get_results($wpdb->prepare(
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS 
+             WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = 'created_by'",
+            $wpdb->dbname,
+            $this->flows_table
+        ));
+        if (empty($created_by_exists)) {
+            $result_created_by = $wpdb->query("ALTER TABLE {$this->flows_table} ADD COLUMN created_by varchar(100) DEFAULT NULL");
+            if ($result_created_by !== false) {
+                error_log('WP Tester: Successfully added created_by column to flows table');
+            } else {
+                error_log('WP Tester: Failed to add created_by column to flows table: ' . $wpdb->last_error);
+            }
+        }
         global $wpdb;
         
         // Check if flow_description column exists
