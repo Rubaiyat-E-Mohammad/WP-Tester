@@ -85,8 +85,14 @@ class WP_Tester {
         // Load text domain early but after plugins_loaded
         add_action('plugins_loaded', array($this, 'load_textdomain'), 1);
         
-        // Initialize AJAX handler early to ensure it's available for all requests
-        add_action('init', array($this, 'init_ajax'), 1);
+        // Initialize AJAX handler after text domain is loaded
+        add_action('plugins_loaded', array($this, 'init_ajax'), 10);
+        
+        // Initialize admin after text domain is loaded
+        add_action('plugins_loaded', array($this, 'init_admin'), 10);
+        
+        // Initialize automation suite after text domain is loaded
+        add_action('plugins_loaded', array($this, 'init_automation_suite'), 10);
         
         // Add a simple test AJAX action directly to verify AJAX works
         add_action('wp_ajax_wp_tester_simple_test', array($this, 'simple_ajax_test'));
@@ -118,6 +124,32 @@ class WP_Tester {
         
         // Initialize AJAX handler
         new WP_Tester_Ajax();
+    }
+    
+    /**
+     * Initialize admin interface
+     */
+    public function init_admin() {
+        // Include admin class if not already included
+        if (!class_exists('WP_Tester_Admin')) {
+            require_once plugin_dir_path(WP_TESTER_PLUGIN_FILE) . 'includes/class-wp-tester-admin.php';
+        }
+        
+        // Initialize admin interface
+        $this->admin = new WP_Tester_Admin();
+    }
+    
+    /**
+     * Initialize automation suite
+     */
+    public function init_automation_suite() {
+        // Include automation suite class if not already included
+        if (!class_exists('WP_Tester_Automation_Suite')) {
+            require_once plugin_dir_path(WP_TESTER_PLUGIN_FILE) . 'includes/class-wp-tester-automation-suite.php';
+        }
+        
+        // Initialize automation suite
+        new WP_Tester_Automation_Suite();
     }
     
     /**
@@ -205,12 +237,8 @@ class WP_Tester {
         $this->flow_executor = new WP_Tester_Flow_Executor();
         $this->feedback_reporter = new WP_Tester_Feedback_Reporter();
         $this->scheduler = new WP_Tester_Scheduler();
-        $this->admin = new WP_Tester_Admin();
         
-        // AJAX handler is initialized in init_ajax method
-        
-        // Initialize Automation Suite
-        new WP_Tester_Automation_Suite();
+        // Admin, AJAX handlers, and Automation Suite are initialized separately after text domain is loaded
         
         // Initialize WooCommerce integration if active
         if (class_exists('WooCommerce')) {
