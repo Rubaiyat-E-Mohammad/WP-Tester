@@ -244,12 +244,10 @@ $settings = get_option('wp_tester_settings', array());
                                             data-url="<?php echo esc_attr($result->url ?? ''); ?>">
                                         View
                                     </button>
-                                    <?php if (($result->forms_found ?? 0) > 0) : ?>
-                                        <button class="modern-btn modern-btn-primary modern-btn-small create-flow" 
-                                                data-url="<?php echo esc_attr($result->url ?? ''); ?>">
-                                            Create Flow
-                                        </button>
-                                    <?php endif; ?>
+                                    <button class="modern-btn modern-btn-primary modern-btn-small create-flow" 
+                                            data-url="<?php echo esc_attr($result->url ?? ''); ?>">
+                                        Create Flow
+                                    </button>
                                 </div>
                             </div>
                         </div>
