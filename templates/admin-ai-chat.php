@@ -20,7 +20,7 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
     <!-- Header -->
     <div class="wp-tester-header">
         <div class="header-content">
-            <div class="header-info">
+            <div class="header-info" style="display: flex; align-items: center; gap: 1rem;">
                 <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>" alt="AI" style="width: 40px; height: 40px;">
                 <div>
                     <h1 style="margin: 0; font-size: 1.5rem; font-weight: 600; color: #1e293b;">AI Chat Assistant</h1>
