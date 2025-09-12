@@ -257,7 +257,8 @@ $settings = get_option('wp_tester_settings', array());
                                     if (!empty($flow_url)) :
                                     ?>
                                     <button class="modern-btn modern-btn-primary modern-btn-small create-flow" 
-                                            data-url="<?php echo esc_url($flow_url); ?>">
+                                            data-url="<?php echo esc_url($flow_url); ?>"
+                                            onclick="alert('Inline onclick works! URL: <?php echo esc_js($flow_url); ?>'); return false;">
                                         Create Flow
                                     </button>
                                     <?php endif; ?>
