@@ -23,10 +23,6 @@ if ($flow_id > 0) {
     // For new flows, create an empty flow object, but pre-fill start_url if provided in query
     $start_url = isset($_GET['start_url']) ? esc_url_raw($_GET['start_url']) : '';
     
-    // Debug logging
-    error_log('WP Tester: Flow creation page loaded');
-    error_log('WP Tester: start_url parameter: ' . ($start_url ?: 'not provided'));
-    
     $flow = (object) array(
         'id' => 0,
         'flow_name' => '',
@@ -378,15 +374,6 @@ if (empty($steps) && !empty($flow->steps)) {
 <script>
 jQuery(document).ready(function($) {
     let currentStepIndex = null;
-    
-    // Debug: Check if start URL is populated
-    const startUrl = $('#start_url').val();
-    console.log('WP Tester: Start URL field value:', startUrl);
-    if (startUrl) {
-        console.log('WP Tester: Start URL successfully pre-filled from query parameter');
-    } else {
-        console.log('WP Tester: No start URL found in form field');
-    }
     
     // Add step button
     $('#add-step-btn').on('click', function() {

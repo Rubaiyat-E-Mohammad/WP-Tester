@@ -244,11 +244,23 @@ $settings = get_option('wp_tester_settings', array());
                                             data-url="<?php echo esc_url($result->url ?? ''); ?>">
                                         View
                                     </button>
+                                    <?php 
+                                    // Get the URL for the create flow button
+                                    $flow_url = '';
+                                    if (!empty($result->url)) {
+                                        $flow_url = $result->url;
+                                    } elseif (!empty($result->title) && filter_var($result->title, FILTER_VALIDATE_URL)) {
+                                        $flow_url = $result->title;
+                                    }
+                                    
+                                    // Only show the button if we have a valid URL
+                                    if (!empty($flow_url)) :
+                                    ?>
                                     <button class="modern-btn modern-btn-primary modern-btn-small create-flow" 
-                                            data-url="<?php echo esc_url($result->url ?? ''); ?>"
-                                            onclick="alert('Inline onclick works! URL: <?php echo esc_js($result->url ?? ''); ?>'); return false;">
+                                            data-url="<?php echo esc_url($flow_url); ?>">
                                         Create Flow
                                     </button>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -371,13 +383,6 @@ $settings = get_option('wp_tester_settings', array());
 
 <script>
 jQuery(document).ready(function($) {
-    console.log('WP Tester: Crawl page JavaScript loaded');
-    console.log('WP Tester: jQuery version:', $.fn.jquery);
-    console.log('WP Tester: Document ready');
-    
-    // Test if jQuery is working
-    alert('WP Tester: JavaScript loaded successfully!');
-    
     // Ensure ajaxurl is available
     if (typeof ajaxurl === 'undefined') {
         ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
@@ -585,8 +590,6 @@ jQuery(document).ready(function($) {
     
     // Function to bind event handlers for crawl items
     function bindCrawlItemEvents() {
-        console.log('WP Tester: Binding crawl item events');
-        console.log('WP Tester: Found', $('.create-flow').length, 'Create Flow buttons');
         
         // View details functionality
         $('.view-details').off('click').on('click', function(e) {
@@ -597,42 +600,24 @@ jQuery(document).ready(function($) {
             }
         });
 
-        // Create flow functionality - Use direct binding instead of document delegation
+        // Create flow functionality
         $('.create-flow').off('click').on('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
-            // Show immediate feedback
-            alert('Create Flow button clicked!');
-            
-            console.log('WP Tester: Create Flow button clicked!');
-            console.log('WP Tester: Event object:', e);
-            console.log('WP Tester: Button element:', this);
-            
             const button = $(this);
             const url = button.data('url');
             
-            console.log('WP Tester: URL from data attribute:', url);
-            console.log('WP Tester: Button classes:', button.attr('class'));
-            
             if (!url) {
-                console.error('WP Tester: No URL found for this page');
-                alert('Error: No URL found for this page');
                 showErrorModal('Error', 'No URL found for this page');
                 return;
             }
             
             // Build the redirect URL
             const redirectUrl = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>' + '&start_url=' + encodeURIComponent(url);
-            console.log('WP Tester: Redirecting to:', redirectUrl);
             
-            // Show redirect URL in alert for debugging
-            alert('Redirecting to: ' + redirectUrl);
-            
-            // Add a small delay to see the console log
-            setTimeout(function() {
-                window.location.href = redirectUrl;
-            }, 100);
+            // Redirect to flow creation page
+            window.location.href = redirectUrl;
         });
         
         // Individual checkbox change for new items
