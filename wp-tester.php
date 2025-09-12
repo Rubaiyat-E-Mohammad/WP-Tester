@@ -68,6 +68,7 @@ class WP_Tester {
         // Add a simple test AJAX action directly to verify AJAX works
         add_action('wp_ajax_wp_tester_simple_test', array($this, 'simple_ajax_test'));
         
+        add_action('plugins_loaded', array($this, 'load_textdomain'));
         add_action('plugins_loaded', array($this, 'init'));
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
@@ -101,9 +102,6 @@ class WP_Tester {
      * Initialize plugin
      */
     public function init() {
-        // Load text domain
-        $this->load_textdomain();
-        
         // Include required files
         $this->includes();
         
@@ -117,7 +115,7 @@ class WP_Tester {
     /**
      * Load plugin text domain for translations
      */
-    private function load_textdomain() {
+    public function load_textdomain() {
         load_plugin_textdomain('wp-tester', false, basename(dirname(__FILE__)) . '/languages');
     }
     

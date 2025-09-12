@@ -325,6 +325,7 @@ $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
 jQuery(document).ready(function($) {
     // Define ajaxurl for AJAX calls
     var ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
+    const aiIconUrl = '<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/artificial-intelligence.png'); ?>';
     
     // Debug: Log plugin loading
     console.log('WP Tester AI Chat loaded');
@@ -430,7 +431,7 @@ jQuery(document).ready(function($) {
         
         const iconHtml = type === 'user' ? 
             `<span class="dashicons dashicons-admin-users" style="color: ${color}; margin-right: 0.5rem;"></span>` :
-            `<img src="${ajaxurl.replace('admin-ajax.php', '')}../assets/images/artificial-intelligence.png" alt="AI" style="width: 20px; height: 20px; margin-right: 0.5rem;">`;
+            `<img src="${aiIconUrl}" alt="AI" style="width: 20px; height: 20px; margin-right: 0.5rem;">`;
         
         const messageHtml = `
             <div class="chat-message ${messageClass}">

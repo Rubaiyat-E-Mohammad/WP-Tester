@@ -2566,6 +2566,13 @@ class WP_Tester_Ajax {
             $api_key = get_option('wp_tester_ai_api_key', '');
             $api_provider = get_option('wp_tester_ai_api_provider', 'openai');
             
+            // Debug logging
+            error_log('WP Tester AI Chat Debug:');
+            error_log('Model: ' . $model);
+            error_log('API Provider: ' . $api_provider);
+            error_log('API Key length: ' . strlen($api_key ?: ''));
+            error_log('API Key (first 10 chars): ' . substr($api_key ?: '', 0, 10));
+            
             if (empty($model)) {
                 wp_send_json_error('No AI model configured. Please configure your AI model in the AI Flow Generator settings.');
             }
@@ -2840,6 +2847,12 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                 return array('success' => false, 'error' => 'Unsupported API provider: ' . $model_config['provider']);
         }
         
+        // Debug logging for API call
+        error_log('WP Tester API Call Debug:');
+        error_log('URL: ' . $url);
+        error_log('Headers: ' . print_r($headers, true));
+        error_log('Data: ' . print_r($data, true));
+        
         $args = array(
             'method' => 'POST',
             'headers' => $headers,
@@ -2859,6 +2872,7 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
         // Debug logging for API responses
         error_log('WP Tester AI API Debug - Original Model: ' . $model . ', Actual Model: ' . $actual_model . ', Provider: ' . $model_config['provider']);
         error_log('WP Tester AI API Debug - Request Data: ' . json_encode($data));
+        error_log('WP Tester AI API Debug - Response Code: ' . wp_remote_retrieve_response_code($response));
         error_log('WP Tester AI API Debug - Response Body: ' . $body);
         error_log('WP Tester AI API Debug - Response Data: ' . print_r($response_data, true));
         
