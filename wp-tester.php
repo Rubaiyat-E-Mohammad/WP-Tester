@@ -82,22 +82,18 @@ class WP_Tester {
      * Constructor
      */
     private function __construct() {
-        // Load text domain immediately
-        $this->load_textdomain();
+        // Load text domain on init action (WordPress 6.7.0+ requirement)
+        add_action('init', array($this, 'load_textdomain'), 1);
         
-        // Initialize AJAX handler after text domain is loaded
-        add_action('plugins_loaded', array($this, 'init_ajax'), 10);
-        
-        // Initialize admin after text domain is loaded
-        add_action('plugins_loaded', array($this, 'init_admin'), 10);
-        
-        // Initialize automation suite after text domain is loaded
-        add_action('plugins_loaded', array($this, 'init_automation_suite'), 10);
+        // Initialize everything after text domain is loaded
+        add_action('init', array($this, 'init_ajax'), 5);
+        add_action('init', array($this, 'init_admin'), 5);
+        add_action('init', array($this, 'init_automation_suite'), 5);
+        add_action('init', array($this, 'init'), 5);
         
         // Add a simple test AJAX action directly to verify AJAX works
         add_action('wp_ajax_wp_tester_simple_test', array($this, 'simple_ajax_test'));
         
-        add_action('plugins_loaded', array($this, 'init'), 5);
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
         register_uninstall_hook(__FILE__, array('WP_Tester', 'uninstall'));
@@ -197,8 +193,8 @@ class WP_Tester {
      * Get translated string safely
      */
     private function get_translated_string($string) {
-        // Text domain is loaded immediately in constructor, so we can safely translate
-        if (function_exists('__')) {
+        // Only translate if we're past the init action and text domain is loaded
+        if (function_exists('__') && did_action('init')) {
             return __($string, 'wp-tester');
         }
         return $string;
