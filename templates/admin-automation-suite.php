@@ -21,7 +21,7 @@ $flows = $database->get_flows();
     <h1 class="wp-heading-inline">
         <img src="<?php echo esc_url(WP_TESTER_PLUGIN_URL . 'assets/images/robotic.png'); ?>"
             alt="AI"
-            style="width: 64px; height: 64px;">
+            style="width: 24px; height: 24px;">
         <?php _e('Automation Suite Generator', 'wp-tester'); ?>
     </h1>
 
