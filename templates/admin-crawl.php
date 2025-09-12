@@ -603,8 +603,8 @@ jQuery(document).ready(function($) {
             }
         });
 
-        // Create flow functionality - Simple direct approach
-        $('.create-flow').on('click', function(e) {
+        // Create flow functionality - Use event delegation
+        $(document).on('click', '.create-flow', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
@@ -630,6 +630,33 @@ jQuery(document).ready(function($) {
             
             // Redirect to flow creation page
             window.location.href = redirectUrl;
+        });
+        
+        // Also try binding directly to existing buttons
+        $('.create-flow').each(function() {
+            $(this).off('click').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                alert('Direct binding Create Flow clicked!');
+                
+                const button = $(this);
+                const url = button.data('url');
+                
+                if (!url) {
+                    alert('No URL found in direct binding!');
+                    return;
+                }
+                
+                // Build the redirect URL
+                const flowCreationUrl = '<?php echo admin_url('admin.php?page=wp-tester-flows&action=add'); ?>';
+                const redirectUrl = flowCreationUrl + '&start_url=' + encodeURIComponent(url);
+                
+                alert('Direct binding redirecting to: ' + redirectUrl);
+                
+                // Redirect to flow creation page
+                window.location.href = redirectUrl;
+            });
         });
         
         // Individual checkbox change for new items
