@@ -358,6 +358,17 @@ if (!defined('ABSPATH')) {
                                 Name to display in email sender field
                         </p>
                         </div>
+                        
+                        <!-- Test Email Button -->
+                        <div style="grid-column: 1 / -1; margin-top: 1rem;">
+                            <button type="button" id="test-email-btn" 
+                                    style="background: #00265e; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 600;">
+                                Test Email Configuration
+                            </button>
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                Send a test email to verify your email configuration is working
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -769,5 +780,35 @@ jQuery(document).ready(function($) {
             }
         });
     }
+    
+    // Test email functionality
+    $('#test-email-btn').on('click', function() {
+        const button = $(this);
+        const originalText = button.text();
+        
+        button.text('Sending Test Email...').prop('disabled', true);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'wp_tester_test_email',
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Test email sent successfully! Check your inbox.');
+                } else {
+                    alert('Failed to send test email: ' + (response.data || 'Unknown error'));
+                }
+            },
+            error: function() {
+                alert('Error sending test email. Check console for details.');
+            },
+            complete: function() {
+                button.text(originalText).prop('disabled', false);
+            }
+        });
+    });
 });
 </script>

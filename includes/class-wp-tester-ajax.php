@@ -66,6 +66,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_create_ai_flow', array($this, 'create_ai_flow'));
         add_action('wp_ajax_wp_tester_get_ai_flows', array($this, 'get_ai_flows'));
         add_action('wp_ajax_wp_tester_load_more_results', array($this, 'load_more_results'));
+        add_action('wp_ajax_wp_tester_test_email', array($this, 'test_email'));
         add_action('wp_ajax_wp_tester_get_available_ai_models', array($this, 'get_available_ai_models'));
         add_action('wp_ajax_wp_tester_load_more_crawl_results', array($this, 'load_more_crawl_results'));
         add_action('wp_ajax_wp_tester_test_connection', array($this, 'test_connection'));
@@ -3164,6 +3165,27 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
             
         } catch (Exception $e) {
             error_log('WP Tester: Error sending manual test notification - ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Test email functionality
+     */
+    public function test_email() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $scheduler = new WP_Tester_Scheduler();
+            $scheduler->test_email();
+            
+            wp_send_json_success(array('message' => __('Test email sent successfully', 'wp-tester')));
+        } catch (Exception $e) {
+            wp_send_json_error(array('message' => __('Failed to send test email: ', 'wp-tester') . $e->getMessage()));
         }
     }
 }
