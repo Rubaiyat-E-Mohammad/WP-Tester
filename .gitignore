@@ -44,3 +44,4 @@ vendor/
 # Test files
 tests/
 phpunit.xml
+test-email-debug.txt

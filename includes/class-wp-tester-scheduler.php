@@ -622,28 +622,18 @@ class WP_Tester_Scheduler {
     public function send_test_notification($results, $total_flows, $passed_flows, $failed_flows, $type = 'manual') {
         $settings = get_option('wp_tester_settings', array());
         
-        error_log('WP Tester: Attempting to send test notification email');
-        error_log('WP Tester: Email notifications enabled: ' . (empty($settings['email_notifications']) ? 'NO' : 'YES'));
-        
         // Check if email notifications are enabled
         if (empty($settings['email_notifications'])) {
-            error_log('WP Tester: Email notifications are disabled');
             return;
         }
         
         $recipients = $settings['email_recipients'] ?? '';
-        error_log('WP Tester: Email recipients setting: ' . $recipients);
-        
         if (empty($recipients)) {
-            error_log('WP Tester: No email recipients configured');
             return;
         }
         
         $recipient_emails = array_filter(array_map('trim', explode("\n", $recipients)));
-        error_log('WP Tester: Parsed recipient emails: ' . print_r($recipient_emails, true));
-        
         if (empty($recipient_emails)) {
-            error_log('WP Tester: No valid email recipients found');
             return;
         }
         
@@ -749,16 +739,10 @@ class WP_Tester_Scheduler {
     private function send_email($recipients, $subject, $html_content) {
         $settings = get_option('wp_tester_settings', array());
         
-        error_log('WP Tester: Sending email with subject: ' . $subject);
-        error_log('WP Tester: SMTP host configured: ' . (!empty($settings['smtp_host']) ? 'YES' : 'NO'));
-        error_log('WP Tester: SMTP username configured: ' . (!empty($settings['smtp_username']) ? 'YES' : 'NO'));
-        
         // Use SMTP if configured
         if (!empty($settings['smtp_host']) && !empty($settings['smtp_username'])) {
-            error_log('WP Tester: Using SMTP to send email');
             $this->send_smtp_email($recipients, $subject, $html_content, $settings);
         } else {
-            error_log('WP Tester: Using WordPress default mail');
             // Use WordPress default mail
             $this->send_wp_email($recipients, $subject, $html_content, $settings);
         }
@@ -769,19 +753,11 @@ class WP_Tester_Scheduler {
      */
     private function send_smtp_email($recipients, $subject, $html_content, $settings) {
         try {
-            error_log('WP Tester: Starting SMTP email send');
-            error_log('WP Tester: SMTP Host: ' . $settings['smtp_host']);
-            error_log('WP Tester: SMTP Port: ' . ($settings['smtp_port'] ?? 587));
-            error_log('WP Tester: SMTP Username: ' . $settings['smtp_username']);
-            error_log('WP Tester: SMTP Encryption: ' . ($settings['smtp_encryption'] ?? 'none'));
-            
             // Set up SMTP headers
             $headers = array(
                 'Content-Type: text/html; charset=UTF-8',
                 'From: ' . ($settings['from_name'] ?? 'WP Tester') . ' <' . ($settings['from_email'] ?? get_option('admin_email')) . '>'
             );
-            
-            error_log('WP Tester: Email headers: ' . print_r($headers, true));
             
             // Use wp_mail with SMTP settings
             add_action('phpmailer_init', function($phpmailer) use ($settings) {
@@ -799,20 +775,13 @@ class WP_Tester_Scheduler {
                 }
             });
             foreach ($recipients as $recipient) {
-                error_log('WP Tester: Sending email to: ' . $recipient);
-                
                 if (function_exists('wp_mail')) {
-                    $result = wp_mail($recipient, $subject, $html_content, $headers);
-                    error_log('WP Tester: wp_mail result for ' . $recipient . ': ' . ($result ? 'SUCCESS' : 'FAILED'));
+                    wp_mail($recipient, $subject, $html_content, $headers);
                 } else {
-                    error_log('WP Tester: wp_mail not available, using PHP mail');
                     // Fallback to PHP mail if wp_mail is not available
-                    $result = mail($recipient, $subject, $html_content, implode("\r\n", $headers));
-                    error_log('WP Tester: PHP mail result for ' . $recipient . ': ' . ($result ? 'SUCCESS' : 'FAILED'));
+                    mail($recipient, $subject, $html_content, implode("\r\n", $headers));
                 }
             }
-            
-            error_log('WP Tester: Test notification email sent via SMTP to ' . count($recipients) . ' recipients');
         } catch (Exception $e) {
             error_log('WP Tester: SMTP email error - ' . $e->getMessage());
         }
@@ -822,8 +791,6 @@ class WP_Tester_Scheduler {
      * Test email functionality
      */
     public function test_email() {
-        error_log('WP Tester: Testing email functionality');
-        
         $test_results = array(array(
             'flow_id' => 999,
             'flow_name' => 'Test Flow',

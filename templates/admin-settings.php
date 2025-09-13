@@ -359,20 +359,14 @@ if (!defined('ABSPATH')) {
                         </p>
                         </div>
                         
-                        <!-- Test Buttons -->
-                        <div style="grid-column: 1 / -1; margin-top: 1rem; display: flex; gap: 1rem;">
-                            <button type="button" id="simple-test-btn" 
-                                    style="background: #28a745; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 600;">
-                                Test AJAX
-                            </button>
+                        <!-- Test Email Button -->
+                        <div style="grid-column: 1 / -1; margin-top: 1rem;">
                             <button type="button" id="test-email-btn" 
                                     style="background: #00265e; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 600;">
                                 Test Email Configuration
                             </button>
-                        </div>
-                        <div style="grid-column: 1 / -1; margin-top: 0.5rem;">
-                            <p style="margin: 0; font-size: 0.8125rem; color: #64748b;">
-                                First test AJAX, then test email configuration
+                            <p style="margin: 0.5rem 0 0 0; font-size: 0.8125rem; color: #64748b;">
+                                Send a test email to verify your email configuration is working
                             </p>
                         </div>
                     </div>
@@ -787,34 +781,11 @@ jQuery(document).ready(function($) {
         });
     }
     
-    // Simple AJAX test
-    $('#simple-test-btn').on('click', function() {
-        console.log('WP Tester: Simple test button clicked');
-        
-        $.ajax({
-            url: '<?php echo admin_url('admin-ajax.php'); ?>',
-            type: 'POST',
-            data: {
-                action: 'wp_tester_simple_test',
-                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
-            },
-            success: function(response) {
-                console.log('WP Tester: Simple test response:', response);
-                alert('Simple test response: ' + JSON.stringify(response));
-            },
-            error: function(xhr, status, error) {
-                console.log('WP Tester: Simple test error:', xhr, status, error);
-                alert('Simple test error: ' + error);
-            }
-        });
-    });
-    
     // Test email functionality
     $('#test-email-btn').on('click', function() {
         const button = $(this);
         const originalText = button.text();
         
-        console.log('WP Tester: Test email button clicked');
         button.text('Sending Test Email...').prop('disabled', true);
         
         $.ajax({
@@ -824,14 +795,7 @@ jQuery(document).ready(function($) {
                 action: 'wp_tester_test_email',
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
-            beforeSend: function() {
-                console.log('WP Tester: AJAX request starting');
-            },
             success: function(response) {
-                console.log('WP Tester: AJAX success response:', response);
-                console.log('WP Tester: Response type:', typeof response);
-                console.log('WP Tester: Response keys:', Object.keys(response));
-                
                 if (response.success) {
                     alert('Test email sent successfully! Check your inbox.');
                 } else {
@@ -839,11 +803,9 @@ jQuery(document).ready(function($) {
                 }
             },
             error: function(xhr, status, error) {
-                console.log('WP Tester: AJAX error:', xhr, status, error);
-                alert('Error sending test email. Check console for details.');
+                alert('Error sending test email. Please try again.');
             },
             complete: function() {
-                console.log('WP Tester: AJAX request completed');
                 button.text(originalText).prop('disabled', false);
             }
         });
