@@ -786,26 +786,33 @@ jQuery(document).ready(function($) {
         const button = $(this);
         const originalText = button.text();
         
+        console.log('WP Tester: Test email button clicked');
         button.text('Sending Test Email...').prop('disabled', true);
         
         $.ajax({
-            url: ajaxurl,
+            url: '<?php echo admin_url('admin-ajax.php'); ?>',
             type: 'POST',
             data: {
                 action: 'wp_tester_test_email',
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
+            beforeSend: function() {
+                console.log('WP Tester: AJAX request starting');
+            },
             success: function(response) {
+                console.log('WP Tester: AJAX success response:', response);
                 if (response.success) {
                     alert('Test email sent successfully! Check your inbox.');
                 } else {
                     alert('Failed to send test email: ' + (response.data || 'Unknown error'));
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.log('WP Tester: AJAX error:', xhr, status, error);
                 alert('Error sending test email. Check console for details.');
             },
             complete: function() {
+                console.log('WP Tester: AJAX request completed');
                 button.text(originalText).prop('disabled', false);
             }
         });

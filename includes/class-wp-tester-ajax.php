@@ -3172,19 +3172,26 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
      * Test email functionality
      */
     public function test_email() {
+        error_log('WP Tester: Test email AJAX handler called');
+        
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
+            error_log('WP Tester: Test email - insufficient permissions');
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
+        
+        error_log('WP Tester: Test email - permissions OK, calling scheduler');
         
         try {
             $scheduler = new WP_Tester_Scheduler();
             $scheduler->test_email();
             
+            error_log('WP Tester: Test email - scheduler called successfully');
             wp_send_json_success(array('message' => __('Test email sent successfully', 'wp-tester')));
         } catch (Exception $e) {
+            error_log('WP Tester: Test email - exception: ' . $e->getMessage());
             wp_send_json_error(array('message' => __('Failed to send test email: ', 'wp-tester') . $e->getMessage()));
         }
     }
