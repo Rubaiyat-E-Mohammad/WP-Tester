@@ -67,6 +67,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_get_ai_flows', array($this, 'get_ai_flows'));
         add_action('wp_ajax_wp_tester_load_more_results', array($this, 'load_more_results'));
         add_action('wp_ajax_wp_tester_test_email', array($this, 'test_email'));
+        add_action('wp_ajax_wp_tester_simple_test', array($this, 'simple_test'));
         add_action('wp_ajax_wp_tester_get_available_ai_models', array($this, 'get_available_ai_models'));
         add_action('wp_ajax_wp_tester_load_more_crawl_results', array($this, 'load_more_crawl_results'));
         add_action('wp_ajax_wp_tester_test_connection', array($this, 'test_connection'));
@@ -3172,27 +3173,58 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
      * Test email functionality
      */
     public function test_email() {
+        // Write to a test file to verify this function is called
+        file_put_contents('/Users/rubaiyatemohammad/WP-Tester/test-email-debug.txt', 
+            "Test email AJAX handler called at " . date('Y-m-d H:i:s') . "\n", 
+            FILE_APPEND | LOCK_EX
+        );
+        
         error_log('WP Tester: Test email AJAX handler called');
         
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            error_log('WP Tester: Test email - insufficient permissions');
+            file_put_contents('/Users/rubaiyatemohammad/WP-Tester/test-email-debug.txt', 
+                "Insufficient permissions at " . date('Y-m-d H:i:s') . "\n", 
+                FILE_APPEND | LOCK_EX
+            );
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
         
-        error_log('WP Tester: Test email - permissions OK, calling scheduler');
+        file_put_contents('/Users/rubaiyatemohammad/WP-Tester/test-email-debug.txt', 
+            "Permissions OK, calling scheduler at " . date('Y-m-d H:i:s') . "\n", 
+            FILE_APPEND | LOCK_EX
+        );
         
         try {
             $scheduler = new WP_Tester_Scheduler();
             $scheduler->test_email();
             
-            error_log('WP Tester: Test email - scheduler called successfully');
+            file_put_contents('/Users/rubaiyatemohammad/WP-Tester/test-email-debug.txt', 
+                "Scheduler called successfully at " . date('Y-m-d H:i:s') . "\n", 
+                FILE_APPEND | LOCK_EX
+            );
+            
             wp_send_json_success(array('message' => __('Test email sent successfully', 'wp-tester')));
         } catch (Exception $e) {
-            error_log('WP Tester: Test email - exception: ' . $e->getMessage());
+            file_put_contents('/Users/rubaiyatemohammad/WP-Tester/test-email-debug.txt', 
+                "Exception: " . $e->getMessage() . " at " . date('Y-m-d H:i:s') . "\n", 
+                FILE_APPEND | LOCK_EX
+            );
             wp_send_json_error(array('message' => __('Failed to send test email: ', 'wp-tester') . $e->getMessage()));
         }
+    }
+    
+    /**
+     * Simple test AJAX handler
+     */
+    public function simple_test() {
+        file_put_contents('/Users/rubaiyatemohammad/WP-Tester/simple-test-debug.txt', 
+            "Simple test AJAX handler called at " . date('Y-m-d H:i:s') . "\n", 
+            FILE_APPEND | LOCK_EX
+        );
+        
+        wp_send_json_success(array('message' => 'Simple test successful'));
     }
 }
