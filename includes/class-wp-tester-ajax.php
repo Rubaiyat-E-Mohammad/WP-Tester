@@ -3180,10 +3180,23 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
         }
         
         try {
+            // First, let's check what settings we actually have
+            $settings = get_option('wp_tester_settings', array());
+            $response_data = array(
+                'message' => __('Test email sent successfully', 'wp-tester'),
+                'debug' => array(
+                    'settings_exist' => !empty($settings),
+                    'email_notifications' => $settings['email_notifications'] ?? 'not set',
+                    'email_recipients' => $settings['email_recipients'] ?? 'not set',
+                    'smtp_host' => $settings['smtp_host'] ?? 'not set',
+                    'smtp_username' => $settings['smtp_username'] ?? 'not set'
+                )
+            );
+            
             $scheduler = new WP_Tester_Scheduler();
             $scheduler->test_email();
             
-            wp_send_json_success(array('message' => __('Test email sent successfully', 'wp-tester')));
+            wp_send_json_success($response_data);
         } catch (Exception $e) {
             wp_send_json_error(array('message' => __('Failed to send test email: ', 'wp-tester') . $e->getMessage()));
         }

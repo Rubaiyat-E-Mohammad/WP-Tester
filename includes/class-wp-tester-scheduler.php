@@ -622,20 +622,28 @@ class WP_Tester_Scheduler {
     public function send_test_notification($results, $total_flows, $passed_flows, $failed_flows, $type = 'manual') {
         $settings = get_option('wp_tester_settings', array());
         
+        // Debug: Check what settings we actually have
+        error_log('WP Tester: Email settings: ' . print_r($settings, true));
+        
         // Check if email notifications are enabled
         if (empty($settings['email_notifications'])) {
+            error_log('WP Tester: Email notifications disabled');
             return;
         }
         
         $recipients = $settings['email_recipients'] ?? '';
         if (empty($recipients)) {
+            error_log('WP Tester: No email recipients configured');
             return;
         }
         
         $recipient_emails = array_filter(array_map('trim', explode("\n", $recipients)));
         if (empty($recipient_emails)) {
+            error_log('WP Tester: No valid email recipients found');
             return;
         }
+        
+        error_log('WP Tester: Sending email to: ' . implode(', ', $recipient_emails));
         
         // Generate email content
         $subject = sprintf(
@@ -739,10 +747,16 @@ class WP_Tester_Scheduler {
     private function send_email($recipients, $subject, $html_content) {
         $settings = get_option('wp_tester_settings', array());
         
+        error_log('WP Tester: send_email called with subject: ' . $subject);
+        error_log('WP Tester: SMTP host: ' . ($settings['smtp_host'] ?? 'not set'));
+        error_log('WP Tester: SMTP username: ' . ($settings['smtp_username'] ?? 'not set'));
+        
         // Use SMTP if configured
         if (!empty($settings['smtp_host']) && !empty($settings['smtp_username'])) {
+            error_log('WP Tester: Using SMTP to send email');
             $this->send_smtp_email($recipients, $subject, $html_content, $settings);
         } else {
+            error_log('WP Tester: Using WordPress default mail');
             // Use WordPress default mail
             $this->send_wp_email($recipients, $subject, $html_content, $settings);
         }
@@ -775,11 +789,15 @@ class WP_Tester_Scheduler {
                 }
             });
             foreach ($recipients as $recipient) {
+                error_log('WP Tester: Attempting to send email to: ' . $recipient);
                 if (function_exists('wp_mail')) {
-                    wp_mail($recipient, $subject, $html_content, $headers);
+                    $result = wp_mail($recipient, $subject, $html_content, $headers);
+                    error_log('WP Tester: wp_mail result: ' . ($result ? 'SUCCESS' : 'FAILED'));
                 } else {
+                    error_log('WP Tester: wp_mail not available, using PHP mail');
                     // Fallback to PHP mail if wp_mail is not available
-                    mail($recipient, $subject, $html_content, implode("\r\n", $headers));
+                    $result = mail($recipient, $subject, $html_content, implode("\r\n", $headers));
+                    error_log('WP Tester: PHP mail result: ' . ($result ? 'SUCCESS' : 'FAILED'));
                 }
             }
         } catch (Exception $e) {

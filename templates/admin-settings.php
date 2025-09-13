@@ -797,7 +797,17 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 if (response.success) {
-                    alert('Test email sent successfully! Check your inbox.');
+                    console.log('Email test response:', response);
+                    if (response.data && response.data.debug) {
+                        alert('Test email sent! Debug info:\n' + 
+                              'Settings exist: ' + response.data.debug.settings_exist + '\n' +
+                              'Email notifications: ' + response.data.debug.email_notifications + '\n' +
+                              'Email recipients: ' + response.data.debug.email_recipients + '\n' +
+                              'SMTP host: ' + response.data.debug.smtp_host + '\n' +
+                              'SMTP username: ' + response.data.debug.smtp_username);
+                    } else {
+                        alert('Test email sent successfully! Check your inbox.');
+                    }
                 } else {
                     alert('Failed to send test email: ' + (response.data || 'Unknown error'));
                 }
