@@ -3180,24 +3180,41 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
         }
         
         try {
-            // First, let's check what settings we actually have
             $settings = get_option('wp_tester_settings', array());
-            $response_data = array(
-                'message' => __('Test email sent successfully', 'wp-tester'),
-                'debug' => array(
-                    'settings_exist' => !empty($settings),
-                    'email_notifications' => $settings['email_notifications'] ?? 'not set',
-                    'email_recipients' => $settings['email_recipients'] ?? 'not set',
-                    'smtp_host' => $settings['smtp_host'] ?? 'not set',
-                    'smtp_username' => $settings['smtp_username'] ?? 'not set'
-                )
-            );
+            
+            // Check if email notifications are enabled
+            if (empty($settings['email_notifications'])) {
+                wp_send_json_error(array('message' => __('Email notifications are disabled. Please enable them in settings first.', 'wp-tester')));
+                return;
+            }
+            
+            // Check if recipients are configured
+            $recipients = $settings['email_recipients'] ?? '';
+            if (empty($recipients)) {
+                wp_send_json_error(array('message' => __('No email recipients configured. Please add email addresses in settings.', 'wp-tester')));
+                return;
+            }
             
             $scheduler = new WP_Tester_Scheduler();
-            $scheduler->test_email();
+            $result = $scheduler->test_email();
             
-            wp_send_json_success($response_data);
+            if ($result) {
+                $response_data = array(
+                    'message' => __('Test email sent successfully! Check your inbox and spam folder.', 'wp-tester'),
+                    'debug' => array(
+                        'settings_exist' => !empty($settings),
+                        'email_notifications' => $settings['email_notifications'] ?? 'not set',
+                        'email_recipients' => $settings['email_recipients'] ?? 'not set',
+                        'smtp_host' => $settings['smtp_host'] ?? 'not set',
+                        'smtp_username' => $settings['smtp_username'] ?? 'not set'
+                    )
+                );
+                wp_send_json_success($response_data);
+            } else {
+                wp_send_json_error(array('message' => __('Failed to send test email. Check your email configuration and server logs.', 'wp-tester')));
+            }
         } catch (Exception $e) {
+            error_log('WP Tester: Test email error - ' . $e->getMessage());
             wp_send_json_error(array('message' => __('Failed to send test email: ', 'wp-tester') . $e->getMessage()));
         }
     }

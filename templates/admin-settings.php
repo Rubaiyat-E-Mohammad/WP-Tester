@@ -796,29 +796,78 @@ jQuery(document).ready(function($) {
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
+                console.log('Email test response:', response);
+                
                 if (response.success) {
-                    console.log('Email test response:', response);
-                    if (response.data && response.data.debug) {
-                        alert('Test email sent! Debug info:\n' + 
-                              'Settings exist: ' + response.data.debug.settings_exist + '\n' +
-                              'Email notifications: ' + response.data.debug.email_notifications + '\n' +
-                              'Email recipients: ' + response.data.debug.email_recipients + '\n' +
-                              'SMTP host: ' + response.data.debug.smtp_host + '\n' +
-                              'SMTP username: ' + response.data.debug.smtp_username);
-                    } else {
-                        alert('Test email sent successfully! Check your inbox.');
-                    }
+                    showEmailTestModal('success', 'Test Email Sent Successfully!', 
+                        'The test email has been sent successfully. Please check your inbox and spam folder.<br><br>' +
+                        '<strong>Debug Information:</strong><br>' +
+                        '• Settings exist: ' + (response.data.debug.settings_exist ? 'Yes' : 'No') + '<br>' +
+                        '• Email notifications: ' + (response.data.debug.email_notifications ? 'Enabled' : 'Disabled') + '<br>' +
+                        '• Email recipients: ' + (response.data.debug.email_recipients || 'Not configured') + '<br>' +
+                        '• SMTP host: ' + (response.data.debug.smtp_host || 'Not configured') + '<br>' +
+                        '• SMTP username: ' + (response.data.debug.smtp_username || 'Not configured')
+                    );
                 } else {
-                    alert('Failed to send test email: ' + (response.data || 'Unknown error'));
+                    showEmailTestModal('error', 'Test Email Failed', 
+                        'Failed to send test email: ' + (response.data.message || 'Unknown error') + '<br><br>' +
+                        'Please check your email configuration and try again.'
+                    );
                 }
             },
             error: function(xhr, status, error) {
-                alert('Error sending test email. Please try again.');
+                showEmailTestModal('error', 'Test Email Error', 
+                    'An error occurred while sending the test email. Please try again.<br><br>' +
+                    'Error details: ' + error
+                );
             },
             complete: function() {
                 button.text(originalText).prop('disabled', false);
             }
         });
     });
+    
+    // Function to show email test modal
+    function showEmailTestModal(type, title, message) {
+        const modalHtml = `
+            <div class="wp-tester-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+                <div class="wp-tester-modal" style="background: white; border-radius: 8px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+                    <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <span class="dashicons dashicons-${type === 'success' ? 'yes-alt' : 'warning'}" style="color: ${type === 'success' ? '#00a32a' : '#d63638'}; margin-right: 0.5rem; font-size: 1.5rem;"></span>
+                        <h3 style="margin: 0; color: #00265e; font-size: 1.25rem;">${title}</h3>
+                    </div>
+                    <div style="color: #374151; line-height: 1.6; margin-bottom: 1.5rem;">
+                        ${message}
+                    </div>
+                    <div style="text-align: right;">
+                        <button type="button" class="wp-tester-modal-close" style="background: #00265e; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(modalHtml);
+        
+        // Close modal handlers
+        $('.wp-tester-modal-close, .wp-tester-modal-overlay').on('click', function(e) {
+            if (e.target === this) {
+                $('.wp-tester-modal-overlay').fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }
+        });
+        
+        // Close on escape key
+        $(document).on('keydown.emailTestModal', function(e) {
+            if (e.keyCode === 27) {
+                $('.wp-tester-modal-overlay').fadeOut(300, function() {
+                    $(this).remove();
+                });
+                $(document).off('keydown.emailTestModal');
+            }
+        });
+    }
 });
 </script>
