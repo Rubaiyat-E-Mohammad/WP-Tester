@@ -4,6 +4,7 @@
  * This will test email sending without any WordPress interference
  * 
  * @phpstan-ignore-file
+ * @psalm-suppress UndefinedClass
  */
 
 // Load WordPress
@@ -51,6 +52,7 @@ if (isset($_POST['test_direct'])) {
     $headers1 .= "Reply-To: $from_email\r\n";
     $headers1 .= "Content-Type: text/plain; charset=UTF-8\r\n";
     
+    // @phpstan-ignore-next-line - mail() function parameters are correct
     $result1 = mail($to, $subject1, $message1, $headers1);
     echo '<p>Result: ' . ($result1 ? '<span style="color:green;">SUCCESS</span>' : '<span style="color:red;">FAILED</span>') . '</p>';
     

@@ -8,6 +8,7 @@
  * IMPORTANT: Remove this file after debugging for security reasons.
  * 
  * @phpstan-ignore-file
+ * @psalm-suppress UndefinedClass
  */
 
 // Load WordPress
