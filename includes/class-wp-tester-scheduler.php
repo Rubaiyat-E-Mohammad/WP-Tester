@@ -786,10 +786,18 @@ class WP_Tester_Scheduler {
         $total_recipients = count($recipients);
         
         try {
-            // Set up SMTP headers
+            // Set up SMTP headers with additional delivery headers
+            $from_email = $settings['from_email'] ?? get_option('admin_email');
+            $from_name = $settings['from_name'] ?? 'WP Tester';
+            
             $headers = array(
                 'Content-Type: text/html; charset=UTF-8',
-                'From: ' . ($settings['from_name'] ?? 'WP Tester') . ' <' . ($settings['from_email'] ?? get_option('admin_email')) . '>'
+                'From: ' . $from_name . ' <' . $from_email . '>',
+                'Reply-To: ' . $from_email,
+                'Return-Path: ' . $from_email,
+                'X-Mailer: WP Tester Plugin',
+                'X-Priority: 3',
+                'MIME-Version: 1.0'
             );
             
             // Create a unique callback function name to avoid conflicts
@@ -816,10 +824,21 @@ class WP_Tester_Scheduler {
                     }
                     
                     // Enable debug output for troubleshooting
-                    $phpmailer->SMTPDebug = 0; // Set to 2 for verbose debug output
+                    $phpmailer->SMTPDebug = 2; // Enable verbose debug output
                     $phpmailer->Debugoutput = function($str, $level) {
                         error_log("WP Tester SMTP Debug: $str");
                     };
+                    
+                    // Additional SMTP settings for better delivery
+                    $phpmailer->SMTPKeepAlive = true;
+                    $phpmailer->Timeout = 30;
+                    $phpmailer->SMTPOptions = array(
+                        'ssl' => array(
+                            'verify_peer' => false,
+                            'verify_peer_name' => false,
+                            'allow_self_signed' => true
+                        )
+                    );
                     
                 } catch (Exception $e) {
                     error_log('WP Tester: PHPMailer configuration error - ' . $e->getMessage());
@@ -829,18 +848,38 @@ class WP_Tester_Scheduler {
             // Send emails to each recipient
             foreach ($recipients as $recipient) {
                 error_log('WP Tester: Attempting to send email to: ' . $recipient);
+                error_log('WP Tester: Subject: ' . $subject);
+                error_log('WP Tester: From: ' . ($settings['from_name'] ?? 'WP Tester') . ' <' . ($settings['from_email'] ?? get_option('admin_email')) . '>');
                 
                 if (function_exists('wp_mail')) {
+                    // Clear any previous PHPMailer errors
+                    global $phpmailer;
+                    if (isset($phpmailer)) {
+                        $phpmailer->clearErrorMessages();
+                    }
+                    
                     $result = wp_mail($recipient, $subject, $html_content, $headers);
+                    
                     if ($result) {
                         $success_count++;
                         error_log('WP Tester: wp_mail SUCCESS for ' . $recipient);
                     } else {
                         error_log('WP Tester: wp_mail FAILED for ' . $recipient);
-                        // Get the last error from PHPMailer
-                        global $phpmailer;
-                        if (isset($phpmailer) && !empty($phpmailer->ErrorInfo)) {
-                            error_log('WP Tester: PHPMailer error: ' . $phpmailer->ErrorInfo);
+                        
+                        // Get detailed error information
+                        if (isset($phpmailer)) {
+                            if (!empty($phpmailer->ErrorInfo)) {
+                                error_log('WP Tester: PHPMailer error: ' . $phpmailer->ErrorInfo);
+                            }
+                            if (!empty($phpmailer->getSMTPInstance()->getError())) {
+                                error_log('WP Tester: SMTP error: ' . $phpmailer->getSMTPInstance()->getError());
+                            }
+                        }
+                        
+                        // Check WordPress mail errors
+                        $wp_mail_errors = apply_filters('wp_mail_failed', null);
+                        if ($wp_mail_errors) {
+                            error_log('WP Tester: WordPress mail error: ' . $wp_mail_errors->get_error_message());
                         }
                     }
                 } else {
@@ -852,6 +891,10 @@ class WP_Tester_Scheduler {
                         error_log('WP Tester: PHP mail SUCCESS for ' . $recipient);
                     } else {
                         error_log('WP Tester: PHP mail FAILED for ' . $recipient);
+                        $last_error = error_get_last();
+                        if ($last_error) {
+                            error_log('WP Tester: PHP error: ' . $last_error['message']);
+                        }
                     }
                 }
             }
@@ -902,9 +945,17 @@ class WP_Tester_Scheduler {
         $success_count = 0;
         $total_recipients = count($recipients);
         
+        $from_email = $settings['from_email'] ?? get_option('admin_email');
+        $from_name = $settings['from_name'] ?? 'WP Tester';
+        
         $headers = array(
             'Content-Type: text/html; charset=UTF-8',
-            'From: ' . ($settings['from_name'] ?? 'WP Tester') . ' <' . ($settings['from_email'] ?? get_option('admin_email')) . '>'
+            'From: ' . $from_name . ' <' . $from_email . '>',
+            'Reply-To: ' . $from_email,
+            'Return-Path: ' . $from_email,
+            'X-Mailer: WP Tester Plugin',
+            'X-Priority: 3',
+            'MIME-Version: 1.0'
         );
         
         foreach ($recipients as $recipient) {
