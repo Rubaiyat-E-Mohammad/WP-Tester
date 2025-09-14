@@ -840,6 +840,13 @@ class WP_Tester_Scheduler {
                         )
                     );
                     
+                    // Force authentication for Gmail
+                    $phpmailer->SMTPAuth = true;
+                    $phpmailer->AuthType = 'LOGIN';
+                    
+                    // Set proper encoding
+                    $phpmailer->CharSet = 'UTF-8';
+                    
                 } catch (Exception $e) {
                     error_log('WP Tester: PHPMailer configuration error - ' . $e->getMessage());
                 }

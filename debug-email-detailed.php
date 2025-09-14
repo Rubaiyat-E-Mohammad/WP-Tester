@@ -207,38 +207,51 @@ if (isset($_POST['test_smtp_connection'])) {
             echo '<p class="error">✗ SMTP connection failed: ' . $errstr . ' (' . $errno . ')</p>';
         }
         
-        // Test with PHPMailer directly
+        // Test with PHPMailer directly using plugin settings
         if (class_exists('PHPMailer\PHPMailer\PHPMailer')) {
-            echo '<p>Testing with PHPMailer...</p>';
+            echo '<p>Testing with PHPMailer using plugin SMTP settings...</p>';
             
-            $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-            
-            try {
-                $mail->isSMTP();
-                $mail->Host = $smtp_host;
-                $mail->SMTPAuth = true;
-                $mail->Username = $smtp_username;
-                $mail->Password = $smtp_password;
-                $mail->Port = $smtp_port;
-                $mail->SMTPDebug = 2;
+            if (!empty($settings['smtp_host']) && !empty($settings['smtp_username'])) {
+                // @phpstan-ignore-next-line - PHPMailer class loaded dynamically
+                $mail = new PHPMailer\PHPMailer\PHPMailer(true);
                 
-                if ($smtp_encryption === 'ssl') {
-                    $mail->SMTPSecure = 'ssl';
-                } elseif ($smtp_encryption === 'tls') {
-                    $mail->SMTPSecure = 'tls';
+                try {
+                    $mail->isSMTP();
+                    $mail->Host = $settings['smtp_host'];
+                    $mail->SMTPAuth = true;
+                    $mail->Username = $settings['smtp_username'];
+                    $mail->Password = $settings['smtp_password'];
+                    $mail->Port = $settings['smtp_port'] ?? 587;
+                    $mail->SMTPDebug = 2;
+                    
+                    // Set encryption based on plugin settings
+                    if ($settings['smtp_encryption'] === 'ssl') {
+                        $mail->SMTPSecure = 'ssl';
+                    } elseif ($settings['smtp_encryption'] === 'tls') {
+                        $mail->SMTPSecure = 'tls';
+                    }
+                    
+                    $mail->setFrom($settings['from_email'] ?? get_option('admin_email'), $settings['from_name'] ?? 'WP Tester');
+                    $mail->addAddress($test_email ?? 'test@example.com');
+                    $mail->isHTML(true);
+                    $mail->Subject = 'PHPMailer Direct Test - ' . date('Y-m-d H:i:s');
+                    $mail->Body = '<h1>PHPMailer Direct Test</h1><p>This email was sent directly via PHPMailer using your plugin SMTP settings.</p>';
+                    
+                    $mail->send();
+                    echo '<p class="success">✓ PHPMailer direct test successful</p>';
+                    echo '<p><strong>SMTP Settings Used:</strong></p>';
+                    echo '<ul>';
+                    echo '<li>Host: ' . $settings['smtp_host'] . '</li>';
+                    echo '<li>Port: ' . ($settings['smtp_port'] ?? 587) . '</li>';
+                    echo '<li>Encryption: ' . ($settings['smtp_encryption'] ?? 'none') . '</li>';
+                    echo '<li>Username: ' . $settings['smtp_username'] . '</li>';
+                    echo '</ul>';
+                    
+                } catch (Exception $e) {
+                    echo '<p class="error">✗ PHPMailer direct test failed: ' . $e->getMessage() . '</p>';
                 }
-                
-                $mail->setFrom($settings['from_email'] ?? get_option('admin_email'), $settings['from_name'] ?? 'WP Tester');
-                $mail->addAddress($test_email);
-                $mail->isHTML(true);
-                $mail->Subject = 'PHPMailer Direct Test - ' . date('Y-m-d H:i:s');
-                $mail->Body = '<h1>PHPMailer Direct Test</h1><p>This email was sent directly via PHPMailer.</p>';
-                
-                $mail->send();
-                echo '<p class="success">✓ PHPMailer direct test successful</p>';
-                
-            } catch (Exception $e) {
-                echo '<p class="error">✗ PHPMailer direct test failed: ' . $e->getMessage() . '</p>';
+            } else {
+                echo '<p class="warning">SMTP not configured in plugin settings</p>';
             }
         }
         
