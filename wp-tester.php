@@ -218,10 +218,17 @@ class WP_Tester {
     private function init_components() {
         $this->database = new WP_Tester_Database();
         
-        // Update database schema on admin pages
-        if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/wp-admin/') !== false) {
-            $this->database->update_flows_table_schema();
-            $this->database->update_crawl_results_table_schema();
+        // Only update database schema on plugin pages and once per day
+        if (isset($_GET['page']) && strpos($_GET['page'], 'wp-tester') === 0) {
+            $last_schema_update = get_option('wp_tester_last_schema_update', 0);
+            $current_time = time();
+            
+            // Only run schema updates once per day
+            if ($current_time - $last_schema_update > 86400) { // 24 hours
+                $this->database->update_flows_table_schema();
+                $this->database->update_crawl_results_table_schema();
+                update_option('wp_tester_last_schema_update', $current_time);
+            }
         }
         
         $this->crawler = new WP_Tester_Crawler();
@@ -254,6 +261,14 @@ class WP_Tester {
      * Enqueue frontend scripts
      */
     public function enqueue_frontend_scripts() {
+        // Get performance settings
+        $settings = get_option('wp_tester_settings', array());
+        $enable_frontend_tracking = $settings['enable_frontend_tracking'] ?? false;
+        
+        // Only load frontend tracking if explicitly enabled
+        if (!$enable_frontend_tracking) {
+            return;
+        }
         wp_enqueue_script(
             'wp-tester-frontend',
             WP_TESTER_ASSETS_URL . 'js/frontend.js',

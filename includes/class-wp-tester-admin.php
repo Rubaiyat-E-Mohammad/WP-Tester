@@ -409,6 +409,15 @@ class WP_Tester_Admin {
             'wp_tester_settings',
             'wp_tester_general'
         );
+        
+        // Performance settings
+        add_settings_field(
+            'enable_frontend_tracking',
+            __('Enable Frontend Tracking', 'wp-tester'),
+            array($this, 'enable_frontend_tracking_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
     }
     
     /**
@@ -469,8 +478,18 @@ class WP_Tester_Admin {
         $total_crawl_count = $this->database->get_crawl_results_count();
         $has_more_crawls = $total_crawl_count > 20;
         
-        // Fix existing crawl data link counts (run once for old data)
-        $this->database->fix_crawl_link_counts();
+        // Fix existing crawl data link counts (run only if needed)
+        $last_link_fix = get_option('wp_tester_last_link_fix', 0);
+        $current_time = time();
+        
+        // Only run link count fix once per week and if there are records to fix
+        if ($current_time - $last_link_fix > 604800) { // 7 days
+            $updated_count = $this->database->fix_crawl_link_counts();
+            if ($updated_count > 0) {
+                error_log("WP Tester: Fixed link counts for {$updated_count} crawl results");
+            }
+            update_option('wp_tester_last_link_fix', $current_time);
+        }
         
         // Get statistics for all crawl results (not just first 20)
         $crawl_stats = $this->database->get_crawl_statistics();
@@ -1007,6 +1026,14 @@ class WP_Tester_Admin {
         echo '<p class="description">' . __('Name to display in email sender field.', 'wp-tester') . '</p>';
     }
     
+    public function enable_frontend_tracking_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['enable_frontend_tracking']) ? $settings['enable_frontend_tracking'] : false;
+        
+        echo '<input type="checkbox" name="wp_tester_settings[enable_frontend_tracking]" value="1" ' . checked(1, $value, false) . ' />';
+        echo '<p class="description">' . __('<strong>WARNING:</strong> Frontend tracking can significantly slow down your website. Only enable if you need detailed user interaction tracking. This feature tracks every click, form submission, and page interaction.', 'wp-tester') . '</p>';
+    }
+    
     /**
      * Sanitize settings
      */
@@ -1137,6 +1164,11 @@ class WP_Tester_Admin {
         
         if (isset($input['from_name'])) {
             $sanitized['from_name'] = sanitize_text_field($input['from_name']);
+        }
+        
+        // Performance settings
+        if (isset($input['enable_frontend_tracking'])) {
+            $sanitized['enable_frontend_tracking'] = (bool) $input['enable_frontend_tracking'];
         }
         
         // Debug logging
