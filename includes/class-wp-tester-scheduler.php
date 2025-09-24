@@ -752,7 +752,7 @@ class WP_Tester_Scheduler {
     /**
      * Send email using SMTP or WordPress mail
      */
-    private function send_email($recipients, $subject, $html_content) {
+    public function send_email($recipients, $subject, $html_content) {
         $settings = get_option('wp_tester_settings', array());
         
         error_log('WP Tester: send_email called with subject: ' . $subject);

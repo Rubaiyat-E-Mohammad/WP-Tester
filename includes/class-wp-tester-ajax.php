@@ -67,6 +67,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_get_ai_flows', array($this, 'get_ai_flows'));
         add_action('wp_ajax_wp_tester_load_more_results', array($this, 'load_more_results'));
         add_action('wp_ajax_wp_tester_test_email', array($this, 'test_email'));
+        add_action('wp_ajax_wp_tester_email_report', array($this, 'email_report'));
         add_action('wp_ajax_wp_tester_get_available_ai_models', array($this, 'get_available_ai_models'));
         add_action('wp_ajax_wp_tester_load_more_crawl_results', array($this, 'load_more_crawl_results'));
         add_action('wp_ajax_wp_tester_test_connection', array($this, 'test_connection'));
@@ -1483,14 +1484,12 @@ class WP_Tester_Ajax {
             // Delete all flows
             $deleted_flows = $wpdb->query("DELETE FROM {$flows_table}");
             
-            // Also clean up related test results if table exists
+            // Note: We preserve test results by default. 
+            // Users can use the separate "Cleanup Test Results" option if they want to remove test data.
             $deleted_results = 0;
-            if ($results_exists) {
-                $deleted_results = $wpdb->query("DELETE FROM {$results_table}");
-            }
             
             wp_send_json_success(array(
-                'message' => sprintf(__('Successfully deleted all %d flows and %d related test results.', 'wp-tester'), $deleted_flows, $deleted_results),
+                'message' => sprintf(__('Successfully deleted all %d flows. Test results have been preserved.', 'wp-tester'), $deleted_flows),
                 'deleted_count' => $deleted_flows,
                 'deleted_results' => $deleted_results,
                 'debug_info' => array(
@@ -3217,6 +3216,225 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
             error_log('WP Tester: Test email error - ' . $e->getMessage());
             wp_send_json_error(array('message' => __('Failed to send test email: ', 'wp-tester') . $e->getMessage()));
         }
+    }
+    
+    /**
+     * Email comprehensive test results report
+     */
+    public function email_report() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
+        try {
+            $period = sanitize_text_field($_POST['period'] ?? '30');
+            $additional_recipients = sanitize_text_field($_POST['additional_recipients'] ?? '');
+            
+            // Get settings for email configuration
+            $settings = get_option('wp_tester_settings', array());
+            
+            // Check if email notifications are enabled
+            if (empty($settings['email_notifications'])) {
+                wp_send_json_error(array('message' => __('Email notifications are disabled. Please enable them in settings first.', 'wp-tester')));
+                return;
+            }
+            
+            // Get recipients
+            $recipients = array();
+            
+            // Add configured recipients from settings
+            if (!empty($settings['email_recipients'])) {
+                $configured_recipients = array_filter(array_map('trim', explode("\n", $settings['email_recipients'])));
+                $recipients = array_merge($recipients, $configured_recipients);
+            }
+            
+            // Add additional recipients if provided
+            if (!empty($additional_recipients)) {
+                $additional_emails = array_filter(array_map('trim', explode(',', $additional_recipients)));
+                foreach ($additional_emails as $email) {
+                    if (is_email($email)) {
+                        $recipients[] = $email;
+                    }
+                }
+            }
+            
+            if (empty($recipients)) {
+                wp_send_json_error(array('message' => __('No valid email recipients found. Please configure email recipients in settings or provide additional recipients.', 'wp-tester')));
+                return;
+            }
+            
+            // Remove duplicates
+            $recipients = array_unique($recipients);
+            
+            // Get test results based on period
+            $database = new WP_Tester_Database();
+            $date_from = '';
+            
+            if ($period !== 'all') {
+                $days = intval($period);
+                $date_from = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+            }
+            
+            $results = $database->get_test_results_for_period($date_from);
+            
+            if (empty($results)) {
+                wp_send_json_error(array('message' => __('No test results found for the selected period.', 'wp-tester')));
+                return;
+            }
+            
+            // Generate comprehensive HTML report
+            $report_html = $this->generate_comprehensive_email_report($results, $period);
+            
+            // Send email using scheduler
+            $scheduler = new WP_Tester_Scheduler();
+            $subject = sprintf('WP Tester Comprehensive Report - %s', $this->get_period_label($period));
+            
+            $success = $scheduler->send_email($recipients, $subject, $report_html);
+            
+            if ($success) {
+                $message = sprintf(
+                    __('Test results report sent successfully to %d recipient(s)!', 'wp-tester'),
+                    count($recipients)
+                );
+                wp_send_json_success(array('message' => $message));
+            } else {
+                wp_send_json_error(array('message' => __('Failed to send email report. Please check your email configuration and server logs.', 'wp-tester')));
+            }
+            
+        } catch (Exception $e) {
+            error_log('WP Tester: Email report error - ' . $e->getMessage());
+            wp_send_json_error(array('message' => __('Failed to send email report: ', 'wp-tester') . $e->getMessage()));
+        }
+    }
+    
+    /**
+     * Get period label for email subject
+     */
+    private function get_period_label($period) {
+        switch ($period) {
+            case '7':
+                return 'Last 7 Days';
+            case '30':
+                return 'Last 30 Days';
+            case '90':
+                return 'Last 90 Days';
+            case 'all':
+                return 'All Time';
+            default:
+                return 'Recent Results';
+        }
+    }
+    
+    /**
+     * Generate comprehensive HTML email report
+     */
+    private function generate_comprehensive_email_report($results, $period) {
+        // Calculate statistics
+        $total_tests = count($results);
+        $passed_tests = count(array_filter($results, function($r) { return $r['status'] === 'passed'; }));
+        $failed_tests = count(array_filter($results, function($r) { return $r['status'] === 'failed'; }));
+        $success_rate = $total_tests > 0 ? round(($passed_tests / $total_tests) * 100, 1) : 0;
+        $total_execution_time = array_sum(array_column($results, 'execution_time'));
+        $avg_execution_time = $total_tests > 0 ? round($total_execution_time / $total_tests, 2) : 0;
+        
+        // Get period label
+        $period_label = $this->get_period_label($period);
+        
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WP Tester Comprehensive Report</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background-color: #f8fafc; }
+        .container { max-width: 800px; margin: 0 auto; background-color: white; }
+        .header { background: linear-gradient(135deg, #00265e 0%, #0F9D7A 100%); color: white; padding: 2rem; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 2rem; }
+        .stat-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; text-align: center; }
+        .stat-number { font-size: 2rem; font-weight: bold; color: #00265e; margin-bottom: 0.5rem; }
+        .stat-label { color: #64748b; font-size: 0.875rem; }
+        .results-table { width: 100%; border-collapse: collapse; margin: 2rem; }
+        .results-table th, .results-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .results-table th { background-color: #f8fafc; font-weight: 600; color: #374151; }
+        .status-badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .status-passed { background-color: #10b981; color: white; }
+        .status-failed { background-color: #ef4444; color: white; }
+        .footer { text-align: center; padding: 2rem; color: #64748b; font-size: 0.875rem; border-top: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 style="margin: 0; font-size: 1.75rem;">WP Tester Comprehensive Report</h1>
+            <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">' . esc_html($period_label) . ' • Generated on ' . date('F j, Y \a\t g:i A') . '</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">' . $total_tests . '</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color: #10b981;">' . $passed_tests . '</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color: #ef4444;">' . $failed_tests . '</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" style="color: #0F9D7A;">' . $success_rate . '%</div>
+                <div class="stat-label">Success Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">' . $avg_execution_time . 's</div>
+                <div class="stat-label">Avg Execution Time</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">' . number_format($total_execution_time, 2) . 's</div>
+                <div class="stat-label">Total Runtime</div>
+            </div>
+        </div>
+        
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>Flow Name</th>
+                    <th>Status</th>
+                    <th>Execution Time</th>
+                    <th>Steps</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>';
+        
+        foreach ($results as $result) {
+            $status_class = $result['status'] === 'passed' ? 'status-passed' : 'status-failed';
+            $html .= '<tr>
+                <td>' . esc_html($result['flow_name']) . '</td>
+                <td><span class="status-badge ' . $status_class . '">' . esc_html(strtoupper($result['status'])) . '</span></td>
+                <td>' . number_format($result['execution_time'], 2) . 's</td>
+                <td>' . esc_html($result['steps_executed']) . '/' . esc_html($result['steps_executed'] + $result['steps_failed']) . '</td>
+                <td>' . esc_html(date('M j, Y g:i A', strtotime($result['completed_at']))) . '</td>
+            </tr>';
+        }
+        
+        $html .= '</tbody>
+        </table>
+        
+        <div class="footer">
+            <p>This report was automatically generated by WP Tester Plugin</p>
+            <p>For more detailed information, please visit your WordPress dashboard</p>
+        </div>
+    </div>
+</body>
+</html>';
+        
+        return $html;
     }
     
 }

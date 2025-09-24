@@ -250,6 +250,10 @@ if (!defined('ABSPATH')) {
                         <option value="not_executed">Not Executed</option>
                         <option value="running">Running</option>
                     </select>
+                    <button class="modern-btn modern-btn-secondary modern-btn-small" id="email-report">
+                        <span class="dashicons dashicons-email-alt"></span>
+                        Email Report
+                    </button>
                     <button class="modern-btn modern-btn-secondary modern-btn-small" id="export-results">
                         <span class="dashicons dashicons-download"></span>
                         Export
@@ -553,6 +557,12 @@ jQuery(document).ready(function($) {
                 button.html(originalText).prop('disabled', false);
             }
         });
+    });
+
+    // Email report
+    $('#email-report').on('click', function(e) {
+        e.preventDefault();
+        showEmailReportModal();
     });
 
     // Export results
@@ -1125,6 +1135,104 @@ jQuery(document).ready(function($) {
         });
     });
     
+    // Email report modal function
+    function showEmailReportModal() {
+        const modalId = 'email-report-modal-' + Date.now();
+        const modal = $(`
+            <div id="${modalId}" class="modern-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
+                        <div style="width: 60px; height: 60px; background: #00265e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                            <span class="dashicons dashicons-email-alt" style="color: white; font-size: 30px;"></span>
+                        </div>
+                        <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">Email Test Results Report</h3>
+                    </div>
+                    <div style="color: #64748b; line-height: 1.6; margin-bottom: 2rem; text-align: center;">
+                        Send a comprehensive HTML report of recent test results via email.<br>
+                        <small style="color: #9ca3af;">Report will include test summaries, charts, and detailed results.</small>
+                    </div>
+                    <div style="margin-bottom: 2rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Report Period</label>
+                        <select id="email-period" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                            <option value="7">Last 7 days</option>
+                            <option value="30">Last 30 days</option>
+                            <option value="90">Last 90 days</option>
+                            <option value="all">All time</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 2rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">Additional Recipients</label>
+                        <input type="email" id="email-additional-recipients" placeholder="email@example.com (optional)" 
+                               style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white;">
+                        <small style="color: #64748b; font-size: 0.8125rem; margin-top: 0.25rem; display: block;">
+                            Leave empty to use configured email recipients from settings. Separate multiple emails with commas.
+                        </small>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                        <button type="button" id="email-cancel" style="padding: 0.75rem 1.5rem; border: 1px solid #e2e8f0; border-radius: 8px; background: white; color: #64748b; cursor: pointer;">
+                            Cancel
+                        </button>
+                        <button type="button" id="email-send" style="padding: 0.75rem 1.5rem; border: none; border-radius: 8px; background: #00265e; color: white; cursor: pointer; font-weight: 600;">
+                            <span class="dashicons dashicons-email-alt" style="font-size: 16px; margin-right: 0.25rem;"></span>
+                            Send Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `);
+        
+        $('body').append(modal);
+        
+        modal.find('#email-cancel').on('click', function() {
+            modal.remove();
+        });
+        
+        modal.on('click', function(e) {
+            if (e.target === this) {
+                modal.remove();
+            }
+        });
+        
+        modal.find('#email-send').on('click', function() {
+            const period = modal.find('#email-period').val();
+            const additionalRecipients = modal.find('#email-additional-recipients').val();
+            
+            // Show progress
+            const button = $(this);
+            const originalText = button.html();
+            button.html('<span class="dashicons dashicons-update-alt" style="animation: spin 1s linear infinite;"></span> Sending...').prop('disabled', true);
+            
+            // Call email report AJAX
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'wp_tester_email_report',
+                    period: period,
+                    additional_recipients: additionalRecipients,
+                    nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+                },
+                success: function(response) {
+                    modal.remove();
+                    if (response && response.success) {
+                        showSuccessModal('Email Report Sent!', 
+                            response.data.message || 'Test results report has been sent successfully.');
+                    } else {
+                        const errorMessage = (response && response.data && response.data.message) ? response.data.message : 'Unknown error occurred';
+                        showErrorModal('Email Failed', errorMessage);
+                    }
+                },
+                error: function() {
+                    modal.remove();
+                    showErrorModal('Email Error', 'Error connecting to server. Please try again.');
+                },
+                complete: function() {
+                    button.html(originalText).prop('disabled', false);
+                }
+            });
+        });
+    }
+
     // Export modal function
     function showExportModal() {
         const modalId = 'export-modal-' + Date.now();
@@ -1236,6 +1344,12 @@ jQuery(document).ready(function($) {
 </script>
 
 <style>
+/* Spin animation for loading states */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 /* Bulk Selection Styles */
 .bulk-actions-header {
     background: #f8fafc;

@@ -762,6 +762,34 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                     .text(`${model.name} (${model.provider}) - Paid`);
                 modelSelect.append(option);
             });
+            
+            // Set current saved model after all options are loaded
+            const currentModel = '<?php echo esc_js($ai_model); ?>';
+            const currentApiKey = '<?php echo esc_js($ai_api_key); ?>';
+            
+            if (currentModel) {
+                $('#ai-model-select').val(currentModel);
+                updateApiKeySection();
+                
+                // Set saved API key
+                if (currentApiKey) {
+                    $('#ai-api-key').val(currentApiKey);
+                }
+                
+                // Update description for selected model
+                const selectedOption = $('#ai-model-select option:selected');
+                if (selectedOption.length) {
+                    const modelId = selectedOption.val();
+                    const isFree = selectedOption.attr('data-free') === 'true';
+                    const requiresApiKey = selectedOption.attr('data-requires-api-key') === 'true';
+                    
+                    if (availableModels.free_models[modelId]) {
+                        description.text(availableModels.free_models[modelId].description);
+                    } else if (availableModels.paid_models[modelId]) {
+                        description.text(availableModels.paid_models[modelId].description);
+                    }
+                }
+            }
 
             // Set default to first free model
             const firstFreeModel = modelSelect.find('option[data-free="true"]:first');
@@ -851,15 +879,6 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
 
         // Load models on page load
         loadAvailableModels();
-
-        // Set current model after models are loaded
-        setTimeout(function() {
-            const currentModel = '<?php echo esc_js($ai_model); ?>';
-            if (currentModel) {
-                $('#ai-model-select').val(currentModel);
-                updateApiKeySection();
-            }
-        }, 1000);
 
         // Generate AI Flows
         $('#generate-ai-flows').on('click', function(e) {

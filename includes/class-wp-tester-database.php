@@ -808,6 +808,54 @@ class WP_Tester_Database {
     }
     
     /**
+     * Get test results for a specific period (for email reports)
+     */
+    public function get_test_results_for_period($date_from = '') {
+        global $wpdb;
+        
+        $where_clause = '';
+        $params = array();
+        
+        if (!empty($date_from)) {
+            $where_clause = 'WHERE tr.completed_at >= %s';
+            $params[] = $date_from;
+        }
+        
+        $sql = "SELECT tr.*, f.flow_name, f.flow_type 
+                FROM {$this->test_results_table} tr 
+                LEFT JOIN {$this->flows_table} f ON tr.flow_id = f.id 
+                {$where_clause}
+                ORDER BY tr.completed_at DESC";
+        
+        if (!empty($params)) {
+            $results = $wpdb->get_results($wpdb->prepare($sql, $params));
+        } else {
+            $results = $wpdb->get_results($sql);
+        }
+        
+        // Format results for email report
+        $formatted_results = array();
+        foreach ($results as $result) {
+            $formatted_results[] = array(
+                'id' => $result->id,
+                'flow_id' => $result->flow_id,
+                'flow_name' => $result->flow_name ?: 'Unknown Flow',
+                'flow_type' => $result->flow_type ?: 'unknown',
+                'status' => $result->status,
+                'steps_executed' => $result->steps_executed ?: 0,
+                'steps_passed' => $result->steps_passed ?: 0,
+                'steps_failed' => $result->steps_failed ?: 0,
+                'execution_time' => $result->execution_time ?: 0,
+                'completed_at' => $result->completed_at,
+                'started_at' => $result->started_at,
+                'error_message' => $result->error_message ?: ''
+            );
+        }
+        
+        return $formatted_results;
+    }
+    
+    /**
      * Get test result by ID
      */
     public function get_test_result($result_id) {
