@@ -391,7 +391,16 @@ class WP_Tester_WooCommerce {
         ));
         
         if ($flow) {
-            $scheduler->schedule_immediate_test_run(array($flow->id));
+            // Only schedule test if auto-testing is enabled
+            $settings = get_option('wp_tester_settings', array());
+            $auto_test = $settings['auto_run_tests_on_flow_creation'] ?? false;
+            
+            if ($auto_test) {
+                $scheduler->schedule_immediate_test_run(array($flow->id));
+                error_log('WP Tester: Scheduled immediate test for product flow ID: ' . $flow->id);
+            } else {
+                error_log('WP Tester: Auto-testing disabled, not scheduling test for product flow ID: ' . $flow->id);
+            }
         }
     }
     

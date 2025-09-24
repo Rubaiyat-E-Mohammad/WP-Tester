@@ -52,8 +52,8 @@ class WP_Tester_Flow_Executor {
         // Initialize screenshot handler
         add_action('init', array($this, 'init_screenshot_handler'));
         
-        // Hook into scheduled testing
-        add_action('wp_tester_test_flows', array($this, 'run_scheduled_tests'));
+        // Hook into scheduled testing (remove duplicate hook - scheduler already handles this)
+        // add_action('wp_tester_test_flows', array($this, 'run_scheduled_tests'));
     }
     
     /**

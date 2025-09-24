@@ -38,11 +38,17 @@ class WP_Tester_Scheduler {
             wp_schedule_event(time(), 'weekly', 'wp_tester_cleanup');
         }
         
-        // Ensure crawl is scheduled based on current settings
-        $this->ensure_crawl_scheduled();
+        // Clear any existing immediate test events that might be pending
+        $this->clear_immediate_test_events();
         
-        // Ensure tests are scheduled based on current settings
-        $this->ensure_tests_scheduled();
+        // Only schedule events if we're in admin and on WP Tester pages
+        if (is_admin() && isset($_GET['page']) && strpos($_GET['page'], 'wp-tester') === 0) {
+            // Ensure crawl is scheduled based on current settings
+            $this->ensure_crawl_scheduled();
+            
+            // Ensure tests are scheduled based on current settings
+            $this->ensure_tests_scheduled();
+        }
     }
     
     /**
@@ -402,6 +408,18 @@ class WP_Tester_Scheduler {
             'tests' => wp_next_scheduled('wp_tester_test_flows'),
             'cleanup' => wp_next_scheduled('wp_tester_cleanup')
         );
+    }
+    
+    /**
+     * Clear immediate test events that might be pending
+     */
+    public function clear_immediate_test_events() {
+        // Clear any single scheduled test events that might be pending
+        $cron_events = wp_get_scheduled_event('wp_tester_test_flows');
+        if ($cron_events) {
+            wp_clear_scheduled_hook('wp_tester_test_flows');
+            error_log('WP Tester: Cleared pending immediate test events');
+        }
     }
     
     /**
