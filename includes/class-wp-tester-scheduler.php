@@ -663,6 +663,8 @@ class WP_Tester_Scheduler {
         } else {
             error_log('WP Tester: Failed to send test notification email');
         }
+        
+        return $email_success;
     }
     
     /**
@@ -763,6 +765,12 @@ class WP_Tester_Scheduler {
         if (!empty($settings['smtp_host']) && !empty($settings['smtp_username'])) {
             error_log('WP Tester: Using SMTP to send email');
             $success = $this->send_smtp_email($recipients, $subject, $html_content, $settings);
+            
+            // Fallback to WordPress mail if SMTP fails
+            if (!$success) {
+                error_log('WP Tester: SMTP failed, falling back to WordPress default mail');
+                $success = $this->send_wp_email($recipients, $subject, $html_content, $settings);
+            }
         } else {
             error_log('WP Tester: Using WordPress default mail');
             // Use WordPress default mail
@@ -800,57 +808,93 @@ class WP_Tester_Scheduler {
                 'MIME-Version: 1.0'
             );
             
-            // Create a unique callback function name to avoid conflicts
-            $callback_name = 'wp_tester_smtp_init_' . uniqid();
-            
-            // Use wp_mail with SMTP settings
-            add_action('phpmailer_init', $callback_name);
-            
-            // Define the callback function
-            $$callback_name = function($phpmailer) use ($settings) {
+            // Define the SMTP configuration callback function
+            $smtp_callback = function($phpmailer) use ($settings) {
                 try {
+                    error_log('WP Tester: Configuring PHPMailer for SMTP');
                     $phpmailer->isSMTP();
                     $phpmailer->Host = $settings['smtp_host'];
                     $phpmailer->SMTPAuth = true;
                     $phpmailer->Username = $settings['smtp_username'];
                     $phpmailer->Password = $settings['smtp_password'];
-                    $phpmailer->Port = $settings['smtp_port'] ?? 587;
+                    $phpmailer->Port = intval($settings['smtp_port'] ?? 587);
                     
-                    // Set encryption
-                    if ($settings['smtp_encryption'] === 'ssl') {
-                        $phpmailer->SMTPSecure = 'ssl';
-                    } elseif ($settings['smtp_encryption'] === 'tls') {
+                    // Set encryption - using string values for WordPress compatibility
+                    if (isset($settings['smtp_encryption'])) {
+                        if ($settings['smtp_encryption'] === 'ssl') {
+                            $phpmailer->SMTPSecure = 'ssl';
+                            // Ensure port is 465 for SSL
+                            if ($phpmailer->Port == 587) {
+                                $phpmailer->Port = 465;
+                            }
+                        } elseif ($settings['smtp_encryption'] === 'tls') {
+                            $phpmailer->SMTPSecure = 'tls';
+                            // Ensure port is 587 for TLS
+                            if ($phpmailer->Port == 465) {
+                                $phpmailer->Port = 587;
+                            }
+                        }
+                    } else {
+                        // Default to TLS for better security
                         $phpmailer->SMTPSecure = 'tls';
+                        if ($phpmailer->Port == 465) {
+                            $phpmailer->Port = 587;
+                        }
                     }
                     
-                    // Enable debug output for troubleshooting
-                    $phpmailer->SMTPDebug = 2; // Enable verbose debug output
+                    // Enable debug output only for troubleshooting (logs only, not browser output)
+                    $phpmailer->SMTPDebug = 1; // Only show connection errors, not all traffic
                     $phpmailer->Debugoutput = function($str, $level) {
                         error_log("WP Tester SMTP Debug: $str");
                     };
                     
                     // Additional SMTP settings for better delivery
-                    $phpmailer->SMTPKeepAlive = true;
+                    $phpmailer->SMTPKeepAlive = false; // Disable for better compatibility
                     $phpmailer->Timeout = 30;
-                    $phpmailer->SMTPOptions = array(
-                        'ssl' => array(
-                            'verify_peer' => false,
-                            'verify_peer_name' => false,
-                            'allow_self_signed' => true
-                        )
-                    );
                     
-                    // Force authentication for Gmail
-                    $phpmailer->SMTPAuth = true;
-                    $phpmailer->AuthType = 'LOGIN';
+                    // Provider-specific optimizations
+                    $host = strtolower($settings['smtp_host']);
+                    if (strpos($host, 'gmail') !== false) {
+                        // Gmail-specific settings
+                        $phpmailer->SMTPOptions = array(
+                            'ssl' => array(
+                                'verify_peer' => true,
+                                'verify_peer_name' => true,
+                                'allow_self_signed' => false
+                            )
+                        );
+                    } elseif (strpos($host, 'outlook') !== false || strpos($host, 'hotmail') !== false) {
+                        // Outlook/Hotmail-specific settings
+                        $phpmailer->SMTPOptions = array(
+                            'ssl' => array(
+                                'verify_peer' => true,
+                                'verify_peer_name' => true,
+                                'allow_self_signed' => false
+                            )
+                        );
+                    } else {
+                        // Generic SMTP with relaxed SSL for compatibility
+                        $phpmailer->SMTPOptions = array(
+                            'ssl' => array(
+                                'verify_peer' => false,
+                                'verify_peer_name' => false,
+                                'allow_self_signed' => true
+                            )
+                        );
+                    }
                     
                     // Set proper encoding
                     $phpmailer->CharSet = 'UTF-8';
                     
+                    error_log('WP Tester: PHPMailer configured successfully');
+                    
                 } catch (Exception $e) {
-                    error_log('WP Tester: PHPMailer configuration error - ' . $e->getMessage());
+                    error_log('WP Tester: PHPMailer configuration error: ' . $e->getMessage());
                 }
             };
+            
+            // Add the phpmailer_init hook
+            add_action('phpmailer_init', $smtp_callback);
             
             // Send emails to each recipient
             foreach ($recipients as $recipient) {
@@ -907,7 +951,7 @@ class WP_Tester_Scheduler {
             }
             
             // Remove the callback to prevent interference with other emails
-            remove_action('phpmailer_init', $callback_name);
+            remove_action('phpmailer_init', $smtp_callback);
             
             error_log("WP Tester: SMTP email sending completed. Success: $success_count/$total_recipients");
             
@@ -916,10 +960,8 @@ class WP_Tester_Scheduler {
         } catch (Exception $e) {
             error_log('WP Tester: SMTP email error - ' . $e->getMessage());
             
-            // Remove the callback in case of error
-            if (isset($callback_name)) {
-                remove_action('phpmailer_init', $callback_name);
-            }
+            // Always remove the callback in case of error to prevent conflicts
+            remove_action('phpmailer_init', $smtp_callback);
             
             return false;
         }
@@ -939,10 +981,12 @@ class WP_Tester_Scheduler {
             'error_message' => null
         ));
         
-        $this->send_test_notification($test_results, 1, 1, 0, 'test');
+        $result = $this->send_test_notification($test_results, 1, 1, 0, 'test');
+        
+        error_log('WP Tester: Test email result: ' . ($result ? 'SUCCESS' : 'FAILED'));
         
         // Return success status for AJAX response
-        return true;
+        return $result;
     }
     
     /**
