@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
 // Get current AI settings
 $ai_api_key = get_option('wp_tester_ai_api_key', '');
 $ai_api_provider = get_option('wp_tester_ai_api_provider', 'openai');
-$ai_model = get_option('wp_tester_ai_model', 'fallback-generator');
+$ai_model = get_option('wp_tester_ai_model', '');
 $has_api_key = !empty($ai_api_key);
 
 // Get site analysis
@@ -526,6 +526,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
             const selectedModel = $('#ai-model-select').val();
             const apiKey = $('#ai-api-key').val();
 
+            console.log('WP Tester: Saving AI config - Model:', selectedModel, 'API Key length:', (apiKey ? apiKey.length : 0));
 
             if (!selectedModel) {
                 showErrorModal('Model Selection Required', 'Please select an AI model first.');
@@ -556,6 +557,7 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                     nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
                 },
                 success: function(response) {
+                    console.log('WP Tester: Save response:', response);
                     if (response.success) {
                         // Show success animation
                         button.removeClass('saving').addClass('success');
@@ -767,7 +769,9 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
             const currentModel = '<?php echo esc_js($ai_model); ?>';
             const currentApiKey = '<?php echo esc_js($ai_api_key); ?>';
             
-            if (currentModel) {
+            if (currentModel && currentModel !== '') {
+                // We have a saved model - use it
+                console.log('WP Tester: Setting saved model:', currentModel);
                 $('#ai-model-select').val(currentModel);
                 updateApiKeySection();
                 
@@ -789,13 +793,14 @@ $ai_generated_flows = $database->get_ai_generated_flows(5);
                         description.text(availableModels.paid_models[modelId].description);
                     }
                 }
-            }
-
-            // Set default to first free model
-            const firstFreeModel = modelSelect.find('option[data-free="true"]:first');
-            if (firstFreeModel.length > 0) {
-                firstFreeModel.prop('selected', true);
-                updateApiKeySection();
+            } else {
+                // No saved model - set default to first free model
+                console.log('WP Tester: No saved model, setting default');
+                const firstFreeModel = modelSelect.find('option[data-free="true"]:first');
+                if (firstFreeModel.length > 0) {
+                    firstFreeModel.prop('selected', true);
+                    updateApiKeySection();
+                }
             }
         }
 
