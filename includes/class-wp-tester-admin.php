@@ -465,9 +465,15 @@ class WP_Tester_Admin {
      * Crawl results page
      */
     public function crawl_page() {
-        $crawl_results = $this->database->get_crawl_results(20, 0); // Load first 20 results
+        $crawl_results = $this->database->get_crawl_results(20, 0); // Load first 20 results for display
         $total_crawl_count = $this->database->get_crawl_results_count();
         $has_more_crawls = $total_crawl_count > 20;
+        
+        // Fix existing crawl data link counts (run once for old data)
+        $this->database->fix_crawl_link_counts();
+        
+        // Get statistics for all crawl results (not just first 20)
+        $crawl_stats = $this->database->get_crawl_statistics();
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-crawl.php';
     }

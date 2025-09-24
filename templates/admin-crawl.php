@@ -56,7 +56,7 @@ $settings = get_option('wp_tester_settings', array());
                         <span class="dashicons dashicons-admin-page"></span>
                     </div>
                 </div>
-                <div class="stat-value"><?php echo count($crawl_results ?? []); ?></div>
+                <div class="stat-value"><?php echo $crawl_stats['total_pages'] ?? 0; ?></div>
                 <div class="stat-change neutral">
                     <span class="dashicons dashicons-search"></span>
                     Discovered
@@ -70,17 +70,7 @@ $settings = get_option('wp_tester_settings', array());
                         <span class="dashicons dashicons-feedback"></span>
                     </div>
                 </div>
-                <div class="stat-value">
-                    <?php
-                    $forms_count = 0;
-                    if (!empty($crawl_results)) {
-                        foreach ($crawl_results as $result) {
-                            $forms_count += ($result->forms_found ?? 0);
-                        }
-                    }
-                    echo $forms_count;
-                    ?>
-                </div>
+                <div class="stat-value"><?php echo $crawl_stats['total_forms'] ?? 0; ?></div>
                 <div class="stat-change positive">
                     <span class="dashicons dashicons-feedback"></span>
                     Interactive
@@ -94,17 +84,7 @@ $settings = get_option('wp_tester_settings', array());
                         <span class="dashicons dashicons-admin-links"></span>
                     </div>
                 </div>
-                <div class="stat-value">
-                    <?php
-                    $links_count = 0;
-                    if (!empty($crawl_results)) {
-                        foreach ($crawl_results as $result) {
-                            $links_count += ($result->links_found ?? 0);
-                        }
-                    }
-                    echo $links_count;
-                    ?>
-                </div>
+                <div class="stat-value"><?php echo $crawl_stats['total_links'] ?? 0; ?></div>
                 <div class="stat-change neutral">
                     <span class="dashicons dashicons-admin-links"></span>
                     Navigation
@@ -120,10 +100,7 @@ $settings = get_option('wp_tester_settings', array());
                 </div>
                 <div class="stat-value" style="font-size: 1.25rem;">
                     <?php
-                    // Get last crawl from database stats
-                    $database = new WP_Tester_Database();
-                    $stats = $database->get_dashboard_stats();
-                    $last_crawl = $stats['last_crawl'] ?? 'Never';
+                    $last_crawl = $crawl_stats['last_crawl'] ?? 'Never';
                     
                     if ($last_crawl !== 'Never') {
                         $last_crawl = date('M j, Y H:i', strtotime($last_crawl));

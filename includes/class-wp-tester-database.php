@@ -153,6 +153,15 @@ class WP_Tester_Database {
         // Ensure schema is up to date
         $this->update_crawl_results_table_schema();
         
+        // Count forms and links properly
+        $forms_count = 0;
+        $links_count = 0;
+        
+        if (is_array($interactive_elements)) {
+            $forms_count = isset($interactive_elements['forms']) ? count($interactive_elements['forms']) : 0;
+            $links_count = isset($interactive_elements['links']) ? count($interactive_elements['links']) : 0;
+        }
+        
         $result = $wpdb->replace(
             $this->crawl_results_table,
             array(
@@ -162,8 +171,8 @@ class WP_Tester_Database {
                 'content_hash' => $content_hash,
                 'interactive_elements' => wp_json_encode($interactive_elements),
                 'discovered_flows' => wp_json_encode($discovered_flows),
-                'forms_found' => is_array($interactive_elements) ? count($interactive_elements) : 0,
-                'links_found' => 0, // Will be set properly by crawler
+                'forms_found' => $forms_count,
+                'links_found' => $links_count,
                 'crawled_at' => current_time('mysql'),
                 'last_crawled' => current_time('mysql'),
                 'created_at' => current_time('mysql'),
@@ -220,6 +229,73 @@ class WP_Tester_Database {
         $where_values[] = $offset;
         
         return $wpdb->get_results($wpdb->prepare($sql, $where_values));
+    }
+    
+    /**
+     * Get crawl statistics for all results
+     */
+    public function get_crawl_statistics() {
+        global $wpdb;
+        
+        // Ensure schema is up to date
+        $this->update_crawl_results_table_schema();
+        
+        $stats = array();
+        
+        // Total pages crawled
+        $stats['total_pages'] = $wpdb->get_var("SELECT COUNT(*) FROM {$this->crawl_results_table} WHERE status = 'active'") ?: 0;
+        
+        // Total forms found
+        $stats['total_forms'] = $wpdb->get_var("SELECT SUM(forms_found) FROM {$this->crawl_results_table} WHERE status = 'active'") ?: 0;
+        
+        // Total links found
+        $stats['total_links'] = $wpdb->get_var("SELECT SUM(links_found) FROM {$this->crawl_results_table} WHERE status = 'active'") ?: 0;
+        
+        // Last crawl timestamp
+        $stats['last_crawl'] = $wpdb->get_var("SELECT MAX(last_crawled) FROM {$this->crawl_results_table}") ?: 'Never';
+        
+        return $stats;
+    }
+    
+    /**
+     * Fix existing crawl results link counts (run once to fix old data)
+     */
+    public function fix_crawl_link_counts() {
+        global $wpdb;
+        
+        // Get all crawl results that have links_found = 0 but interactive_elements data
+        $results = $wpdb->get_results("
+            SELECT id, interactive_elements 
+            FROM {$this->crawl_results_table} 
+            WHERE links_found = 0 AND interactive_elements IS NOT NULL AND interactive_elements != ''
+        ");
+        
+        $updated_count = 0;
+        
+        foreach ($results as $result) {
+            $interactive_elements = json_decode($result->interactive_elements, true);
+            
+            if (is_array($interactive_elements)) {
+                $forms_count = isset($interactive_elements['forms']) ? count($interactive_elements['forms']) : 0;
+                $links_count = isset($interactive_elements['links']) ? count($interactive_elements['links']) : 0;
+                
+                // Update the record
+                $wpdb->update(
+                    $this->crawl_results_table,
+                    array(
+                        'forms_found' => $forms_count,
+                        'links_found' => $links_count
+                    ),
+                    array('id' => $result->id),
+                    array('%d', '%d'),
+                    array('%d')
+                );
+                
+                $updated_count++;
+            }
+        }
+        
+        return $updated_count;
     }
     
     /**
