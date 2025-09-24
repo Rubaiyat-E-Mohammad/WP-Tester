@@ -73,8 +73,16 @@ class WP_Tester_Scheduler {
                     $result['execution_time']
                 ));
                 
-                // Schedule tests for newly discovered flows
-                $this->schedule_flow_tests();
+                // Schedule tests for newly discovered flows only if auto-testing is enabled
+                $settings = get_option('wp_tester_settings', array());
+                $auto_test = $settings['auto_run_tests_on_flow_creation'] ?? false;
+                
+                if ($auto_test) {
+                    $this->schedule_flow_tests();
+                    error_log('WP Tester: Auto-scheduled tests after crawl');
+                } else {
+                    error_log('WP Tester: Auto-testing disabled, no tests scheduled after crawl');
+                }
             } else {
                 error_log('WP Tester: Scheduled crawl failed - ' . $result['error']);
             }

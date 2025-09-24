@@ -399,7 +399,8 @@ class WP_Tester_Ajax {
         
         try {
             $crawler = new WP_Tester_Crawler();
-            $result = $crawler->run_full_crawl();
+            // Force flow generation for discover flows feature (override settings)
+            $result = $crawler->run_flow_discovery();
             
             if ($result['success']) {
                 wp_send_json_success(array(
