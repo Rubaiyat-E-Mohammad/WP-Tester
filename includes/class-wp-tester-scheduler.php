@@ -688,7 +688,7 @@ class WP_Tester_Scheduler {
                 <!-- Header -->
                 <div style="background: linear-gradient(135deg, #00265e 0%, #0F9D7A 100%); color: white; padding: 2rem; text-align: center;">
                     <h1 style="margin: 0; font-size: 1.5rem; font-weight: 700;">WP Tester Test Results</h1>
-                    <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 1rem;">' . ucfirst($type) . ' Test Execution Report</p>
+                    <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 1rem;">' . ucfirst($type) . ' Execution Report</p>
                 </div>
                 
                 <!-- Summary -->
