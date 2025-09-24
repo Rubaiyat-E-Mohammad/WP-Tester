@@ -399,8 +399,21 @@ class WP_Tester_Ajax {
         
         try {
             $crawler = new WP_Tester_Crawler();
-            // Force flow generation for discover flows feature (override settings)
-            $result = $crawler->run_flow_discovery();
+            
+            // Temporarily override settings to force flow generation for discover flows
+            $settings = get_option('wp_tester_settings', array());
+            $original_auto_generate = $settings['auto_generate_flows_on_crawl'] ?? true;
+            
+            // Force enable flow generation for this operation
+            $settings['auto_generate_flows_on_crawl'] = true;
+            update_option('wp_tester_settings', $settings);
+            
+            // Run the regular crawl with forced flow generation
+            $result = $crawler->run_full_crawl();
+            
+            // Restore original setting
+            $settings['auto_generate_flows_on_crawl'] = $original_auto_generate;
+            update_option('wp_tester_settings', $settings);
             
             if ($result['success']) {
                 wp_send_json_success(array(
