@@ -273,6 +273,14 @@ class WP_Tester_WooCommerce {
      * Handle product stock changes
      */
     public function product_stock_changed($product_id, $stock_status, $product) {
+        // Check if auto-testing is enabled
+        $settings = get_option('wp_tester_settings', array());
+        $auto_test = $settings['auto_run_tests_on_flow_creation'] ?? false;
+        
+        if (!$auto_test) {
+            return;
+        }
+        
         // Trigger re-testing of product flows when stock changes
         $this->schedule_product_flow_retest($product_id);
     }
@@ -281,6 +289,14 @@ class WP_Tester_WooCommerce {
      * Handle new product addition
      */
     public function new_product_added($product_id) {
+        // Check if auto-generation is enabled
+        $settings = get_option('wp_tester_settings', array());
+        $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? false;
+        
+        if (!$auto_generate) {
+            return;
+        }
+        
         // Create new flow for the product
         $product = wc_get_product($product_id);
         if ($product && $product->is_published()) {
@@ -292,6 +308,14 @@ class WP_Tester_WooCommerce {
      * Handle product updates
      */
     public function product_updated($product_id) {
+        // Check if auto-generation is enabled
+        $settings = get_option('wp_tester_settings', array());
+        $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? false;
+        
+        if (!$auto_generate) {
+            return;
+        }
+        
         // Update existing flow or create new one
         $product = wc_get_product($product_id);
         if ($product && $product->is_published()) {

@@ -418,6 +418,23 @@ class WP_Tester_Admin {
             'wp_tester_settings',
             'wp_tester_general'
         );
+        
+        // Automation control settings
+        add_settings_field(
+            'auto_generate_flows_on_crawl',
+            __('Auto-Generate Flows During Crawl', 'wp-tester'),
+            array($this, 'auto_generate_flows_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
+        
+        add_settings_field(
+            'auto_run_tests_on_flow_creation',
+            __('Auto-Run Tests on Flow Creation', 'wp-tester'),
+            array($this, 'auto_run_tests_callback'),
+            'wp_tester_settings',
+            'wp_tester_general'
+        );
     }
     
     /**
@@ -1034,6 +1051,22 @@ class WP_Tester_Admin {
         echo '<p class="description">' . __('<strong>WARNING:</strong> Frontend tracking can significantly slow down your website. Only enable if you need detailed user interaction tracking. This feature tracks every click, form submission, and page interaction.', 'wp-tester') . '</p>';
     }
     
+    public function auto_generate_flows_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['auto_generate_flows_on_crawl']) ? $settings['auto_generate_flows_on_crawl'] : false;
+        
+        echo '<input type="checkbox" name="wp_tester_settings[auto_generate_flows_on_crawl]" value="1" ' . checked(1, $value, false) . ' />';
+        echo '<p class="description">' . __('When enabled, crawling will automatically generate test flows based on discovered forms and interactive elements. <strong>Disable this to keep crawling and flow generation separate.</strong>', 'wp-tester') . '</p>';
+    }
+    
+    public function auto_run_tests_callback() {
+        $settings = get_option('wp_tester_settings', array());
+        $value = isset($settings['auto_run_tests_on_flow_creation']) ? $settings['auto_run_tests_on_flow_creation'] : false;
+        
+        echo '<input type="checkbox" name="wp_tester_settings[auto_run_tests_on_flow_creation]" value="1" ' . checked(1, $value, false) . ' />';
+        echo '<p class="description">' . __('When enabled, creating new flows will automatically trigger test execution. <strong>Disable this to keep flow creation and test execution separate.</strong>', 'wp-tester') . '</p>';
+    }
+    
     /**
      * Sanitize settings
      */
@@ -1169,6 +1202,15 @@ class WP_Tester_Admin {
         // Performance settings
         if (isset($input['enable_frontend_tracking'])) {
             $sanitized['enable_frontend_tracking'] = (bool) $input['enable_frontend_tracking'];
+        }
+        
+        // Automation control settings
+        if (isset($input['auto_generate_flows_on_crawl'])) {
+            $sanitized['auto_generate_flows_on_crawl'] = (bool) $input['auto_generate_flows_on_crawl'];
+        }
+        
+        if (isset($input['auto_run_tests_on_flow_creation'])) {
+            $sanitized['auto_run_tests_on_flow_creation'] = (bool) $input['auto_run_tests_on_flow_creation'];
         }
         
         // Debug logging

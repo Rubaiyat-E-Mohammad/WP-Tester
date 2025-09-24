@@ -75,15 +75,26 @@ class WP_Tester_Crawler {
                 $pages_crawled += $this->crawl_special_pages($crawled_urls, $discovered_flows, $max_pages - $pages_crawled);
             }
             
-            // Discover and save flows (with duplicate prevention)
-            $saved_flows_count = $this->process_discovered_flows($discovered_flows, $prevent_duplicates);
+            // Discover and save flows only if setting allows it
+            $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? false;
+            $saved_flows_count = 0;
+            
+            if ($auto_generate) {
+                $saved_flows_count = $this->process_discovered_flows($discovered_flows, $prevent_duplicates);
+                error_log('WP Tester: Auto-generated ' . $saved_flows_count . ' flows during crawl');
+            } else {
+                error_log('WP Tester: Flow auto-generation disabled - ' . count($discovered_flows) . ' flows discovered but not saved');
+            }
             
             $execution_time = microtime(true) - $start_time;
             
             // Crawl admin panel if requested and setting allows
             $admin_flows = 0;
-            if ($include_admin && $include_admin_setting) {
+            if ($include_admin && $include_admin_setting && $auto_generate) {
                 $admin_flows = $this->crawl_admin_panel();
+                error_log('WP Tester: Admin crawl generated ' . $admin_flows . ' flows');
+            } elseif ($include_admin && $include_admin_setting) {
+                error_log('WP Tester: Admin crawl performed but flow generation disabled');
             }
             
             $this->database->update_last_crawl_timestamp();
@@ -782,12 +793,16 @@ class WP_Tester_Crawler {
             return;
         }
         
+        // Check if auto-generation is enabled
+        $settings = get_option('wp_tester_settings', array());
+        $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? false;
+        
         $crawled_urls = array();
         $discovered_flows = array();
         
         $this->crawl_url($url, $post_after->post_type, $crawled_urls, $discovered_flows, $post_after);
         
-        if (!empty($discovered_flows)) {
+        if (!empty($discovered_flows) && $auto_generate) {
             $this->process_discovered_flows($discovered_flows, true);
         }
     }
