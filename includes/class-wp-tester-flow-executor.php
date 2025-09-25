@@ -183,8 +183,8 @@ class WP_Tester_Flow_Executor {
                     }
                 }
                 
-                // Add delay between steps
-                usleep(500000); // 0.5 second delay
+                // Add delay between steps (reduced for faster execution)
+                usleep(100000); // 0.1 second delay (reduced from 0.5 second)
             }
             
             $execution_time = microtime(true) - $start_time;
@@ -317,7 +317,7 @@ class WP_Tester_Flow_Executor {
                         'error' => $last_error,
                         'next_attempt_in' => '2 seconds'
                     ));
-                    sleep(2); // Wait 2 seconds before retry
+                    sleep(1); // Wait 1 second before retry (reduced from 2 seconds)
                 }
                 
             } catch (Exception $e) {
@@ -328,7 +328,7 @@ class WP_Tester_Flow_Executor {
                         'attempt' => $attempt,
                         'error' => $last_error
                     ));
-                    sleep(2);
+                    sleep(1); // Reduced retry delay
                 }
             }
         }
@@ -969,8 +969,8 @@ class WP_Tester_Flow_Executor {
         foreach ($flows as $flow) {
             $this->execute_flow($flow->id, false);
             
-            // Add delay between flow executions
-            sleep(5);
+            // Add delay between flow executions (reduced for faster execution)
+            sleep(1); // Reduced from 5 seconds to 1 second
         }
     }
     
@@ -984,8 +984,8 @@ class WP_Tester_Flow_Executor {
             $result = $this->execute_flow($flow_id);
             $results[$flow_id] = $result;
             
-            // Add delay between flows
-            sleep(2);
+            // Add delay between flows (reduced for faster execution)
+            usleep(500000); // 0.5 seconds (reduced from 2 seconds)
         }
         
         return $results;

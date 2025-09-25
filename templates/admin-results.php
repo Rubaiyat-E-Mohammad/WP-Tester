@@ -591,29 +591,38 @@ jQuery(document).ready(function($) {
             data: {
                 action: 'wp_tester_load_more_results',
                 offset: currentCount,
-                limit: 10
+                limit: 10,
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
             success: function(response) {
-                if (response.success && response.data.results.length > 0) {
-                    // Append new results
-                    response.data.results.forEach(function(result) {
-                        const resultHtml = createResultHtml(result);
-                        $resultsList.append(resultHtml);
-                    });
-                    
-                    // Update button state
-                    if (response.data.has_more) {
-                        $button.prop('disabled', false).html('Load More Results');
+                console.log('Load more results response:', response);
+                
+                if (response.success) {
+                    if (response.data.results && response.data.results.length > 0) {
+                        // Append new results
+                        response.data.results.forEach(function(result) {
+                            const resultHtml = createResultHtml(result);
+                            $resultsList.append(resultHtml);
+                        });
+                        
+                        // Update button state
+                        if (response.data.has_more) {
+                            $button.prop('disabled', false).html('Load More Results');
+                        } else {
+                            $button.html('<span class="dashicons dashicons-yes-alt"></span> All Results Loaded').prop('disabled', true);
+                        }
                     } else {
-                        $button.hide();
+                        $button.html('<span class="dashicons dashicons-yes-alt"></span> No More Results').prop('disabled', true);
                     }
                 } else {
-                    $button.hide();
+                    $button.prop('disabled', false).html('Load More Results');
+                    showErrorModal('Error', response.data.message || 'Failed to load more results.');
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.error('Load more results error:', xhr.responseText, status, error);
                 $button.prop('disabled', false).html('Load More Results');
-                showErrorModal('Error', 'Failed to load more results. Please try again.');
+                showErrorModal('Error', 'Failed to load more results. Please check the console for details.');
             }
         });
     }
@@ -1143,7 +1152,10 @@ jQuery(document).ready(function($) {
                 <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
                     <div style="text-align: center; margin-bottom: 1.5rem;">
                         <div style="width: 60px; height: 60px; background: #00265e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                            <span class="dashicons dashicons-email-alt" style="color: white; font-size: 30px;"></span>
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: white;">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" fill="none"/>
+                                <path d="m22 6-10 7L2 6" stroke="currentColor" stroke-width="2" fill="none"/>
+                            </svg>
                         </div>
                         <h3 style="margin: 0; color: #1f2937; font-size: 1.25rem; font-weight: 600;">Email Test Results Report</h3>
                     </div>

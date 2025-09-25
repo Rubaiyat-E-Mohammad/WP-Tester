@@ -136,7 +136,7 @@ class WP_Tester_Ajax {
         try {
             // Set longer execution time for bulk operations
             if (current_user_can('manage_options')) {
-                set_time_limit(300); // 5 minutes max
+                set_time_limit(600); // 10 minutes max for large test suites
             }
             
             $admin = new WP_Tester_Admin();
@@ -153,11 +153,17 @@ class WP_Tester_Ajax {
             
             $results = array();
             $start_time = time();
-            $max_execution_time = 240; // 4 minutes to allow for cleanup
+            $max_execution_time = 3600; // 9 minutes to allow for cleanup (increased from 4 minutes)
+            
+            $total_flows = count($flows);
+            $completed_flows = 0;
             
             foreach ($flows as $flow) {
+                $completed_flows++;
+                
                 // Check execution time limit
                 if ((time() - $start_time) > $max_execution_time) {
+                    error_log("WP Tester: Time limit reached after {$completed_flows}/{$total_flows} flows");
                     $results[] = array(
                         'flow_id' => $flow->id,
                         'flow_name' => $flow->flow_name,
@@ -169,6 +175,11 @@ class WP_Tester_Ajax {
                     break;
                 }
                 
+                // Log progress every 10 flows
+                if ($completed_flows % 10 === 0 || $completed_flows === 1) {
+                    error_log("WP Tester: Running test {$completed_flows}/{$total_flows} - Flow: {$flow->flow_name}");
+                }
+                
                 $result = $admin->execute_flow_with_fallback($flow->id, true);
                 $results[] = array(
                     'flow_id' => $flow->id,
@@ -176,13 +187,15 @@ class WP_Tester_Ajax {
                     'result' => $result
                 );
                 
-                // Small delay between flows to prevent server overload
-                usleep(100000); // 0.1 second
+                // Reduced delay between flows for faster execution
+                usleep(50000); // 0.05 second (reduced from 0.1 second)
             }
             
             wp_send_json_success(array(
-                'message' => sprintf(__('Executed %d flows successfully.', 'wp-tester'), count($flows ?: [])),
-                'results' => $results
+                'message' => sprintf(__('Executed %d of %d flows successfully.', 'wp-tester'), $completed_flows, $total_flows),
+                'results' => $results,
+                'total_flows' => $total_flows,
+                'completed_flows' => $completed_flows
             ));
             
         } catch (Exception $e) {
@@ -3115,9 +3128,18 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
      * Load more test results
      */
     public function load_more_results() {
+        check_ajax_referer('wp_tester_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
+            return;
+        }
+        
         try {
             $offset = intval($_POST['offset'] ?? 0);
             $limit = intval($_POST['limit'] ?? 10);
+            
+            error_log("WP Tester: Loading more results - offset: $offset, limit: $limit");
             
             global $wpdb;
             $results_table = $wpdb->prefix . 'wp_tester_test_results';
@@ -3138,31 +3160,42 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
             $total_count = $wpdb->get_var("SELECT COUNT(*) FROM {$results_table}");
             $has_more = ($offset + $limit) < $total_count;
             
+            error_log("WP Tester: Load more results - Found " . count($results) . " results, total_count: $total_count, has_more: " . ($has_more ? 'yes' : 'no'));
+            
             // Format results for frontend
             $formatted_results = array();
             foreach ($results as $result) {
+                $steps_total = max($result->steps_executed, $result->steps_passed + $result->steps_failed);
                 $formatted_results[] = array(
                     'id' => $result->id,
                     'flow_id' => $result->flow_id,
                     'flow_name' => $result->flow_name ?: 'Unknown Flow',
                     'status' => $result->status,
                     'steps_executed' => $result->steps_executed,
-                    'steps_total' => $result->steps_executed, // Assuming all steps were attempted
+                    'steps_total' => $steps_total,
                     'execution_time' => $result->execution_time,
                     'time_ago' => human_time_diff(strtotime($result->started_at), current_time('timestamp')) . ' ago',
                     'view_url' => admin_url('admin.php?page=wp-tester-results&action=view&result_id=' . $result->id)
                 );
             }
             
+            error_log("WP Tester: Load more results response - " . count($formatted_results) . " results, has_more: " . ($has_more ? 'yes' : 'no'));
+            
             wp_send_json_success(array(
                 'results' => $formatted_results,
                 'has_more' => $has_more,
                 'total_count' => $total_count,
-                'loaded_count' => count($formatted_results)
+                'loaded_count' => count($formatted_results),
+                'debug' => array(
+                    'offset' => $offset,
+                    'limit' => $limit,
+                    'raw_results_count' => count($results)
+                )
             ));
             
         } catch (Exception $e) {
-            wp_send_json_error('Error loading more results: ' . $e->getMessage());
+            error_log("WP Tester: Load more results error - " . $e->getMessage());
+            wp_send_json_error(array('message' => 'Error loading more results: ' . $e->getMessage()));
         }
     }
     
@@ -3302,10 +3335,15 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
             // Get recipients
             $recipients = array();
             
+            // Debug: Log settings for troubleshooting
+            error_log('WP Tester Email Report - Settings email_recipients: ' . print_r($settings['email_recipients'] ?? 'NOT SET', true));
+            error_log('WP Tester Email Report - Additional recipients: ' . print_r($additional_recipients, true));
+            
             // Add configured recipients from settings
             if (!empty($settings['email_recipients'])) {
                 $configured_recipients = array_filter(array_map('trim', explode("\n", $settings['email_recipients'])));
                 $recipients = array_merge($recipients, $configured_recipients);
+                error_log('WP Tester Email Report - Found configured recipients: ' . print_r($configured_recipients, true));
             }
             
             // Add additional recipients if provided
@@ -3314,12 +3352,21 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                 foreach ($additional_emails as $email) {
                     if (is_email($email)) {
                         $recipients[] = $email;
+                        error_log('WP Tester Email Report - Added additional recipient: ' . $email);
                     }
                 }
             }
             
             if (empty($recipients)) {
-                wp_send_json_error(array('message' => __('No valid email recipients found. Please configure email recipients in settings or provide additional recipients.', 'wp-tester')));
+                wp_send_json_error(array(
+                    'message' => __('No email recipients found. Please either:', 'wp-tester') . "\n" . 
+                                __('1. Configure email recipients in WP Tester Settings → Email Notifications, OR', 'wp-tester') . "\n" . 
+                                __('2. Add recipients in the "Additional Recipients" field above.', 'wp-tester'),
+                    'debug' => array(
+                        'configured_recipients' => $settings['email_recipients'] ?? 'NOT SET',
+                        'additional_recipients' => $additional_recipients
+                    )
+                ));
                 return;
             }
             

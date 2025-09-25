@@ -244,7 +244,7 @@ class WP_Tester_Scheduler {
             GROUP BY f.id
             HAVING (last_test_date IS NULL OR last_test_date < DATE_SUB(NOW(), INTERVAL 6 HOUR))
             ORDER BY f.priority DESC, last_test_date ASC
-            LIMIT 20
+            LIMIT 100
         ";
         
         return $wpdb->get_results($sql);
