@@ -41,8 +41,16 @@ class WP_Tester_Scheduler {
         // Clear any existing immediate test events that might be pending
         $this->clear_immediate_test_events();
         
-        // Only schedule events if we're in admin and on WP Tester pages
-        if (is_admin() && isset($_GET['page']) && strpos($_GET['page'], 'wp-tester') === 0) {
+        // Only schedule events if we're in admin and on WP Tester pages (delay until WordPress is loaded)
+        add_action('admin_init', array($this, 'maybe_schedule_events'));
+    }
+    
+    /**
+     * Maybe schedule events (called after WordPress admin is loaded)
+     */
+    public function maybe_schedule_events() {
+        // Only schedule events if we're on WP Tester pages
+        if (isset($_GET['page']) && strpos($_GET['page'], 'wp-tester') === 0) {
             // Ensure crawl is scheduled based on current settings
             $this->ensure_crawl_scheduled();
             
@@ -415,8 +423,8 @@ class WP_Tester_Scheduler {
      */
     public function clear_immediate_test_events() {
         // Clear any single scheduled test events that might be pending
-        $cron_events = wp_get_scheduled_event('wp_tester_test_flows');
-        if ($cron_events) {
+        $next_event = wp_next_scheduled('wp_tester_test_flows');
+        if ($next_event) {
             wp_clear_scheduled_hook('wp_tester_test_flows');
             error_log('WP Tester: Cleared pending immediate test events');
         }
