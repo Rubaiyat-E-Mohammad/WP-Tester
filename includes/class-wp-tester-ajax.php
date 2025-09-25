@@ -398,24 +398,79 @@ class WP_Tester_Ajax {
         }
         
         try {
-            $crawler = new WP_Tester_Crawler();
+            // Generate flows directly from existing crawl data - NO CRAWLING
+            $database = new WP_Tester_Database();
             
-            // Use dedicated flow discovery method that always generates flows
-            $result = $crawler->discover_and_generate_flows();
+            // Get existing crawl results
+            $crawl_results = $database->get_crawl_results(1000, 0); // Get all results
             
-            if ($result['success']) {
-                wp_send_json_success(array(
-                    'message' => sprintf(
-                        __('Flow discovery completed. Found %d new flows.', 'wp-tester'),
-                        $result['discovered_flows'] ?: 0
-                    ),
-                    'discovered_flows' => $result['discovered_flows']
-                ));
-            } else {
+            if (empty($crawl_results)) {
                 wp_send_json_error(array(
-                    'message' => __('Flow discovery failed: ', 'wp-tester') . $result['error']
+                    'message' => __('No crawl data found. Please run "Crawl Site" first, then use "Discover Flows".', 'wp-tester')
                 ));
+                return;
             }
+            
+            $discovered_flows = array();
+            $flow_generator = new WP_Tester_AI_Flow_Generator();
+            
+            // Generate flows from existing crawl data
+            foreach ($crawl_results as $crawl_result) {
+                if (empty($crawl_result->interactive_elements)) {
+                    continue;
+                }
+                
+                $interactive_elements = json_decode($crawl_result->interactive_elements, true);
+                if (!is_array($interactive_elements)) {
+                    continue;
+                }
+                
+                // Check for forms and generate flows
+                if (isset($interactive_elements['forms']) && !empty($interactive_elements['forms'])) {
+                    foreach ($interactive_elements['forms'] as $form) {
+                        $flow_type = $this->determine_flow_type($form, $crawl_result->url);
+                        $flow_name = $this->generate_flow_name($form, $crawl_result->title, $flow_type);
+                        
+                        $discovered_flows[] = array(
+                            'name' => $flow_name,
+                            'type' => $flow_type,
+                            'start_url' => $crawl_result->url,
+                            'priority' => $this->get_flow_priority($flow_type),
+                            'form_data' => $form
+                        );
+                    }
+                }
+            }
+            
+            // Remove duplicates and save flows
+            $unique_flows = $this->remove_duplicate_flows($discovered_flows);
+            $saved_count = 0;
+            
+            foreach ($unique_flows as $flow) {
+                $steps = $this->generate_flow_steps_from_form($flow);
+                $expected_outcome = $this->generate_expected_outcome($flow);
+                
+                $flow_id = $database->save_flow(
+                    $flow['name'],
+                    $flow['type'], 
+                    $flow['start_url'],
+                    $steps,
+                    $expected_outcome,
+                    $flow['priority']
+                );
+                
+                if ($flow_id) {
+                    $saved_count++;
+                }
+            }
+            
+            wp_send_json_success(array(
+                'message' => sprintf(
+                    __('Flow discovery completed. Generated %d new flows from existing crawl data.', 'wp-tester'),
+                    $saved_count
+                ),
+                'discovered_flows' => $saved_count
+            ));
             
         } catch (Exception $e) {
             wp_send_json_error(array(
@@ -3437,6 +3492,158 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
 </html>';
         
         return $html;
+    }
+    
+    /**
+     * Determine flow type from form data
+     */
+    private function determine_flow_type($form, $url) {
+        $action = strtolower($form['action'] ?? '');
+        $fields = $form['fields'] ?? array();
+        
+        // Check field names and types to determine flow type
+        $field_names = array_column($fields, 'name');
+        $field_names_string = implode(' ', $field_names);
+        
+        if (strpos($action, 'register') !== false || strpos($field_names_string, 'password') !== false && strpos($field_names_string, 'email') !== false) {
+            return 'registration';
+        } elseif (strpos($action, 'login') !== false || strpos($url, 'login') !== false) {
+            return 'login';
+        } elseif (strpos($action, 'contact') !== false || strpos($field_names_string, 'message') !== false) {
+            return 'contact';
+        } elseif (strpos($action, 'search') !== false || strpos($field_names_string, 'search') !== false) {
+            return 'search';
+        } else {
+            return 'form_submission';
+        }
+    }
+    
+    /**
+     * Generate flow name from form data
+     */
+    private function generate_flow_name($form, $page_title, $flow_type) {
+        $page_title = $page_title ?: 'Unknown Page';
+        
+        switch ($flow_type) {
+            case 'registration':
+                return 'User Registration - ' . $page_title;
+            case 'login':
+                return 'User Login - ' . $page_title;
+            case 'contact':
+                return 'Contact Form - ' . $page_title;
+            case 'search':
+                return 'Search Form - ' . $page_title;
+            default:
+                return 'Form Submission - ' . $page_title;
+        }
+    }
+    
+    /**
+     * Get flow priority based on type
+     */
+    private function get_flow_priority($flow_type) {
+        $priorities = array(
+            'login' => 10,
+            'registration' => 9,
+            'contact' => 8,
+            'search' => 7,
+            'form_submission' => 6
+        );
+        
+        return $priorities[$flow_type] ?? 5;
+    }
+    
+    /**
+     * Remove duplicate flows
+     */
+    private function remove_duplicate_flows($flows) {
+        $unique = array();
+        
+        foreach ($flows as $flow) {
+            $key = $flow['type'] . '_' . $flow['start_url'];
+            if (!isset($unique[$key])) {
+                $unique[$key] = $flow;
+            }
+        }
+        
+        return array_values($unique);
+    }
+    
+    /**
+     * Generate flow steps from form data
+     */
+    private function generate_flow_steps_from_form($flow) {
+        $steps = array();
+        
+        // Navigate to page
+        $steps[] = array(
+            'action' => 'navigate',
+            'target' => $flow['start_url'],
+            'description' => 'Navigate to ' . $flow['name']
+        );
+        
+        // Fill form fields
+        if (isset($flow['form_data']['fields'])) {
+            foreach ($flow['form_data']['fields'] as $field) {
+                if ($field['type'] === 'submit') continue;
+                
+                $steps[] = array(
+                    'action' => 'fill',
+                    'target' => $field['name'] ?: $field['id'],
+                    'value' => $this->get_test_value_for_field($field),
+                    'description' => 'Fill ' . ($field['name'] ?: $field['id'])
+                );
+            }
+        }
+        
+        // Submit form
+        $steps[] = array(
+            'action' => 'click',
+            'target' => 'input[type="submit"], button[type="submit"]',
+            'description' => 'Submit form'
+        );
+        
+        return $steps;
+    }
+    
+    /**
+     * Generate expected outcome
+     */
+    private function generate_expected_outcome($flow) {
+        switch ($flow['type']) {
+            case 'registration':
+                return 'User successfully registers and receives confirmation';
+            case 'login':
+                return 'User successfully logs in and is redirected';
+            case 'contact':
+                return 'Contact form is submitted and confirmation is shown';
+            case 'search':
+                return 'Search results are displayed';
+            default:
+                return 'Form is submitted successfully';
+        }
+    }
+    
+    /**
+     * Get test value for form field
+     */
+    private function get_test_value_for_field($field) {
+        $type = $field['type'] ?? 'text';
+        $name = strtolower($field['name'] ?? '');
+        
+        if (strpos($name, 'email') !== false) {
+            return 'test@example.com';
+        } elseif (strpos($name, 'password') !== false) {
+            return 'TestPassword123!';
+        } elseif (strpos($name, 'phone') !== false) {
+            return '555-123-4567';
+        } elseif (strpos($name, 'name') !== false) {
+            return 'Test User';
+        } elseif ($type === 'textarea') {
+            return 'This is a test message for form submission.';
+        } else {
+            return 'Test Value';
+        }
     }
     
 }
