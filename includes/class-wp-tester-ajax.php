@@ -3184,9 +3184,9 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                     'flow_id' => $result->flow_id,
                     'flow_name' => $result->flow_name ?: 'Unknown Flow',
                     'status' => $result->status,
-                    'steps_executed' => $result->steps_executed,
-                    'steps_total' => $steps_total,
-                    'execution_time' => $result->execution_time,
+                    'steps_executed' => intval($result->steps_executed),
+                    'steps_total' => intval($steps_total),
+                    'execution_time' => floatval($result->execution_time ?: 0),
                     'time_ago' => human_time_diff(strtotime($result->started_at), current_time('timestamp')) . ' ago',
                     'view_url' => admin_url('admin.php?page=wp-tester-results&action=view&result_id=' . $result->id)
                 );

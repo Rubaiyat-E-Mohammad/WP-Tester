@@ -376,9 +376,6 @@ if (!defined('ABSPATH')) {
                     <button class="modern-btn modern-btn-secondary" id="load-more">
                         Load More Results
                     </button>
-                    <button class="modern-btn modern-btn-primary" id="debug-ajax" style="margin-left: 10px;">
-                        Debug AJAX
-                    </button>
                 </div>
 
             <?php else : ?>
@@ -585,37 +582,6 @@ jQuery(document).ready(function($) {
         loadMoreResults();
     });
     
-    // Debug AJAX button
-    $('#debug-ajax').on('click', function(e) {
-        e.preventDefault();
-        console.log('Debug AJAX test starting...');
-        console.log('ajaxurl:', ajaxurl);
-        
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            timeout: 10000,
-            data: {
-                action: 'wp_tester_load_more_results',
-                offset: 0,
-                limit: 5,
-                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
-            },
-            success: function(response) {
-                console.log('Debug AJAX SUCCESS:', response);
-                alert('Debug AJAX worked! Check console for details.');
-            },
-            error: function(xhr, status, error) {
-                console.error('Debug AJAX ERROR:', {
-                    status: status,
-                    error: error,
-                    responseText: xhr.responseText,
-                    statusCode: xhr.status
-                });
-                alert('Debug AJAX failed! Check console for details.');
-            }
-        });
-    });
     
     let currentOffset = 0; // Track offset globally
     
@@ -719,7 +685,7 @@ jQuery(document).ready(function($) {
                         ${status.charAt(0).toUpperCase() + status.slice(1)}
                     </div>
                     <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #64748b;">
-                        ${(result.execution_time || 0).toFixed(3)}s execution time
+                        ${parseFloat(result.execution_time || 0).toFixed(3)}s execution time
                     </div>
                     <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
                         <a href="${result.view_url}" class="modern-btn modern-btn-secondary modern-btn-small">
