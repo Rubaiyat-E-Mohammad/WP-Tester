@@ -291,7 +291,7 @@ class WP_Tester_WooCommerce {
     public function new_product_added($product_id) {
         // Check if auto-generation is enabled
         $settings = get_option('wp_tester_settings', array());
-        $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? true; // Default to enabled
+        $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? false; // Default to disabled
         
         if (!$auto_generate) {
             return;
@@ -310,7 +310,7 @@ class WP_Tester_WooCommerce {
     public function product_updated($product_id) {
         // Check if auto-generation is enabled
         $settings = get_option('wp_tester_settings', array());
-        $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? true; // Default to enabled
+        $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? false; // Default to disabled
         
         if (!$auto_generate) {
             return;

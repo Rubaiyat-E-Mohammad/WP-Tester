@@ -1053,10 +1053,10 @@ class WP_Tester_Admin {
     
     public function auto_generate_flows_callback() {
         $settings = get_option('wp_tester_settings', array());
-        $value = isset($settings['auto_generate_flows_on_crawl']) ? $settings['auto_generate_flows_on_crawl'] : true; // Default to enabled for existing users
+        $value = isset($settings['auto_generate_flows_on_crawl']) ? $settings['auto_generate_flows_on_crawl'] : false; // Default to disabled for clean separation
         
         echo '<input type="checkbox" name="wp_tester_settings[auto_generate_flows_on_crawl]" value="1" ' . checked(1, $value, false) . ' />';
-        echo '<p class="description">' . __('When enabled, regular crawling will automatically generate test flows. When disabled, use the separate "Discover Flows" button to generate flows. <strong>Note:</strong> "Discover Flows" always generates flows regardless of this setting.', 'wp-tester') . '</p>';
+        echo '<p class="description">' . __('When enabled, regular crawling will automatically generate test flows. When disabled, crawling only discovers pages. <strong>Use "Discover Flows" button to generate flows separately.</strong>', 'wp-tester') . '</p>';
     }
     
     public function auto_run_tests_callback() {

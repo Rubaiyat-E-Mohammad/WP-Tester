@@ -76,7 +76,7 @@ class WP_Tester_Crawler {
             }
             
             // Discover and save flows only if setting allows it
-            $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? true; // Default to enabled for backward compatibility
+            $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? false; // Default to disabled - keep crawling and flow generation separate
             $saved_flows_count = 0;
             
             if ($auto_generate) {
@@ -90,11 +90,14 @@ class WP_Tester_Crawler {
             
             // Crawl admin panel if requested and setting allows
             $admin_flows = 0;
-            if ($include_admin && $include_admin_setting && $auto_generate) {
-                $admin_flows = $this->crawl_admin_panel();
-                error_log('WP Tester: Admin crawl generated ' . $admin_flows . ' flows');
-            } elseif ($include_admin && $include_admin_setting) {
-                error_log('WP Tester: Admin crawl performed but flow generation disabled');
+            if ($include_admin && $include_admin_setting) {
+                if ($auto_generate) {
+                    $admin_flows = $this->crawl_admin_panel();
+                    error_log('WP Tester: Admin crawl generated ' . $admin_flows . ' flows');
+                } else {
+                    // Just crawl admin for discovery but don't generate flows
+                    error_log('WP Tester: Admin crawl skipped - flow generation disabled');
+                }
             }
             
             $this->database->update_last_crawl_timestamp();
@@ -795,7 +798,7 @@ class WP_Tester_Crawler {
         
         // Check if auto-generation is enabled
         $settings = get_option('wp_tester_settings', array());
-        $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? true; // Default to enabled
+        $auto_generate = $settings['auto_generate_flows_on_crawl'] ?? false; // Default to disabled
         
         $crawled_urls = array();
         $discovered_flows = array();
