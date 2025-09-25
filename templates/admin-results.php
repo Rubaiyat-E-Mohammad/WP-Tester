@@ -376,6 +376,9 @@ if (!defined('ABSPATH')) {
                     <button class="modern-btn modern-btn-secondary" id="load-more">
                         Load More Results
                     </button>
+                    <button class="modern-btn modern-btn-primary" id="debug-ajax" style="margin-left: 10px;">
+                        Debug AJAX
+                    </button>
                 </div>
 
             <?php else : ?>
@@ -411,6 +414,11 @@ if (!defined('ABSPATH')) {
 
 <script>
 jQuery(document).ready(function($) {
+    // Ensure ajaxurl is available
+    if (typeof ajaxurl === 'undefined') {
+        var ajaxurl = '<?php echo admin_url('admin-ajax.php'); ?>';
+    }
+    
     // Filter functionality
     $('#filter-status').on('change', function() {
         filterTestResults(); // Use the combined search and filter function
@@ -577,10 +585,49 @@ jQuery(document).ready(function($) {
         loadMoreResults();
     });
     
+    // Debug AJAX button
+    $('#debug-ajax').on('click', function(e) {
+        e.preventDefault();
+        console.log('Debug AJAX test starting...');
+        console.log('ajaxurl:', ajaxurl);
+        
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            timeout: 10000,
+            data: {
+                action: 'wp_tester_load_more_results',
+                offset: 0,
+                limit: 5,
+                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
+            },
+            success: function(response) {
+                console.log('Debug AJAX SUCCESS:', response);
+                alert('Debug AJAX worked! Check console for details.');
+            },
+            error: function(xhr, status, error) {
+                console.error('Debug AJAX ERROR:', {
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    statusCode: xhr.status
+                });
+                alert('Debug AJAX failed! Check console for details.');
+            }
+        });
+    });
+    
+    let currentOffset = 0; // Track offset globally
+    
     function loadMoreResults() {
         const $button = $('#load-more');
         const $resultsList = $('#results-list');
+        
+        // Count current results more reliably
         const currentCount = $resultsList.find('.modern-list-item').length;
+        currentOffset = currentCount; // Update global offset
+        
+        console.log('Load More Results: currentCount =', currentCount, 'currentOffset =', currentOffset);
         
         // Show loading state
         $button.prop('disabled', true).html('<span class="dashicons dashicons-update" style="animation: spin 1s linear infinite;"></span> Loading...');
@@ -588,9 +635,10 @@ jQuery(document).ready(function($) {
         $.ajax({
             url: ajaxurl,
             type: 'POST',
+            timeout: 30000, // 30 second timeout
             data: {
                 action: 'wp_tester_load_more_results',
-                offset: currentCount,
+                offset: currentOffset,
                 limit: 10,
                 nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
             },
@@ -620,9 +668,25 @@ jQuery(document).ready(function($) {
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Load more results error:', xhr.responseText, status, error);
+                console.error('Load more results error:', {
+                    status: status,
+                    error: error,
+                    responseText: xhr.responseText,
+                    statusCode: xhr.status
+                });
+                
                 $button.prop('disabled', false).html('Load More Results');
-                showErrorModal('Error', 'Failed to load more results. Please check the console for details.');
+                
+                let errorMessage = 'Failed to load more results.';
+                if (status === 'timeout') {
+                    errorMessage = 'Request timed out. Please try again.';
+                } else if (xhr.status === 403) {
+                    errorMessage = 'Access denied. Please refresh the page and try again.';
+                } else if (xhr.status === 0) {
+                    errorMessage = 'Network error. Please check your connection.';
+                }
+                
+                showErrorModal('Load More Error', errorMessage);
             }
         });
     }

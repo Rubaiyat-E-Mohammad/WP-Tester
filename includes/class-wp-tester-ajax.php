@@ -3128,12 +3128,16 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
      * Load more test results
      */
     public function load_more_results() {
+        error_log("WP Tester: load_more_results() called");
+        
         check_ajax_referer('wp_tester_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
             return;
         }
+        
+        error_log("WP Tester: load_more_results() - nonce and permissions OK");
         
         try {
             $offset = intval($_POST['offset'] ?? 0);
@@ -3146,7 +3150,7 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
             $flows_table = $wpdb->prefix . 'wp_tester_flows';
             
             // Get more results with flow information
-            $results = $wpdb->get_results($wpdb->prepare(
+            $sql = $wpdb->prepare(
                 "SELECT tr.*, f.flow_name 
                  FROM {$results_table} tr 
                  LEFT JOIN {$flows_table} f ON tr.flow_id = f.id 
@@ -3154,7 +3158,16 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
                  LIMIT %d OFFSET %d",
                 $limit,
                 $offset
-            ));
+            );
+            
+            error_log("WP Tester: Load more SQL: " . $sql);
+            $results = $wpdb->get_results($sql);
+            
+            if ($wpdb->last_error) {
+                error_log("WP Tester: Database error in load_more_results: " . $wpdb->last_error);
+                wp_send_json_error(array('message' => 'Database error: ' . $wpdb->last_error));
+                return;
+            }
             
             // Check if there are more results
             $total_count = $wpdb->get_var("SELECT COUNT(*) FROM {$results_table}");
