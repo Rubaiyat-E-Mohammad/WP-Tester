@@ -869,17 +869,32 @@ class WP_Tester_Database {
         
         $where_clause = $flow_id ? 'WHERE tr.flow_id = %d' : '';
         
-        $sql = "SELECT tr.*, f.flow_name, f.flow_type 
-                FROM {$this->test_results_table} tr 
-                LEFT JOIN {$this->flows_table} f ON tr.flow_id = f.id 
-                {$where_clause}
-                ORDER BY tr.started_at DESC 
-                LIMIT %d OFFSET %d";
-        
-        if ($flow_id) {
-            return $wpdb->get_results($wpdb->prepare($sql, $flow_id, $limit, $offset));
+        // Build SQL without LIMIT if limit is 0 (load all)
+        if ($limit == 0) {
+            $sql = "SELECT tr.*, f.flow_name, f.flow_type 
+                    FROM {$this->test_results_table} tr 
+                    LEFT JOIN {$this->flows_table} f ON tr.flow_id = f.id 
+                    {$where_clause}
+                    ORDER BY tr.started_at DESC";
+            
+            if ($flow_id) {
+                return $wpdb->get_results($wpdb->prepare($sql, $flow_id));
+            } else {
+                return $wpdb->get_results($sql);
+            }
         } else {
-            return $wpdb->get_results($wpdb->prepare($sql, $limit, $offset));
+            $sql = "SELECT tr.*, f.flow_name, f.flow_type 
+                    FROM {$this->test_results_table} tr 
+                    LEFT JOIN {$this->flows_table} f ON tr.flow_id = f.id 
+                    {$where_clause}
+                    ORDER BY tr.started_at DESC 
+                    LIMIT %d OFFSET %d";
+            
+            if ($flow_id) {
+                return $wpdb->get_results($wpdb->prepare($sql, $flow_id, $limit, $offset));
+            } else {
+                return $wpdb->get_results($wpdb->prepare($sql, $limit, $offset));
+            }
         }
     }
     

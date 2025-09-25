@@ -65,7 +65,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_save_conversation', array($this, 'save_conversation'));
         add_action('wp_ajax_wp_tester_create_ai_flow', array($this, 'create_ai_flow'));
         add_action('wp_ajax_wp_tester_get_ai_flows', array($this, 'get_ai_flows'));
-        add_action('wp_ajax_wp_tester_load_more_results', array($this, 'load_more_results'));
+        // Removed load_more_results - now loading all results at once
         add_action('wp_ajax_wp_tester_test_email', array($this, 'test_email'));
         add_action('wp_ajax_wp_tester_email_report', array($this, 'email_report'));
         add_action('wp_ajax_wp_tester_get_available_ai_models', array($this, 'get_available_ai_models'));
@@ -3124,93 +3124,7 @@ DO NOT generate flows for simple greetings or general conversation. Only generat
         }
     }
     
-    /**
-     * Load more test results
-     */
-    public function load_more_results() {
-        error_log("WP Tester: load_more_results() called");
-        
-        check_ajax_referer('wp_tester_nonce', 'nonce');
-        
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error(array('message' => __('Insufficient permissions', 'wp-tester')));
-            return;
-        }
-        
-        error_log("WP Tester: load_more_results() - nonce and permissions OK");
-        
-        try {
-            $offset = intval($_POST['offset'] ?? 0);
-            $limit = intval($_POST['limit'] ?? 10);
-            
-            error_log("WP Tester: Loading more results - offset: $offset, limit: $limit");
-            
-            global $wpdb;
-            $results_table = $wpdb->prefix . 'wp_tester_test_results';
-            $flows_table = $wpdb->prefix . 'wp_tester_flows';
-            
-            // Get more results with flow information
-            $sql = $wpdb->prepare(
-                "SELECT tr.*, f.flow_name 
-                 FROM {$results_table} tr 
-                 LEFT JOIN {$flows_table} f ON tr.flow_id = f.id 
-                 ORDER BY tr.started_at DESC 
-                 LIMIT %d OFFSET %d",
-                $limit,
-                $offset
-            );
-            
-            error_log("WP Tester: Load more SQL: " . $sql);
-            $results = $wpdb->get_results($sql);
-            
-            if ($wpdb->last_error) {
-                error_log("WP Tester: Database error in load_more_results: " . $wpdb->last_error);
-                wp_send_json_error(array('message' => 'Database error: ' . $wpdb->last_error));
-                return;
-            }
-            
-            // Check if there are more results
-            $total_count = $wpdb->get_var("SELECT COUNT(*) FROM {$results_table}");
-            $has_more = ($offset + $limit) < $total_count;
-            
-            error_log("WP Tester: Load more results - Found " . count($results) . " results, total_count: $total_count, has_more: " . ($has_more ? 'yes' : 'no'));
-            
-            // Format results for frontend
-            $formatted_results = array();
-            foreach ($results as $result) {
-                $steps_total = max($result->steps_executed, $result->steps_passed + $result->steps_failed);
-                $formatted_results[] = array(
-                    'id' => $result->id,
-                    'flow_id' => $result->flow_id,
-                    'flow_name' => $result->flow_name ?: 'Unknown Flow',
-                    'status' => $result->status,
-                    'steps_executed' => intval($result->steps_executed),
-                    'steps_total' => intval($steps_total),
-                    'execution_time' => floatval($result->execution_time ?: 0),
-                    'time_ago' => human_time_diff(strtotime($result->started_at), current_time('timestamp')) . ' ago',
-                    'view_url' => admin_url('admin.php?page=wp-tester-results&action=view&result_id=' . $result->id)
-                );
-            }
-            
-            error_log("WP Tester: Load more results response - " . count($formatted_results) . " results, has_more: " . ($has_more ? 'yes' : 'no'));
-            
-            wp_send_json_success(array(
-                'results' => $formatted_results,
-                'has_more' => $has_more,
-                'total_count' => $total_count,
-                'loaded_count' => count($formatted_results),
-                'debug' => array(
-                    'offset' => $offset,
-                    'limit' => $limit,
-                    'raw_results_count' => count($results)
-                )
-            ));
-            
-        } catch (Exception $e) {
-            error_log("WP Tester: Load more results error - " . $e->getMessage());
-            wp_send_json_error(array('message' => 'Error loading more results: ' . $e->getMessage()));
-        }
-    }
+    // Removed load_more_results method - now loading all results at once
     
     /**
      * Send email notification for manual test execution

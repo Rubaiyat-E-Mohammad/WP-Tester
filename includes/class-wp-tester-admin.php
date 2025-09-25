@@ -796,7 +796,7 @@ class WP_Tester_Admin {
      * List results page
      */
     private function list_results_page() {
-        $results = $this->database->get_test_results(null, 50, 0);
+        $results = $this->database->get_test_results(null, 0, 0); // Load ALL results (no limit)
         
         include WP_TESTER_PLUGIN_DIR . 'templates/admin-results.php';
     }
