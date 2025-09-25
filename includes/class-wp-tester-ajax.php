@@ -49,7 +49,7 @@ class WP_Tester_Ajax {
         add_action('wp_ajax_wp_tester_get_test_results_stats', array($this, 'get_test_results_stats'));
         add_action('wp_ajax_wp_tester_bulk_test_results_action', array($this, 'bulk_test_results_action'));
         add_action('wp_ajax_wp_tester_bulk_crawl_action', array($this, 'bulk_crawl_action'));
-        add_action('wp_ajax_wp_tester_debug_bulk_action', array($this, 'debug_bulk_action'));
+        // Removed debug_bulk_action - not needed for production
         add_action('wp_ajax_wp_tester_cleanup_crawl_duplicates', array($this, 'cleanup_crawl_duplicates'));
         add_action('wp_ajax_wp_tester_cleanup_all_crawls', array($this, 'cleanup_all_crawls'));
         add_action('wp_ajax_wp_tester_clear_cache', array($this, 'clear_cache'));
@@ -2486,20 +2486,6 @@ class WP_Tester_Ajax {
         } catch (Exception $e) {
             return array('success' => false, 'error' => $e->getMessage());
         }
-    }
-    
-    /**
-     * Debug bulk action - simple test endpoint
-     */
-    public function debug_bulk_action() {
-        // Debug bulk action called
-        
-        wp_send_json_success(array(
-            'message' => 'Debug endpoint working',
-            'post_data' => $_POST,
-            'get_data' => $_GET,
-            'request_data' => $_REQUEST
-        ));
     }
     
     /**

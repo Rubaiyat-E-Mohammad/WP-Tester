@@ -279,9 +279,6 @@ if (!defined('ABSPATH')) {
                         <button id="clear-selection" class="modern-btn modern-btn-secondary modern-btn-small">
                             Clear Selection
                         </button>
-                        <button id="debug-bulk-action" class="modern-btn modern-btn-secondary modern-btn-small">
-                            Debug Test
-                        </button>
                     </div>
                 </div>
                 
@@ -962,28 +959,6 @@ jQuery(document).ready(function($) {
         updateBulkActions();
     });
     
-    // Debug bulk action
-    $('#debug-bulk-action').on('click', function() {
-        // Debug button clicked
-        
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'wp_tester_debug_bulk_action',
-                test_data: 'debug test',
-                nonce: '<?php echo wp_create_nonce('wp_tester_nonce'); ?>'
-            },
-            success: function(response) {
-                // Debug response received
-                showSuccessModal('Debug Test Successful', 'Debug test completed successfully! Check console for details.');
-            },
-            error: function(xhr, status, error) {
-                console.error('WP Tester: Debug error:', {xhr, status, error});
-                showErrorModal('Debug Test Failed', 'Debug test failed! Check console for details.');
-            }
-        });
-    });
     
     // Apply bulk action for results
     $('#apply-bulk-action').on('click', function() {
